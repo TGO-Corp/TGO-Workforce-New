@@ -161,8 +161,9 @@ function SettingsPage() {
           <div>
             <p className="text-sm font-medium">Interface animations</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Page transitions and animated counters on dashboard numbers. Turn off for a snappier,
-              static interface.
+              Page transitions, animated counters on dashboard numbers, and the moving circuit lines
+              on card, table, modal and sidebar headers. Turn off for a snappier, static interface —
+              saved to your account, so it follows you across devices.
             </p>
           </div>
           <Switch

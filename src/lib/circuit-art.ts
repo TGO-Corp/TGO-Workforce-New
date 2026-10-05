@@ -22,7 +22,7 @@
 
 import type { CSSProperties } from "react";
 
-export type CircuitVariant = "card" | "table" | "modal";
+export type CircuitVariant = "card" | "table" | "modal" | "sidebarHeader" | "sidebar";
 
 type VariantSpec = {
   w: number;
@@ -38,6 +38,11 @@ type VariantSpec = {
   baseAlpha: number;
   preserve: string;
   gradient: string;
+  /** Art only, no navy fill/gradient of its own — for painting over a
+   * surface that already has its own background (the sidebar panel). */
+  overlay?: boolean;
+  /** Bottom-edge scanner sweep; off for the tall sidebar backdrop. */
+  scanner?: boolean;
 };
 
 const SPECS: Record<CircuitVariant, VariantSpec> = {
@@ -79,6 +84,38 @@ const SPECS: Record<CircuitVariant, VariantSpec> = {
     baseAlpha: 0.12,
     preserve: "xMaxYMid slice",
     gradient: "linear-gradient(120deg, #1e4761 0%, #183445 52%, #112936 100%)",
+  },
+  // The sidebar's logo header: same board as a card band, but kept clear of
+  // the logo + wordmark that fill the left ~60% of it.
+  sidebarHeader: {
+    w: 256,
+    h: 76,
+    traces: 4,
+    anchor: "right",
+    keepClear: 0.6,
+    rings: true,
+    lattice: true,
+    pulseAlpha: 0.7,
+    baseAlpha: 0.11,
+    preserve: "xMaxYMid slice",
+    gradient: "linear-gradient(120deg, #1e4761 0%, #183445 55%, #112936 100%)",
+  },
+  // Tall, faint backdrop for the sidebar's nav area: short circuit stubs
+  // creeping in from BOTH edges so the middle (the nav labels) stays clean.
+  sidebar: {
+    w: 256,
+    h: 900,
+    traces: 16,
+    anchor: "both",
+    keepClear: 0,
+    rings: false,
+    lattice: false,
+    pulseAlpha: 0.32,
+    baseAlpha: 0.065,
+    preserve: "xMidYMin slice",
+    gradient: "none",
+    overlay: true,
+    scanner: false,
   },
 };
 
@@ -259,7 +296,7 @@ export function buildCircuitSvg(variant: CircuitVariant, seed: string, animated:
     traces.map((t) => renderTrace(t, spec, rand, animated)).join("") +
     (spec.rings ? renderRings(spec, animated) : "") +
     (spec.lattice ? renderLattice(spec, rand, animated) : "") +
-    renderScanner(spec, animated);
+    (spec.scanner === false ? "" : renderScanner(spec, animated));
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${spec.w} ${spec.h}" preserveAspectRatio="${spec.preserve}">` +
@@ -287,6 +324,16 @@ export function circuitBackgroundStyle(
 
   const spec = SPECS[variant];
   const svg = encodeURIComponent(buildCircuitSvg(variant, seed, animated));
+  if (spec.overlay) {
+    const overlayStyle: CSSProperties = {
+      backgroundImage: `url("data:image/svg+xml,${svg}")`,
+      backgroundSize: "cover",
+      backgroundPosition: "center top",
+      backgroundRepeat: "no-repeat",
+    };
+    cache.set(key, overlayStyle);
+    return overlayStyle;
+  }
   const style: CSSProperties = {
     backgroundColor: "#183445",
     backgroundImage: `url("data:image/svg+xml,${svg}"), ${spec.gradient}`,

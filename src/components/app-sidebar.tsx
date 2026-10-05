@@ -42,6 +42,7 @@ import {
   isSuperAdminRole,
   hasPermission,
 } from "@/lib/permissions";
+import { useCircuitBackground } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
 export type NavItem = {
@@ -229,10 +230,15 @@ export function AppSidebar() {
   const effectiveRole = getEffectiveRole(account);
   const isAdmin = isFullAccessRole(effectiveRole);
   const isSuperAdmin = isSuperAdminRole(effectiveRole);
+  // Circuit line art (see @/lib/circuit-art): a full dark band behind the logo,
+  // and a faint rail of stubs down both edges of the nav area. Both go static
+  // when "Interface animations" is off in Settings.
+  const headerBand = useCircuitBackground("sidebarHeader", "sidebar-header");
+  const navBackdrop = useCircuitBackground("sidebar", "sidebar-nav");
 
   return (
     <Sidebar collapsible="icon" className="shadow-[2px_0_20px_-4px_rgba(0,0,0,0.35)]">
-      <SidebarHeader className={cn("gap-3 py-4", collapsed ? "px-2" : "px-4")}>
+      <SidebarHeader className={cn("gap-3 py-4", collapsed ? "px-2" : "px-4")} style={headerBand}>
         <div className={cn("flex min-h-11 items-center", collapsed ? "justify-center" : "gap-3")}>
           {/* Always the light-on-dark logo variant — the sidebar is a
               constant brand green regardless of the app's light/dark theme,
@@ -268,7 +274,7 @@ export function AppSidebar() {
         <div className="h-px w-full bg-gradient-to-r from-[#72b360] via-[#72b360]/40 to-transparent" />
       </SidebarHeader>
 
-      <SidebarContent className="pb-3">
+      <SidebarContent className="pb-3" style={navBackdrop}>
         {NAV_GROUPS.map((group) => {
           const visibleItems = group.items.filter(
             (item) =>
