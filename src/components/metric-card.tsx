@@ -3,6 +3,8 @@ import { useRouterState } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrentAccount } from "@/lib/session";
+import { useCircuitBackground } from "@/lib/use-circuit-background";
+import { cn } from "@/lib/utils";
 
 const COUNT_UP_MS = 700;
 
@@ -70,6 +72,8 @@ export function MetricCard({
   // remount on its own — this card doesn't rely on a parent remounting
   // correctly to animate.
   const pathname = useRouterState({ select: (r) => r.location.pathname });
+  // Seeded off the title so each card draws its own board, stable across renders.
+  const bandStyle = useCircuitBackground("card", title);
 
   return (
     <Card
@@ -86,17 +90,24 @@ export function MetricCard({
             }
           : undefined
       }
-      className={
-        onClick
-          ? "cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/40"
-          : undefined
-      }
+      className={cn(
+        "overflow-hidden",
+        onClick && "cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/40",
+      )}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <CardHeader
+        className="flex flex-row items-center justify-between space-y-0 px-5 py-4"
+        style={bandStyle}
+      >
+        <CardTitle className="text-sm font-medium text-white/90">{title}</CardTitle>
+        {/* Icon chip: frosted rounded square with a soft green glow, sitting
+            inside the band's dial rings. Static on purpose — the motion lives
+            in the band's line art, not the icon. */}
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#9bd48a] shadow-[0_0_20px_-2px_rgba(114,179,96,0.55)] ring-1 ring-white/25">
+          <Icon className="h-[18px] w-[18px]" />
+        </span>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-5">
         <div className="text-3xl font-semibold tracking-tight">
           {typeof value === "number" ? (
             <AnimatedNumber key={pathname} value={value} enabled={animationsEnabled} />

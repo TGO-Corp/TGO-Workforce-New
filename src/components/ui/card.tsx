@@ -6,7 +6,14 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
+      className={cn(
+        // has-[table]: a card holding a table clips to its rounded corners, so
+        // the table's dark square header band can't poke past them. Only
+        // table-holding cards — blanket overflow-hidden would risk clipping
+        // chart tooltips in the others.
+        "rounded-xl border bg-card text-card-foreground shadow has-[table]:overflow-hidden",
+        className,
+      )}
       {...props}
     />
   ),

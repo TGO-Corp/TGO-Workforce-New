@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { useCircuitBackground } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
@@ -14,9 +15,23 @@ Table.displayName = "Table";
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
-));
+>(({ className, style, ...props }, ref) => {
+  // Dark circuit-board band (see @/lib/circuit-art). The header row's own
+  // hover is forced transparent — the default light hover tint would wash
+  // out the white header text on the navy.
+  const bandStyle = useCircuitBackground("table", "table");
+  return (
+    <thead
+      ref={ref}
+      className={cn(
+        "[&_tr]:border-b [&_tr]:border-white/10 [&_tr:hover]:bg-transparent",
+        className,
+      )}
+      style={{ ...bandStyle, ...style }}
+      {...props}
+    />
+  );
+});
 TableHeader.displayName = "TableHeader";
 
 const TableBody = React.forwardRef<
@@ -60,7 +75,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "h-10 px-2 text-left align-middle font-medium text-white/90 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className,
     )}
     {...props}
