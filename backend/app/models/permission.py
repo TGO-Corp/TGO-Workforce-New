@@ -52,6 +52,15 @@ class Permission(enum.StrEnum):
     # there's something real behind them).
     BENEFITS_VIEW = "benefits.view"
     BENEFITS_MANAGE = "benefits.manage"
+    # Activity Logs and Onboarding New Hires used to have no permission of
+    # their own (Activity Logs was open to every signed-in account, New Hires
+    # rode on EMPLOYEES_VIEW) — split out so a Super Admin can hide them from
+    # a role (the Viewer role, by default) without touching anything else.
+    # Standing rule: every new module/page gets its own Permission value(s)
+    # here, a label in PERMISSION_LABELS (backend + frontend), a migration
+    # and a require_permission gate — nothing ships outside the matrix.
+    ACTIVITY_LOGS_VIEW = "activity_logs.view"
+    NEW_HIRES_VIEW = "new_hires.view"
 
 
 class RolePermission(Base):

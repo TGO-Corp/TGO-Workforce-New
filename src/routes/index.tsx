@@ -27,6 +27,7 @@ import { BandedCardHeader } from "@/components/banded-card-header";
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { ImportEmployeesDialog } from "@/components/import-employees-dialog";
 import { MetricCard } from "@/components/metric-card";
+import { MyOverview } from "@/components/my-overview";
 import { MetricDetailModal } from "@/components/metric-detail-modal";
 import { HeadcountTrendChart } from "@/components/workforce-charts";
 import { Badge } from "@/components/ui/badge";
@@ -124,7 +125,16 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
+// A Viewer gets their own personal overview (see MyOverview) rather than any
+// of the company-wide / module-snapshot content below. Split into a wrapper
+// so CompanyDashboard's many hooks never run conditionally.
 function Dashboard() {
+  const { data: account } = useCurrentAccount();
+  if (getEffectiveRole(account) === "viewer") return <MyOverview />;
+  return <CompanyDashboard />;
+}
+
+function CompanyDashboard() {
   const employees = useEmployees();
   const { data: account } = useCurrentAccount();
   // The full cross-office "everything" overview (company-wide headcount,

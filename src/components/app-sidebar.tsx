@@ -79,7 +79,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         title: "Onboarding New Hires",
         url: "/new-hires",
         icon: UserPlus,
-        permission: "employees.view",
+        permission: "new_hires.view",
       },
       {
         title: "Onboarding Tracker",
@@ -151,7 +151,12 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Insights",
     items: [
-      { title: "Activity Logs", url: "/activity-logs", icon: ScrollText },
+      {
+        title: "Activity Logs",
+        url: "/activity-logs",
+        icon: ScrollText,
+        permission: "activity_logs.view",
+      },
       // Admin/Super Admin-only: Analytics rolls up numbers across every
       // module (Employee Directory, Onboarding, Attendance), which no single
       // module-siloed role should see in full — see app/routes/analytics.tsx's

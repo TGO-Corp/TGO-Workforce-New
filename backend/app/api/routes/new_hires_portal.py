@@ -1,10 +1,9 @@
 """Read-only proxy for the New Hires page — the page itself used to be a
 filtered view of the Employee Directory, but now mirrors the separate
 Onboarding/Offboarding portal's own GET-only API instead (see
-app/services/onboarding_portal.py). Same permission gate the page's own nav
-entry already declares (permission: "employees.view" in
-src/components/app-sidebar.tsx), so nothing about who can see this page
-changes — only where its data comes from.
+app/services/onboarding_portal.py). Gated by its own Permission.NEW_HIRES_VIEW (the same one the page's nav
+entry declares in src/components/app-sidebar.tsx) so a role such as Viewer
+can be kept out of it from the permission matrix.
 """
 
 from typing import Annotated
@@ -23,7 +22,7 @@ from app.services.onboarding_portal import (
 router = APIRouter(
     prefix="/new-hires",
     tags=["new-hires"],
-    dependencies=[Depends(require_permission(Permission.EMPLOYEES_VIEW))],
+    dependencies=[Depends(require_permission(Permission.NEW_HIRES_VIEW))],
 )
 
 

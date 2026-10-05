@@ -50,7 +50,7 @@ export const PERMISSION_LABELS: Record<Permission, { title: string; description:
   "onboarding.view": {
     title: "View Onboarding Tracker",
     description:
-      "See the onboarding checklist tracker (distinct from the Onboarding New Hires page, which is gated by View Employees instead).",
+      "See the onboarding checklist tracker (distinct from the Onboarding New Hires page, which has its own View Onboarding New Hires permission).",
   },
   "onboarding.manage": {
     title: "Manage Onboarding Tracker",
@@ -84,6 +84,15 @@ export const PERMISSION_LABELS: Record<Permission, { title: string; description:
     title: "Manage Employee Benefits",
     description:
       "Add, edit and delete benefits records — placeholder until the module is built out.",
+  },
+  "activity_logs.view": {
+    title: "View Activity Logs",
+    description:
+      "See the Activity Logs page (still limited to the categories the role's other permissions cover).",
+  },
+  "new_hires.view": {
+    title: "View Onboarding New Hires",
+    description: "See the Onboarding New Hires page (the external onboarding portal feed).",
   },
 };
 
@@ -169,6 +178,14 @@ export function canManageAwards(permissions: Permission[] | undefined): boolean 
 // Admin turns it on from User Management's permission matrix.
 export function canViewBenefits(permissions: Permission[] | undefined): boolean {
   return hasPermission(permissions, "benefits.view");
+}
+
+export function canViewActivityLogs(permissions: Permission[] | undefined): boolean {
+  return hasPermission(permissions, "activity_logs.view");
+}
+
+export function canViewNewHires(permissions: Permission[] | undefined): boolean {
+  return hasPermission(permissions, "new_hires.view");
 }
 
 export function canManageBenefits(permissions: Permission[] | undefined): boolean {

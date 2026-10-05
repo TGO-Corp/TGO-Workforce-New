@@ -22,6 +22,8 @@ VIEW_PERMISSIONS: frozenset[Permission] = frozenset(
         Permission.ATTENDANCE_VIEW,
         Permission.AWARDS_VIEW,
         Permission.BENEFITS_VIEW,
+        Permission.ACTIVITY_LOGS_VIEW,
+        Permission.NEW_HIRES_VIEW,
     }
 )
 
@@ -67,7 +69,7 @@ PERMISSION_LABELS: dict[Permission, dict[str, str]] = {
     Permission.ONBOARDING_VIEW: {
         "title": "View Onboarding Tracker",
         "description": "See the onboarding checklist tracker (distinct from the Onboarding New "
-        "Hires page, which is gated by View Employees instead).",
+        "Hires page, which has its own View Onboarding New Hires permission).",
     },
     Permission.ONBOARDING_MANAGE: {
         "title": "Manage Onboarding Tracker",
@@ -102,6 +104,15 @@ PERMISSION_LABELS: dict[Permission, dict[str, str]] = {
         "title": "Manage Employee Benefits",
         "description": "Add, edit and delete benefits records — placeholder, not yet built.",
     },
+    Permission.ACTIVITY_LOGS_VIEW: {
+        "title": "View Activity Logs",
+        "description": "See the Activity Logs page (still limited to the categories the role's "
+        "other permissions cover).",
+    },
+    Permission.NEW_HIRES_VIEW: {
+        "title": "View Onboarding New Hires",
+        "description": "See the Onboarding New Hires page (the external onboarding portal feed).",
+    },
 }
 
 # Default grants — matches this app's behavior from *before* the matrix
@@ -113,6 +124,8 @@ PERMISSION_LABELS: dict[Permission, dict[str, str]] = {
 DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
     AccountRole.PEOPLE_OPS: {
         Permission.EMPLOYEES_VIEW,
+        Permission.ACTIVITY_LOGS_VIEW,
+        Permission.NEW_HIRES_VIEW,
         Permission.EMPLOYEES_MANAGE,
         Permission.MILESTONES_VIEW,
         Permission.AWARDS_VIEW,
@@ -120,6 +133,8 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
     },
     AccountRole.HR: {
         Permission.EMPLOYEES_VIEW,
+        Permission.ACTIVITY_LOGS_VIEW,
+        Permission.NEW_HIRES_VIEW,
         Permission.MILESTONES_VIEW,
         Permission.ATTENDANCE_VIEW,
         Permission.ATTENDANCE_MANAGE,
@@ -131,6 +146,8 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
     },
     AccountRole.PROJECTS: {
         Permission.EMPLOYEES_VIEW,
+        Permission.ACTIVITY_LOGS_VIEW,
+        Permission.NEW_HIRES_VIEW,
         Permission.MILESTONES_VIEW,
         Permission.ATTENDANCE_VIEW,
         Permission.ATTENDANCE_MANAGE,
@@ -140,12 +157,16 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
     },
     AccountRole.RECRUITMENT_LEAD: {
         Permission.EMPLOYEES_VIEW,
+        Permission.ACTIVITY_LOGS_VIEW,
+        Permission.NEW_HIRES_VIEW,
         Permission.MILESTONES_VIEW,
         Permission.ONBOARDING_VIEW,
         Permission.ONBOARDING_MANAGE,
     },
     AccountRole.ONBOARDING_SPECIALIST: {
         Permission.EMPLOYEES_VIEW,
+        Permission.ACTIVITY_LOGS_VIEW,
+        Permission.NEW_HIRES_VIEW,
         Permission.MILESTONES_VIEW,
         Permission.ONBOARDING_VIEW,
         Permission.ONBOARDING_MANAGE,

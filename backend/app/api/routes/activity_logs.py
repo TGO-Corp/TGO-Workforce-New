@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,8 +9,9 @@ from app.core.auth import get_effective_role, require_account
 from app.core.db import get_db
 from app.models.account import Account
 from app.models.activity_log import ActivityCategory, ActivityLog, ActivitySeverity
+from app.models.permission import Permission
 from app.schemas.activity_log import ActivityLogRead
-from app.services.permissions import visible_activity_categories
+from app.services.permissions import has_permission, visible_activity_categories
 
 # Requires a signed-in account — this used to be reachable by anyone.
 router = APIRouter(
@@ -40,6 +41,14 @@ async def list_activity_logs(
     # categories stay admin/super_admin-only (and unrestricted) — see
     # visible_activity_categories in app/services/permissions.py.
     role = get_effective_role(account, request)
+    # The log itself needs Permission.ACTIVITY_LOGS_VIEW — except an account
+    # reading back its own rows (Profile page's "My Activity"), which is
+    # never anyone else's data.
+    is_own_rows = account_id is not None and account_id == account.id
+    if not is_own_rows and not await has_permission(
+        db, account, Permission.ACTIVITY_LOGS_VIEW, role=role
+    ):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You don't have permission to view activity logs.")
     visible = await visible_activity_categories(db, account, role=role)
 
     stmt = select(ActivityLog).where(ActivityLog.category.in_(visible)).order_by(ActivityLog.created_at.desc())

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  ShieldAlert,
   AlertCircle,
   AlertTriangle,
   ChevronLeft,
@@ -11,6 +12,9 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/app-shell";
+import { canViewActivityLogs } from "@/lib/permissions";
+import { ROLE_LABELS } from "@/lib/roles";
+import { useCurrentAccount } from "@/lib/session";
 import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -92,6 +96,45 @@ function matchesTimeFilter(occurredAt: string, filter: ActivityTimeFilter): bool
 }
 
 function ActivityLogsPage() {
+  const { data: account, isLoading } = useCurrentAccount();
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Activity Logs"
+          description="Audit trail of record changes, access events, data exports and system jobs."
+        />
+        <p className="text-sm text-muted-foreground">Checking access…</p>
+      </div>
+    );
+  }
+  if (!canViewActivityLogs(account?.permissions)) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Activity Logs"
+          description="Audit trail of record changes, access events, data exports and system jobs."
+        />
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <ShieldAlert className="h-10 w-10 text-muted-foreground" />
+            <div>
+              <p className="font-medium">No access</p>
+              <p className="text-sm text-muted-foreground">
+                Your account ({account ? ROLE_LABELS[account.role] : "signed out"}) doesn't have
+                access to Activity Logs. Ask a Super Admin to grant it from the permission matrix on
+                User Management if you need it.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  return <ActivityLogsContent />;
+}
+
+function ActivityLogsContent() {
   const { data, isLoading, isError } = useActivityLogs();
   const logs = data ?? [];
 

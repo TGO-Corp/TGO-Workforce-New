@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  ShieldAlert,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -11,6 +12,9 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/app-shell";
+import { canViewNewHires } from "@/lib/permissions";
+import { ROLE_LABELS } from "@/lib/roles";
+import { useCurrentAccount } from "@/lib/session";
 import { FilterSelect } from "@/components/filter-select";
 import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
@@ -65,6 +69,45 @@ function StatusBadge({ status }: { status: PortalNewHireStatus }) {
 }
 
 function NewHiresPage() {
+  const { data: account, isLoading } = useCurrentAccount();
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Onboarding New Hires"
+          description="Candidates in the onboarding pipeline, pulled live from the Onboarding/Offboarding portal."
+        />
+        <p className="text-sm text-muted-foreground">Checking access…</p>
+      </div>
+    );
+  }
+  if (!canViewNewHires(account?.permissions)) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Onboarding New Hires"
+          description="Candidates in the onboarding pipeline, pulled live from the Onboarding/Offboarding portal."
+        />
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+            <ShieldAlert className="h-10 w-10 text-muted-foreground" />
+            <div>
+              <p className="font-medium">No access</p>
+              <p className="text-sm text-muted-foreground">
+                Your account ({account ? ROLE_LABELS[account.role] : "signed out"}) doesn't have
+                access to Onboarding New Hires. Ask a Super Admin to grant it from the permission
+                matrix on User Management if you need it.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  return <NewHiresContent />;
+}
+
+function NewHiresContent() {
   const { data, isLoading, isError } = usePortalNewHires();
   const hires = useMemo(() => data ?? [], [data]);
 

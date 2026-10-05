@@ -34,7 +34,9 @@ export type Permission =
   | "awards.view"
   | "awards.manage"
   | "benefits.view"
-  | "benefits.manage";
+  | "benefits.manage"
+  | "activity_logs.view"
+  | "new_hires.view";
 
 export type AccountProfile = {
   id: string;
