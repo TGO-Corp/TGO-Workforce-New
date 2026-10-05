@@ -8,7 +8,7 @@
 // src/routes/profile.tsx) — plenty of accounts exist purely to run the portal
 // and were never hired, hence the "not linked" empty state below.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { Cake, CalendarClock, CalendarHeart, Trophy, UserRound } from "lucide-react";
@@ -74,7 +74,7 @@ const awardsConfig = {
   awards: { label: "Awards", color: "var(--chart-4)" },
 } satisfies ChartConfig;
 
-export function MyOverview() {
+export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
   const { data: account, isLoading } = useCurrentAccount();
   const employees = useEmployees();
   const mounted = useMounted();
@@ -107,6 +107,7 @@ export function MyOverview() {
           title={`Welcome, ${greetingName}`}
           description="Your personal overview of your time with Torero Global Outsourcing."
         />
+        {topSlot}
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
             <UserRound className="h-10 w-10 text-muted-foreground" />
@@ -181,6 +182,8 @@ export function MyOverview() {
         title={`Welcome, ${greetingName}`}
         description="Your personal overview — your time with Torero Global Outsourcing at a glance."
       />
+
+      {topSlot}
 
       <Card className="overflow-hidden">
         <BandedCardHeader seed="my-overview-profile">
