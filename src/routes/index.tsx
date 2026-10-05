@@ -130,11 +130,14 @@ export const Route = createFileRoute("/")({
 // so CompanyDashboard's many hooks never run conditionally.
 function Dashboard() {
   const { data: account } = useCurrentAccount();
-  if (getEffectiveRole(account) === "viewer") return <MyOverview />;
-  return <CompanyDashboard />;
+  return <CompanyDashboard viewerMode={getEffectiveRole(account) === "viewer"} />;
 }
 
-function CompanyDashboard() {
+// viewerMode: the personal overview replaces the page header and the
+// module-snapshot cards, but the permission-gated Anniversaries / Birthdays /
+// Awards cards stay — a Viewer still sees other people's milestones and
+// awards (whatever their matrix permissions allow), just like everyone else.
+function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
   const employees = useEmployees();
   const { data: account } = useCurrentAccount();
   // The full cross-office "everything" overview (company-wide headcount,
@@ -428,44 +431,48 @@ function CompanyDashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description={
-          isFullAccess
-            ? "Operational snapshot across all TGO delivery hubs."
-            : "Snapshot of the modules available to your role."
-        }
-        action={
-          <div className="flex items-center gap-2">
-            {canManage && <ImportEmployeesDialog />}
-            <Button asChild size="sm" variant="outline">
-              <Link to="/directory">
-                Open directory <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" disabled={exporting}>
-                  {exporting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="mr-2 h-4 w-4" />
-                  )}
-                  Export All Data
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem disabled={exporting} onSelect={() => handleExport("xlsx")}>
-                  <FileSpreadsheet className="mr-2 h-4 w-4" /> Export as Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={exporting} onSelect={() => handleExport("pdf")}>
-                  <FileText className="mr-2 h-4 w-4" /> Export as PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        }
-      />
+      {viewerMode ? (
+        <MyOverview />
+      ) : (
+        <PageHeader
+          title="Dashboard"
+          description={
+            isFullAccess
+              ? "Operational snapshot across all TGO delivery hubs."
+              : "Snapshot of the modules available to your role."
+          }
+          action={
+            <div className="flex items-center gap-2">
+              {canManage && <ImportEmployeesDialog />}
+              <Button asChild size="sm" variant="outline">
+                <Link to="/directory">
+                  Open directory <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" disabled={exporting}>
+                    {exporting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="mr-2 h-4 w-4" />
+                    )}
+                    Export All Data
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem disabled={exporting} onSelect={() => handleExport("xlsx")}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4" /> Export as Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled={exporting} onSelect={() => handleExport("pdf")}>
+                    <FileText className="mr-2 h-4 w-4" /> Export as PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          }
+        />
+      )}
 
       {(showNewHires || showAnniversaries || showBirthdaysCard || showAwardsCard) && (
         <div className="space-y-3">
@@ -854,7 +861,8 @@ function CompanyDashboard() {
         (canViewEmployeesModule ||
           canViewOnboardingModule ||
           canViewAttendanceModule ||
-          canViewBenefitsModule)) ? (
+          canViewBenefitsModule) &&
+        !viewerMode) ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {!isFullAccess && canViewEmployeesModule && (
             <Card>
