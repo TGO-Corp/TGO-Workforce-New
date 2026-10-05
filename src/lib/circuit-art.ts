@@ -194,8 +194,16 @@ function renderTrace(
   trace: Trace,
   spec: VariantSpec,
   rand: () => number,
-  animated: boolean,
+  animatedRequested: boolean,
+  index: number,
 ): string {
+  // Performance: every animated element here is repainted each frame on the
+  // main thread, and a page can show dozens of bands. So dense variants
+  // (the sidebar's 16 traces) only animate every third trace, and the pad
+  // "ping" ripple and the wide glow stroke are gone — the travelling pulse is
+  // what reads as motion.
+  const animated = animatedRequested && (spec.traces <= 8 || index % 3 === 0);
+  const glow = spec.traces <= 6;
   const d = pathOf(trace.pts);
   const [ex, ey] = trace.end;
   const dur = 3.2 + rand() * 3.4;
@@ -210,21 +218,13 @@ function renderTrace(
     ? `<animate attributeName="stroke-dashoffset" values="9;-191" dur="${r1(dur)}s" begin="-${r1(phase)}s" repeatCount="indefinite"/>`
     : "";
 
-  // The pulse tip reaches the end of the path at exactly half the cycle
-  // (offset -93 of a 200-unit pattern), so the pad ping is keyed to 0.5.
-  const ping = animated
-    ? `<circle cx="${r1(ex)}" cy="${r1(ey)}" r="2.4" fill="none" stroke="${GREEN}" stroke-width="1">` +
-      `<animate attributeName="r" values="2.4;2.4;3;9" keyTimes="0;0.5;0.53;1" dur="${r1(dur)}s" begin="-${r1(phase)}s" repeatCount="indefinite"/>` +
-      `<animate attributeName="stroke-opacity" values="0;0;0.6;0" keyTimes="0;0.5;0.53;1" dur="${r1(dur)}s" begin="-${r1(phase)}s" repeatCount="indefinite"/>` +
-      `</circle>`
-    : "";
-
   return (
     `<path d="${d}" stroke="#fff" stroke-opacity="${spec.baseAlpha}" stroke-width="1"/>` +
-    `<path d="${d}" ${dash} stroke-dashoffset="${offset}" stroke="${GREEN}" stroke-opacity="${r1(spec.pulseAlpha * 0.28)}" stroke-width="3.4">${run}</path>` +
+    (glow
+      ? `<path d="${d}" ${dash} stroke-dashoffset="${offset}" stroke="${GREEN}" stroke-opacity="${r1(spec.pulseAlpha * 0.28)}" stroke-width="3.4">${run}</path>`
+      : "") +
     `<path d="${d}" ${dash} stroke-dashoffset="${offset}" stroke="${GREEN}" stroke-opacity="${spec.pulseAlpha}" stroke-width="1.2">${run}</path>` +
-    `<circle cx="${r1(ex)}" cy="${r1(ey)}" r="2.4" fill="${PAD_FILL}" stroke="#fff" stroke-opacity="0.34" stroke-width="1"/>` +
-    ping
+    `<circle cx="${r1(ex)}" cy="${r1(ey)}" r="2.4" fill="${PAD_FILL}" stroke="#fff" stroke-opacity="0.34" stroke-width="1"/>`
   );
 }
 
@@ -233,17 +233,17 @@ function renderTrace(
 function renderRings(spec: VariantSpec, animated: boolean): string {
   const cx = r1(spec.w * 0.9);
   const cy = r1(spec.h * 0.3);
-  const spin = (from: number, to: number, dur: number) =>
-    animated
-      ? `<animateTransform attributeName="transform" type="rotate" from="${from} ${cx} ${cy}" to="${to} ${cx} ${cy}" dur="${dur}s" repeatCount="indefinite"/>`
-      : "";
+  // The dials used to rotate continuously; a rotating dashed circle forces a
+  // full repaint of the big ring area every frame, so they now just sit
+  // there (the pulses and scanner carry the motion).
+  void animated;
   const inner = r1(spec.h * 0.5);
   const mid = r1(spec.h * 0.78);
   const outer = r1(spec.h * 1.12);
   return (
     `<circle cx="${cx}" cy="${cy}" r="${outer}" fill="none" stroke="#fff" stroke-opacity="0.07" stroke-width="1"/>` +
-    `<g><circle cx="${cx}" cy="${cy}" r="${mid}" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="3" stroke-dasharray="1.2 6.4"/>${spin(360, 0, 46)}</g>` +
-    `<g><circle cx="${cx}" cy="${cy}" r="${inner}" fill="none" stroke="${GREEN}" stroke-opacity="0.38" stroke-width="1.2" stroke-dasharray="22 11 4 11"/>${spin(0, 360, 30)}</g>`
+    `<g><circle cx="${cx}" cy="${cy}" r="${mid}" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="3" stroke-dasharray="1.2 6.4"/></g>` +
+    `<g><circle cx="${cx}" cy="${cy}" r="${inner}" fill="none" stroke="${GREEN}" stroke-opacity="0.38" stroke-width="1.2" stroke-dasharray="22 11 4 11"/></g>`
   );
 }
 
@@ -262,7 +262,7 @@ function renderLattice(spec: VariantSpec, rand: () => number, animated: boolean)
       const y = y0 + row * gap;
       const fade = 1 - col / (cols + 1);
       const alpha = r1(0.1 + 0.28 * fade);
-      const twinkle = animated && rand() < 0.16;
+      const twinkle = false;
       const anim = twinkle
         ? `<animate attributeName="fill-opacity" values="${alpha};0.95;${alpha}" dur="${r1(2.4 + rand() * 2.2)}s" begin="-${r1(rand() * 3)}s" repeatCount="indefinite"/>`
         : "";
@@ -293,7 +293,7 @@ export function buildCircuitSvg(variant: CircuitVariant, seed: string, animated:
   const rand = mulberry32(hashSeed(`${variant}:${seed}`));
   const traces = routeTraces(spec, rand);
   const body =
-    traces.map((t) => renderTrace(t, spec, rand, animated)).join("") +
+    traces.map((t, i) => renderTrace(t, spec, rand, animated, i)).join("") +
     (spec.rings ? renderRings(spec, animated) : "") +
     (spec.lattice ? renderLattice(spec, rand, animated) : "") +
     (spec.scanner === false ? "" : renderScanner(spec, animated));

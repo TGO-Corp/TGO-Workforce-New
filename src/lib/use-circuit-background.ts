@@ -10,7 +10,12 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { circuitBackgroundStyle, type CircuitVariant } from "@/lib/circuit-art";
 import { useCurrentAccount } from "@/lib/session";
 
-export function useCircuitBackground(variant: CircuitVariant, seed: string): CSSProperties {
+export function useCircuitBackground(
+  variant: CircuitVariant,
+  seed: string,
+  /** False freezes the art (e.g. scrolled offscreen) — see useCircuitBand. */
+  active = true,
+): CSSProperties {
   const { data: account } = useCurrentAccount();
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -24,6 +29,23 @@ export function useCircuitBackground(variant: CircuitVariant, seed: string): CSS
     return () => query.removeEventListener("change", onChange);
   }, []);
 
-  const animated = (account?.animations_enabled ?? true) && !reducedMotion;
+  const animated = active && (account?.animations_enabled ?? true) && !reducedMotion;
   return useMemo(() => circuitBackgroundStyle(variant, seed, animated), [variant, seed, animated]);
+}
+
+/** useCircuitBackground plus an IntersectionObserver: the band only animates
+ * while it is actually on screen, so a long page of cards/tables repaints only
+ * what the user can see. Attach `setRef` to the same element that gets
+ * `style`. */
+export function useCircuitBand(variant: CircuitVariant, seed: string) {
+  const [el, setEl] = useState<Element | null>(null);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setVisible(!!entry?.isIntersecting));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [el]);
+  const style = useCircuitBackground(variant, seed, visible);
+  return { setRef: setEl, style };
 }

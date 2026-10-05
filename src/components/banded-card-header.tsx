@@ -15,7 +15,7 @@
 import * as React from "react";
 
 import { CardHeader } from "@/components/ui/card";
-import { useCircuitBackground } from "@/lib/use-circuit-background";
+import { useCircuitBand } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
 export function BandedCardHeader({
@@ -27,9 +27,10 @@ export function BandedCardHeader({
   /** Seeds the generated line art, so each card draws its own board. */
   seed: string;
 }) {
-  const bandStyle = useCircuitBackground("card", seed);
+  const { setRef, style: bandStyle } = useCircuitBand("card", seed);
   return (
     <CardHeader
+      ref={setRef}
       className={cn(
         "rounded-t-[9px] text-white [&_.text-muted-foreground]:text-white/70",
         className,

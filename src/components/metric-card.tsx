@@ -3,7 +3,7 @@ import { useRouterState } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrentAccount } from "@/lib/session";
-import { useCircuitBackground } from "@/lib/use-circuit-background";
+import { useCircuitBand } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
 const COUNT_UP_MS = 700;
@@ -73,7 +73,7 @@ export function MetricCard({
   // correctly to animate.
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   // Seeded off the title so each card draws its own board, stable across renders.
-  const bandStyle = useCircuitBackground("card", title);
+  const { setRef: setBandRef, style: bandStyle } = useCircuitBand("card", title);
 
   return (
     <Card
@@ -96,6 +96,7 @@ export function MetricCard({
       )}
     >
       <CardHeader
+        ref={setBandRef}
         className="flex flex-row items-center justify-between space-y-0 px-5 py-4"
         style={bandStyle}
       >

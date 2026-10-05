@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useCircuitBackground } from "@/lib/use-circuit-background";
+import { useCircuitBand } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
@@ -19,10 +19,14 @@ const TableHeader = React.forwardRef<
   // Dark circuit-board band (see @/lib/circuit-art). The header row's own
   // hover is forced transparent — the default light hover tint would wash
   // out the white header text on the navy.
-  const bandStyle = useCircuitBackground("table", "table");
+  const { setRef, style: bandStyle } = useCircuitBand("table", "table");
   return (
     <thead
-      ref={ref}
+      ref={(node) => {
+        setRef(node);
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      }}
       className={cn(
         "[&_tr]:border-b [&_tr]:border-white/10 [&_tr:hover]:bg-transparent",
         className,
