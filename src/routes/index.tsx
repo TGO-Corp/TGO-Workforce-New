@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/app-shell";
+import { BandedCardHeader } from "@/components/banded-card-header";
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { ImportEmployeesDialog } from "@/components/import-employees-dialog";
 import { MetricCard } from "@/components/metric-card";
@@ -478,19 +479,16 @@ function Dashboard() {
             </div>
           )}
 
-          {/* Two columns until the screen is genuinely wide — four ~385px
-              cards side by side left each table too cramped (dates and
-              offices wrapping onto 2-3 lines). */}
-          <div className="grid gap-4 md:grid-cols-2 min-[1800px]:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {showNewHires && (
               <Card>
-                <CardHeader>
+                <BandedCardHeader seed="new-hires">
                   <CardTitle className="flex items-center gap-2">
                     <UserPlus className="h-4 w-4 text-muted-foreground" />
                     New Hires ({RECENT_HIRE_DAYS} days)
                   </CardTitle>
                   <CardDescription>Started in the last {RECENT_HIRE_DAYS} days</CardDescription>
-                </CardHeader>
+                </BandedCardHeader>
                 <CardContent className="max-h-80 overflow-y-auto p-0">
                   {recentNewHires.length === 0 ? (
                     <p className="p-4 text-sm text-muted-foreground">
@@ -501,6 +499,7 @@ function Dashboard() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
+                          <TableHead>Office</TableHead>
                           <TableHead className="text-right">Started</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -514,18 +513,14 @@ function Dashboard() {
                                 daysAgo <= SOON_THRESHOLD_DAYS ? "bg-amber-500/5" : undefined
                               }
                             >
-                              <TableCell>
-                                <p className="font-medium">
-                                  <EmployeeNameLink employee={e} />
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {[e.department, e.office].filter(Boolean).join(" · ")}
-                                </p>
+                              <TableCell className="font-medium">
+                                <EmployeeNameLink employee={e} />
                               </TableCell>
-                              <TableCell className="whitespace-nowrap text-right text-muted-foreground">
+                              <TableCell className="text-muted-foreground">{e.office}</TableCell>
+                              <TableCell className="text-right text-muted-foreground">
                                 {formatDate(e.startDate)}
-                                <span className="block text-xs">
-                                  {daysAgo === 0 ? "today" : `${daysAgo}d ago`}
+                                <span className="ml-1.5 text-xs">
+                                  ({daysAgo === 0 ? "today" : `${daysAgo}d ago`})
                                 </span>
                               </TableCell>
                             </TableRow>
@@ -540,7 +535,7 @@ function Dashboard() {
 
             {showAnniversaries && (
               <Card>
-                <CardHeader>
+                <BandedCardHeader seed="anniversaries">
                   <CardTitle className="flex items-center gap-2">
                     <Award className="h-4 w-4 text-muted-foreground" />
                     Anniversaries ({milestoneWindowLabel})
@@ -549,7 +544,7 @@ function Dashboard() {
                     Work anniversaries in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS}{" "}
                     days
                   </CardDescription>
-                </CardHeader>
+                </BandedCardHeader>
                 <CardContent className="max-h-80 overflow-y-auto p-0">
                   {recentAnniversaries.length === 0 ? (
                     <p className="p-4 text-sm text-muted-foreground">
@@ -581,16 +576,14 @@ function Dashboard() {
                                 {[e.department, e.office].filter(Boolean).join(" · ")}
                               </p>
                             </TableCell>
-                            <TableCell className="whitespace-nowrap text-muted-foreground">
+                            <TableCell className="text-muted-foreground">
                               {e.monthName} {e.day}
-                              <span className="block text-xs">
-                                {formatMilestoneRelativeDays(e.daysAway)}
+                              <span className="ml-1.5 text-xs">
+                                ({formatMilestoneRelativeDays(e.daysAway)})
                               </span>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Badge variant="secondary" className="whitespace-nowrap">
-                                {formatYears(e.years)}
-                              </Badge>
+                              <Badge variant="secondary">{formatYears(e.years)}</Badge>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -603,7 +596,7 @@ function Dashboard() {
 
             {showBirthdaysCard && (
               <Card>
-                <CardHeader>
+                <BandedCardHeader seed="birthdays">
                   <CardTitle className="flex items-center gap-2">
                     <Cake className="h-4 w-4 text-muted-foreground" />
                     Birthdays ({milestoneWindowLabel})
@@ -611,7 +604,7 @@ function Dashboard() {
                   <CardDescription>
                     Celebrations in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS} days
                   </CardDescription>
-                </CardHeader>
+                </BandedCardHeader>
                 <CardContent className="max-h-80 overflow-y-auto p-0">
                   {recentBirthdays.length === 0 ? (
                     <p className="p-4 text-sm text-muted-foreground">
@@ -622,6 +615,7 @@ function Dashboard() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
+                          <TableHead>Office</TableHead>
                           <TableHead className="text-right">Date</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -633,18 +627,14 @@ function Dashboard() {
                               e.daysAway <= SOON_THRESHOLD_DAYS ? "bg-amber-500/5" : undefined
                             }
                           >
-                            <TableCell>
-                              <p className="font-medium">
-                                <EmployeeNameLink employee={e} />
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {[e.department, e.office].filter(Boolean).join(" · ")}
-                              </p>
+                            <TableCell className="font-medium">
+                              <EmployeeNameLink employee={e} />
                             </TableCell>
-                            <TableCell className="whitespace-nowrap text-right text-muted-foreground">
+                            <TableCell className="text-muted-foreground">{e.office}</TableCell>
+                            <TableCell className="text-right text-muted-foreground">
                               {e.monthName.slice(0, 3)} {e.day}
-                              <span className="block text-xs">
-                                {formatMilestoneRelativeDays(e.daysAway)}
+                              <span className="ml-1.5 text-xs">
+                                ({formatMilestoneRelativeDays(e.daysAway)})
                               </span>
                             </TableCell>
                           </TableRow>
@@ -658,7 +648,7 @@ function Dashboard() {
 
             {showAwardsCard && (
               <Card>
-                <CardHeader>
+                <BandedCardHeader seed="awards">
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="h-4 w-4 text-muted-foreground" />
                     Awards ({RECENT_MILESTONE_DAYS} days)
@@ -666,7 +656,7 @@ function Dashboard() {
                   <CardDescription>
                     Recognition given in the last {RECENT_MILESTONE_DAYS} days
                   </CardDescription>
-                </CardHeader>
+                </BandedCardHeader>
                 <CardContent className="max-h-80 overflow-y-auto p-0">
                   {recentAwards.length === 0 ? (
                     <p className="p-4 text-sm text-muted-foreground">
@@ -718,10 +708,10 @@ function Dashboard() {
                                 a.title
                               )}
                             </TableCell>
-                            <TableCell className="whitespace-nowrap text-right text-muted-foreground">
+                            <TableCell className="text-right text-muted-foreground">
                               {formatDate(a.awardedDate)}
-                              <span className="block text-xs">
-                                {a.daysAgo === 0 ? "today" : `${a.daysAgo}d ago`}
+                              <span className="ml-1.5 text-xs">
+                                ({a.daysAgo === 0 ? "today" : `${a.daysAgo}d ago`})
                               </span>
                             </TableCell>
                           </TableRow>
