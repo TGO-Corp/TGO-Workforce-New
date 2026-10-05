@@ -478,7 +478,10 @@ function Dashboard() {
             </div>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {/* Two columns until the screen is genuinely wide — four ~385px
+              cards side by side left each table too cramped (dates and
+              offices wrapping onto 2-3 lines). */}
+          <div className="grid gap-4 md:grid-cols-2 min-[1800px]:grid-cols-4">
             {showNewHires && (
               <Card>
                 <CardHeader>
@@ -498,7 +501,6 @@ function Dashboard() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
-                          <TableHead>Office</TableHead>
                           <TableHead className="text-right">Started</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -512,14 +514,18 @@ function Dashboard() {
                                 daysAgo <= SOON_THRESHOLD_DAYS ? "bg-amber-500/5" : undefined
                               }
                             >
-                              <TableCell className="font-medium">
-                                <EmployeeNameLink employee={e} />
+                              <TableCell>
+                                <p className="font-medium">
+                                  <EmployeeNameLink employee={e} />
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {[e.department, e.office].filter(Boolean).join(" · ")}
+                                </p>
                               </TableCell>
-                              <TableCell className="text-muted-foreground">{e.office}</TableCell>
-                              <TableCell className="text-right text-muted-foreground">
+                              <TableCell className="whitespace-nowrap text-right text-muted-foreground">
                                 {formatDate(e.startDate)}
-                                <span className="ml-1.5 text-xs">
-                                  ({daysAgo === 0 ? "today" : `${daysAgo}d ago`})
+                                <span className="block text-xs">
+                                  {daysAgo === 0 ? "today" : `${daysAgo}d ago`}
                                 </span>
                               </TableCell>
                             </TableRow>
@@ -575,14 +581,16 @@ function Dashboard() {
                                 {[e.department, e.office].filter(Boolean).join(" · ")}
                               </p>
                             </TableCell>
-                            <TableCell className="text-muted-foreground">
+                            <TableCell className="whitespace-nowrap text-muted-foreground">
                               {e.monthName} {e.day}
-                              <span className="ml-1.5 text-xs">
-                                ({formatMilestoneRelativeDays(e.daysAway)})
+                              <span className="block text-xs">
+                                {formatMilestoneRelativeDays(e.daysAway)}
                               </span>
                             </TableCell>
                             <TableCell className="text-right">
-                              <Badge variant="secondary">{formatYears(e.years)}</Badge>
+                              <Badge variant="secondary" className="whitespace-nowrap">
+                                {formatYears(e.years)}
+                              </Badge>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -614,7 +622,6 @@ function Dashboard() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
-                          <TableHead>Office</TableHead>
                           <TableHead className="text-right">Date</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -626,14 +633,18 @@ function Dashboard() {
                               e.daysAway <= SOON_THRESHOLD_DAYS ? "bg-amber-500/5" : undefined
                             }
                           >
-                            <TableCell className="font-medium">
-                              <EmployeeNameLink employee={e} />
+                            <TableCell>
+                              <p className="font-medium">
+                                <EmployeeNameLink employee={e} />
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {[e.department, e.office].filter(Boolean).join(" · ")}
+                              </p>
                             </TableCell>
-                            <TableCell className="text-muted-foreground">{e.office}</TableCell>
-                            <TableCell className="text-right text-muted-foreground">
+                            <TableCell className="whitespace-nowrap text-right text-muted-foreground">
                               {e.monthName.slice(0, 3)} {e.day}
-                              <span className="ml-1.5 text-xs">
-                                ({formatMilestoneRelativeDays(e.daysAway)})
+                              <span className="block text-xs">
+                                {formatMilestoneRelativeDays(e.daysAway)}
                               </span>
                             </TableCell>
                           </TableRow>
@@ -707,10 +718,10 @@ function Dashboard() {
                                 a.title
                               )}
                             </TableCell>
-                            <TableCell className="text-right text-muted-foreground">
+                            <TableCell className="whitespace-nowrap text-right text-muted-foreground">
                               {formatDate(a.awardedDate)}
-                              <span className="ml-1.5 text-xs">
-                                ({a.daysAgo === 0 ? "today" : `${a.daysAgo}d ago`})
+                              <span className="block text-xs">
+                                {a.daysAgo === 0 ? "today" : `${a.daysAgo}d ago`}
                               </span>
                             </TableCell>
                           </TableRow>
