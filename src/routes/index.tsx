@@ -12,8 +12,6 @@ import {
   ClipboardCheck,
   HeartPulse,
   ShieldAlert,
-  Send,
-  CircleAlert,
   Trophy,
   Download,
   FileSpreadsheet,
@@ -27,6 +25,7 @@ import { BandedCardHeader } from "@/components/banded-card-header";
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { ImportEmployeesDialog } from "@/components/import-employees-dialog";
 import { MetricCard } from "@/components/metric-card";
+import { SnapshotCard } from "@/components/snapshot-card";
 import { MyOverview } from "@/components/my-overview";
 import { MetricDetailModal } from "@/components/metric-detail-modal";
 import { HeadcountTrendChart } from "@/components/workforce-charts";
@@ -894,110 +893,51 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
             </Card>
           )}
           {canViewOnboardingModule && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-                  Onboarding Snapshot
-                </CardTitle>
-                <CardDescription>New hires moving through the checklist</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <p className="text-2xl font-semibold">{onboardingStats.total}</p>
-                    <p className="text-xs text-muted-foreground">Tracked</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{onboardingStats.inProgress}</p>
-                    <p className="text-xs text-muted-foreground">In Progress</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{onboardingStats.complete}</p>
-                    <p className="text-xs text-muted-foreground">Complete</p>
-                  </div>
-                </div>
-                <Button asChild size="sm" variant="outline" className="w-full">
-                  <Link to="/onboarding">
-                    Open onboarding <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <SnapshotCard
+              seed="snapshot-onboarding"
+              icon={ClipboardCheck}
+              title="Onboarding Snapshot"
+              description="New hires moving through the checklist"
+              stats={[
+                { label: "Tracked", value: onboardingStats.total, tone: "slate" },
+                { label: "In Progress", value: onboardingStats.inProgress, tone: "teal" },
+                { label: "Complete", value: onboardingStats.complete, tone: "green" },
+              ]}
+              to="/onboarding"
+              cta="Open onboarding"
+            />
           )}
 
           {canViewBenefitsModule && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <HeartPulse className="h-4 w-4 text-muted-foreground" />
-                  HMO Snapshot
-                </CardTitle>
-                <CardDescription>Eligibility, enrollment and card status</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <p className="text-2xl font-semibold">{hmoStats.active}</p>
-                    <p className="text-xs text-muted-foreground">Active</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{hmoStats.pendingEnrollment}</p>
-                    <p className="text-xs text-muted-foreground">Pending Enrollment</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold">{hmoStats.physicalCardsPending}</p>
-                    <p className="text-xs text-muted-foreground">Cards Pending</p>
-                  </div>
-                </div>
-                <Button asChild size="sm" variant="outline" className="w-full">
-                  <Link to="/hmo-management">
-                    Open HMO Management <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <SnapshotCard
+              seed="snapshot-hmo"
+              icon={HeartPulse}
+              title="HMO Snapshot"
+              description="Eligibility, enrollment and card status"
+              stats={[
+                { label: "Active", value: hmoStats.active, tone: "green" },
+                { label: "Pending Enrollment", value: hmoStats.pendingEnrollment, tone: "teal" },
+                { label: "Cards Pending", value: hmoStats.physicalCardsPending, tone: "slate" },
+              ]}
+              to="/hmo-management"
+              cta="Open HMO Management"
+            />
           )}
 
           {canViewAttendanceModule && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShieldAlert className="h-4 w-4 text-muted-foreground" />
-                  Attendance Snapshot
-                </CardTitle>
-                <CardDescription>Violation records across every status</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div>
-                    <p className="text-2xl font-semibold">{violationStats.pending}</p>
-                    <p className="text-xs text-muted-foreground">Pending</p>
-                  </div>
-                  <div>
-                    <p className="flex items-center justify-center gap-1 text-2xl font-semibold">
-                      <Send className="h-4 w-4 text-muted-foreground" />
-                      {violationStats.sent}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Sent</p>
-                  </div>
-                  <div>
-                    <p className="flex items-center justify-center gap-1 text-2xl font-semibold">
-                      {violationStats.failed > 0 && (
-                        <CircleAlert className="h-4 w-4 text-destructive" />
-                      )}
-                      {violationStats.failed}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Failed</p>
-                  </div>
-                </div>
-                <Button asChild size="sm" variant="outline" className="w-full">
-                  <Link to="/attendance-violations">
-                    Open attendance <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <SnapshotCard
+              seed="snapshot-attendance"
+              icon={ShieldAlert}
+              title="Attendance Snapshot"
+              description="Violation records across every status"
+              stats={[
+                { label: "Pending", value: violationStats.pending, tone: "teal" },
+                { label: "Sent", value: violationStats.sent, tone: "green" },
+                { label: "Failed", value: violationStats.failed, tone: "alert" },
+              ]}
+              to="/attendance-violations"
+              cta="Open attendance"
+            />
           )}
         </div>
       ) : null}
