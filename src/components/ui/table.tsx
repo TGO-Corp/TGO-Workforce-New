@@ -28,7 +28,7 @@ const TableHeader = React.forwardRef<
         else if (ref) ref.current = node;
       }}
       className={cn(
-        "[&_tr]:border-b [&_tr]:border-white/10 [&_tr:hover]:bg-transparent [&_th]:[text-shadow:0_1px_2px_rgb(0_0_0/0.4)]",
+        "[&_tr]:border-b [&_tr]:border-white/10 [&_tr:hover]:bg-transparent [&_th]:[text-shadow:0_1px_2px_rgb(0_0_0/0.4)] [&_.text-muted-foreground]:text-white/70",
         className,
       )}
       style={{ ...bandStyle, ...style }}
