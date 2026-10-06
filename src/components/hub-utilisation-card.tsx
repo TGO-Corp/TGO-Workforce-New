@@ -1,6 +1,6 @@
-// Dashboard "Hub Utilisation": the workforce split across offices as an
+// Dashboard "Hub Utilisation": the ACTIVE workforce split across offices as an
 // animated donut (total headcount in the middle) plus one row per office with
-// its share, active/inactive counts and a bar that fills in on load. Fills the
+// its share, headcount and a bar that fills in on load. Fills the
 // height of the grid cell it sits in instead of leaving a blank lower half.
 // Motion follows the Settings "Interface animations" switch.
 
@@ -35,17 +35,16 @@ export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
 
   const rows = offices.map((o, i) => ({
     ...o,
-    total: o.active + o.inactive,
+    total: o.active,
     color: OFFICE_COLORS[i % OFFICE_COLORS.length] ?? "#72b360",
   }));
   const grandTotal = rows.reduce((sum, r) => sum + r.total, 0);
-  const grandActive = rows.reduce((sum, r) => sum + r.active, 0);
 
   return (
     <Card className="flex flex-col overflow-hidden">
       <BandedCardHeader seed="hub-utilisation">
         <CardTitle>Hub Utilisation</CardTitle>
-        <CardDescription>Share of total workforce per office</CardDescription>
+        <CardDescription>Share of active workforce per office</CardDescription>
       </BandedCardHeader>
       <CardContent className="flex flex-1 flex-col justify-between gap-5 pt-5">
         <div className="relative mx-auto h-[170px] w-[170px]">
@@ -76,7 +75,7 @@ export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
           )}
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <p className="text-2xl font-semibold tabular-nums">{grandTotal.toLocaleString()}</p>
-            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Employees</p>
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Active</p>
           </div>
         </div>
 
@@ -111,18 +110,10 @@ export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
                     }}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {r.active.toLocaleString()} active · {r.inactive.toLocaleString()} inactive
-                </p>
               </div>
             );
           })}
         </div>
-
-        <p className="border-t pt-3 text-xs text-muted-foreground">
-          {grandActive.toLocaleString()} of {grandTotal.toLocaleString()} employees currently active
-          across all hubs.
-        </p>
       </CardContent>
     </Card>
   );
