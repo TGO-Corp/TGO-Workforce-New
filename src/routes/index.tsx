@@ -24,6 +24,7 @@ import { PageHeader } from "@/components/app-shell";
 import { BandedCardHeader } from "@/components/banded-card-header";
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { ImportEmployeesDialog } from "@/components/import-employees-dialog";
+import { HubUtilisationCard } from "@/components/hub-utilisation-card";
 import { MetricCard } from "@/components/metric-card";
 import { SnapshotCard } from "@/components/snapshot-card";
 import { MyOverview } from "@/components/my-overview";
@@ -948,26 +949,7 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
             <HeadcountTrendChart employees={employees} />
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Hub Utilisation</CardTitle>
-              <CardDescription>Share of total workforce per office</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {dist.map((d) => {
-                const pct = total ? Math.round(((d.active + d.inactive) / total) * 100) : 0;
-                return (
-                  <div key={d.office} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>{d.office}</span>
-                      <span className="text-muted-foreground">{pct}%</span>
-                    </div>
-                    <Progress value={pct} />
-                  </div>
-                );
-              })}
-            </CardContent>
-          </Card>
+          <HubUtilisationCard offices={dist} />
         </div>
       )}
     </div>
