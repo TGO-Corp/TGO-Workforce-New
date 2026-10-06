@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/app-shell";
+import { TableStateRow } from "@/components/table-state-row";
 import { canViewNewHires } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useCurrentAccount } from "@/lib/session";
@@ -108,7 +109,7 @@ function NewHiresPage() {
 }
 
 function NewHiresContent() {
-  const { data, isLoading, isError } = usePortalNewHires();
+  const { data, isLoading, isError, error, refetch } = usePortalNewHires();
   const hires = useMemo(() => data ?? [], [data]);
 
   const [query, setQuery] = useState("");
@@ -236,25 +237,33 @@ function NewHiresContent() {
             </TableHeader>
             <TableBody>
               {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    Loading new hires from the onboarding portal…
-                  </TableCell>
-                </TableRow>
+                <TableStateRow
+                  colSpan={7}
+                  kind="loading"
+                  title="Loading new hires…"
+                  description="Fetching from the onboarding portal."
+                />
               )}
               {!isLoading && isError && (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    Couldn't reach the onboarding portal. Try again shortly.
-                  </TableCell>
-                </TableRow>
+                <TableStateRow
+                  colSpan={7}
+                  kind="error"
+                  title="Couldn't reach the onboarding portal"
+                  description={
+                    error instanceof Error && error.message
+                      ? error.message
+                      : "The feed may be down or not configured yet."
+                  }
+                  onRetry={() => void refetch()}
+                />
               )}
               {!isLoading && !isError && rows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    No new hires match the current filters.
-                  </TableCell>
-                </TableRow>
+                <TableStateRow
+                  colSpan={7}
+                  kind="empty"
+                  title="No new hires found"
+                  description="Nothing matches the current search and filters."
+                />
               )}
               {rows.map((h) => (
                 <TableRow key={h.id}>

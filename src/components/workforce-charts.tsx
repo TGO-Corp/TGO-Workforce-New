@@ -15,7 +15,8 @@ import {
 } from "recharts";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BandedCardHeader } from "@/components/banded-card-header";
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import {
   ChartContainer,
   ChartLegend,
@@ -69,25 +70,30 @@ export function OfficeDistributionChart({ employees }: ChartProps) {
   const mounted = useMounted();
   return (
     <Card>
-      <CardHeader>
+      <BandedCardHeader seed="chart-office">
         <CardTitle>Office / Location Distribution</CardTitle>
         <CardDescription>Headcount split across delivery hubs</CardDescription>
-      </CardHeader>
-      <CardContent>
+      </BandedCardHeader>
+      <CardContent className="pt-6">
         {!mounted ? (
           <Skeleton className="h-[260px] w-full" />
         ) : (
-        <ChartContainer config={officeConfig} className="h-[280px] w-full">
-          <BarChart data={officeDistribution(employees)}>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="office" tickLine={false} axisLine={false} fontSize={12} />
-            <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-            <Bar dataKey="active" stackId="a" fill="var(--color-active)" radius={[0, 0, 4, 4]} />
-            <Bar dataKey="inactive" stackId="a" fill="var(--color-inactive)" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ChartContainer>
+          <ChartContainer config={officeConfig} className="h-[280px] w-full">
+            <BarChart data={officeDistribution(employees)}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="office" tickLine={false} axisLine={false} fontSize={12} />
+              <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Bar dataKey="active" stackId="a" fill="var(--color-active)" radius={[0, 0, 4, 4]} />
+              <Bar
+                dataKey="inactive"
+                stackId="a"
+                fill="var(--color-inactive)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -99,25 +105,25 @@ export function StatusDistributionChart({ employees }: ChartProps) {
   const data = statusDistribution(employees);
   return (
     <Card>
-      <CardHeader>
+      <BandedCardHeader seed="chart-status">
         <CardTitle>Status Distribution</CardTitle>
         <CardDescription>Active, resigned and terminated employees</CardDescription>
-      </CardHeader>
-      <CardContent>
+      </BandedCardHeader>
+      <CardContent className="pt-6">
         {!mounted ? (
           <Skeleton className="h-[260px] w-full" />
         ) : (
-        <ChartContainer config={statusConfig} className="mx-auto h-[280px] w-full">
-          <PieChart>
-            <ChartTooltip content={<ChartTooltipContent nameKey="status" />} />
-            <Pie data={data} dataKey="count" nameKey="status" innerRadius={60} outerRadius={100}>
-              {data.map((entry) => (
-                <Cell key={entry.status} fill={`var(--color-${entry.status})`} />
-              ))}
-            </Pie>
-            <ChartLegend content={<ChartLegendContent nameKey="status" />} />
-          </PieChart>
-        </ChartContainer>
+          <ChartContainer config={statusConfig} className="mx-auto h-[280px] w-full">
+            <PieChart>
+              <ChartTooltip content={<ChartTooltipContent nameKey="status" />} />
+              <Pie data={data} dataKey="count" nameKey="status" innerRadius={60} outerRadius={100}>
+                {data.map((entry) => (
+                  <Cell key={entry.status} fill={`var(--color-${entry.status})`} />
+                ))}
+              </Pie>
+              <ChartLegend content={<ChartLegendContent nameKey="status" />} />
+            </PieChart>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -128,31 +134,33 @@ export function HeadcountTrendChart({ employees, range }: TrendChartProps) {
   const mounted = useMounted();
   return (
     <Card>
-      <CardHeader>
+      <BandedCardHeader seed="chart-headcount-trend">
         <CardTitle>Headcount Trend</CardTitle>
         <CardDescription>
-          {range ? "Active headcount over the selected date range" : "Rolling six-month active headcount"}
+          {range
+            ? "Active headcount over the selected date range"
+            : "Rolling six-month active headcount"}
         </CardDescription>
-      </CardHeader>
-      <CardContent>
+      </BandedCardHeader>
+      <CardContent className="pt-6">
         {!mounted ? (
           <Skeleton className="h-[260px] w-full" />
         ) : (
-        <ChartContainer config={trendConfig} className="h-[260px] w-full">
-          <LineChart data={headcountTrend(employees, range)}>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
-            <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Line
-              type="monotone"
-              dataKey="headcount"
-              stroke="var(--color-headcount)"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ChartContainer>
+          <ChartContainer config={trendConfig} className="h-[260px] w-full">
+            <LineChart data={headcountTrend(employees, range)}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+              <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line
+                type="monotone"
+                dataKey="headcount"
+                stroke="var(--color-headcount)"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ChartContainer>
         )}
       </CardContent>
     </Card>
@@ -181,13 +189,15 @@ export function MonthlyHiringTrendChart({ employees, range }: TrendChartProps) {
   const mounted = useMounted();
   return (
     <Card>
-      <CardHeader>
+      <BandedCardHeader seed="chart-hiring-trend">
         <CardTitle>Monthly Hiring Trend</CardTitle>
         <CardDescription>
-          {range ? "Hires against exits over the selected date range" : "Hires against exits over the last 12 months"}
+          {range
+            ? "Hires against exits over the selected date range"
+            : "Hires against exits over the last 12 months"}
         </CardDescription>
-      </CardHeader>
-      <CardContent>
+      </BandedCardHeader>
+      <CardContent className="pt-6">
         {!mounted ? (
           <Skeleton className="h-[280px] w-full" />
         ) : (
@@ -212,13 +222,15 @@ export function HeadcountGrowthChart({ employees, range }: TrendChartProps) {
   const mounted = useMounted();
   return (
     <Card>
-      <CardHeader>
+      <BandedCardHeader seed="chart-headcount-growth">
         <CardTitle>Headcount Growth</CardTitle>
         <CardDescription>
-          {range ? "Cumulative active headcount over the selected date range" : "Cumulative active headcount, rolling 12 months"}
+          {range
+            ? "Cumulative active headcount over the selected date range"
+            : "Cumulative active headcount, rolling 12 months"}
         </CardDescription>
-      </CardHeader>
-      <CardContent>
+      </BandedCardHeader>
+      <CardContent className="pt-6">
         {!mounted ? (
           <Skeleton className="h-[280px] w-full" />
         ) : (
@@ -248,18 +260,28 @@ export function DepartmentDistributionChart({ employees }: ChartProps) {
   const mounted = useMounted();
   return (
     <Card>
-      <CardHeader>
+      <BandedCardHeader seed="chart-department">
         <CardTitle>Department Distribution</CardTitle>
         <CardDescription>Workforce split by department</CardDescription>
-      </CardHeader>
-      <CardContent>
+      </BandedCardHeader>
+      <CardContent className="pt-6">
         {!mounted ? (
           <Skeleton className="h-[300px] w-full" />
         ) : (
           <ChartContainer config={departmentConfig} className="h-[300px] w-full">
-            <BarChart data={departmentDistribution(employees)} layout="vertical" margin={{ left: 8 }}>
+            <BarChart
+              data={departmentDistribution(employees)}
+              layout="vertical"
+              margin={{ left: 8 }}
+            >
               <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-              <XAxis type="number" tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
+              <XAxis
+                type="number"
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+                fontSize={12}
+              />
               <YAxis
                 type="category"
                 dataKey="department"
@@ -271,7 +293,12 @@ export function DepartmentDistributionChart({ employees }: ChartProps) {
               <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
               <Bar dataKey="active" stackId="d" fill="var(--color-active)" radius={[0, 0, 0, 4]} />
-              <Bar dataKey="inactive" stackId="d" fill="var(--color-inactive)" radius={[0, 4, 4, 0]} />
+              <Bar
+                dataKey="inactive"
+                stackId="d"
+                fill="var(--color-inactive)"
+                radius={[0, 4, 4, 0]}
+              />
             </BarChart>
           </ChartContainer>
         )}
@@ -284,11 +311,11 @@ export function TenureDistributionChart({ employees }: ChartProps) {
   const mounted = useMounted();
   return (
     <Card>
-      <CardHeader>
+      <BandedCardHeader seed="chart-tenure">
         <CardTitle>Tenure Distribution</CardTitle>
         <CardDescription>Active employees grouped by length of service</CardDescription>
-      </CardHeader>
-      <CardContent>
+      </BandedCardHeader>
+      <CardContent className="pt-6">
         {!mounted ? (
           <Skeleton className="h-[280px] w-full" />
         ) : (

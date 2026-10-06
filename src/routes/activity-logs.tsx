@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/app-shell";
+import { TableStateRow } from "@/components/table-state-row";
 import { canViewActivityLogs } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useCurrentAccount } from "@/lib/session";
@@ -135,7 +136,7 @@ function ActivityLogsPage() {
 }
 
 function ActivityLogsContent() {
-  const { data, isLoading, isError } = useActivityLogs();
+  const { data, isLoading, isError, refetch } = useActivityLogs();
   const logs = data ?? [];
 
   const [query, setQuery] = useState("");
@@ -299,23 +300,22 @@ function ActivityLogsContent() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      Loading activity...
-                    </TableCell>
-                  </TableRow>
+                  <TableStateRow colSpan={7} kind="loading" title="Loading activity…" />
                 ) : isError ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      Couldn't load activity logs. Try refreshing the page.
-                    </TableCell>
-                  </TableRow>
+                  <TableStateRow
+                    colSpan={7}
+                    kind="error"
+                    title="Couldn't load activity logs"
+                    description="Something went wrong fetching the log."
+                    onRetry={() => void refetch()}
+                  />
                 ) : rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      No activity matches your filters.
-                    </TableCell>
-                  </TableRow>
+                  <TableStateRow
+                    colSpan={7}
+                    kind="empty"
+                    title="No activity found"
+                    description="Nothing matches your filters."
+                  />
                 ) : (
                   rows.map((log) => (
                     <TableRow key={log.id}>

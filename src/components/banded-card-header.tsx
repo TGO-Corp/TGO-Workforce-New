@@ -32,7 +32,7 @@ export function BandedCardHeader({
     <CardHeader
       ref={setRef}
       className={cn(
-        "rounded-t-[9px] text-white [&_.text-muted-foreground]:text-white/70",
+        "rounded-t-[9px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.4)] [&_.text-muted-foreground]:text-white/70",
         className,
       )}
       style={{ ...bandStyle, ...style }}

@@ -36,6 +36,7 @@ import {
   type Employee,
 } from "@/data/employees";
 import { canViewAwards } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 import { useCurrentAccount } from "@/lib/session";
 
 const SERVICE_MILESTONE_YEARS = [1, 2, 3, 5, 10, 15, 20, 25];
@@ -154,6 +155,20 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
           new Date(start.getFullYear() + nextServiceYears, start.getMonth(), start.getDate()),
         )
       : null;
+
+  // Service milestones already reached plus the next one coming up, oldest
+  // first, starting from the hire date.
+  const journey = [
+    { key: "joined", label: "Joined TGO", date: start, reached: true },
+    ...SERVICE_MILESTONE_YEARS.filter((y) => y <= completedYears + 1)
+      .slice(-4)
+      .map((y) => ({
+        key: `year-${y}`,
+        label: `${y}-year anniversary`,
+        date: new Date(start.getFullYear() + y, start.getMonth(), start.getDate()),
+        reached: y <= completedYears,
+      })),
+  ];
 
   const countdowns = [
     { label: `${nextAnniversaryYear}-yr anniversary`, days: daysToAnniversary },
@@ -327,8 +342,42 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
           </CardContent>
         </Card>
 
+        <Card className={cn("overflow-hidden", !showAwards && "lg:col-span-2")}>
+          <BandedCardHeader seed="my-overview-journey">
+            <CardTitle>My Journey</CardTitle>
+            <CardDescription>Where you started and the milestones ahead</CardDescription>
+          </BandedCardHeader>
+          <CardContent className="pt-6">
+            <ol className="relative space-y-5 border-l border-border pl-6">
+              {journey.map((step) => (
+                <li key={step.key} className="relative">
+                  <span
+                    className={cn(
+                      "absolute -left-[31px] top-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 bg-card",
+                      step.reached ? "border-primary bg-primary" : "border-muted-foreground/40",
+                    )}
+                  />
+                  <p
+                    className={cn("text-sm font-medium", !step.reached && "text-muted-foreground")}
+                  >
+                    {step.label}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {step.date.toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                    {!step.reached && ` · in ${inDays(Math.max(0, daysUntilDate(step.date)))}`}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+
         {showAwards && (
-          <Card className="overflow-hidden lg:col-span-2">
+          <Card className="overflow-hidden">
             <BandedCardHeader seed="my-overview-awards">
               <CardTitle>My Recognition</CardTitle>
               <CardDescription>Awards you've received, by year</CardDescription>

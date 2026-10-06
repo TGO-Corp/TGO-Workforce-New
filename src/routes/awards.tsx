@@ -4,6 +4,7 @@ import { AlertTriangle, Loader2, Pencil, Plus, ShieldAlert, Trash2, Trophy } fro
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/app-shell";
+import { TableStateRow } from "@/components/table-state-row";
 import { AwardFormDialog } from "@/components/award-form-dialog";
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { MetricCard } from "@/components/metric-card";
@@ -70,7 +71,7 @@ function AwardsPage() {
   const canView = canViewAwards(account?.permissions);
   const canManage = canManageAwards(account?.permissions);
 
-  const { data, isLoading, isError } = useAwardsQuery(canView);
+  const { data, isLoading, isError, refetch } = useAwardsQuery(canView);
   const awards = data ?? [];
   const deleteMutation = useDeleteAward();
   // For linking a row's name to their full profile (/directory/$employeeId)
@@ -195,32 +196,26 @@ function AwardsPage() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={canManage ? 5 : 4}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      Loading awards...
-                    </TableCell>
-                  </TableRow>
+                  <TableStateRow
+                    colSpan={canManage ? 5 : 4}
+                    kind="loading"
+                    title="Loading awards…"
+                  />
                 ) : isError ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={canManage ? 5 : 4}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      Couldn't load awards. Try refreshing the page.
-                    </TableCell>
-                  </TableRow>
+                  <TableStateRow
+                    colSpan={canManage ? 5 : 4}
+                    kind="error"
+                    title="Couldn't load awards"
+                    description="Something went wrong fetching the awards."
+                    onRetry={() => void refetch()}
+                  />
                 ) : awards.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={canManage ? 5 : 4}
-                      className="h-24 text-center text-muted-foreground"
-                    >
-                      No awards given yet.
-                    </TableCell>
-                  </TableRow>
+                  <TableStateRow
+                    colSpan={canManage ? 5 : 4}
+                    kind="empty"
+                    title="No awards given yet"
+                    description="Awards you give will show up here."
+                  />
                 ) : (
                   awards.map((a) => {
                     const employee = employees.find((e) => e.id === a.employeeId);
