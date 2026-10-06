@@ -6,7 +6,7 @@ import { useCurrentAccount } from "@/lib/session";
 import { useCircuitBand } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
-const COUNT_UP_MS = 700;
+const COUNT_UP_MS = 1200;
 
 /** Animates from the previous numeric value up (or down) to the new one over
  * COUNT_UP_MS, including the very first mount (starts from 0) — that's what
@@ -14,7 +14,11 @@ const COUNT_UP_MS = 700;
  * while already mounted. Skipped entirely (renders the target immediately)
  * only when the account has turned animations off. */
 function AnimatedNumber({ value, enabled }: { value: number; enabled: boolean }) {
-  const [displayed, setDisplayed] = useState(enabled ? 0 : value);
+  // Writes the number straight into the DOM node on each frame instead of
+  // setState-ing it — ~70 React re-renders per card per count-up become zero,
+  // which is what keeps a page full of metric cards smooth.
+  const node = useRef<HTMLSpanElement>(null);
+  const initial = useRef((enabled ? 0 : value).toLocaleString());
   const previous = useRef(enabled ? 0 : value);
   const frame = useRef<number | undefined>(undefined);
 
@@ -22,17 +26,20 @@ function AnimatedNumber({ value, enabled }: { value: number; enabled: boolean })
     const from = previous.current;
     const to = value;
     previous.current = value;
+    const write = (n: number) => {
+      if (node.current) node.current.textContent = n.toLocaleString();
+    };
     if (!enabled || from === to) {
-      setDisplayed(to);
+      write(to);
       return;
     }
 
     const start = performance.now();
     function tick(now: number) {
       const progress = Math.min(1, (now - start) / COUNT_UP_MS);
-      // Ease-out cubic — fast start, settles gently into the final value.
-      const eased = 1 - (1 - progress) ** 3;
-      setDisplayed(Math.round(from + (to - from) * eased));
+      // Ease-out quart — brisk start, long gentle landing.
+      const eased = 1 - (1 - progress) ** 4;
+      write(Math.round(from + (to - from) * eased));
       if (progress < 1) {
         frame.current = requestAnimationFrame(tick);
       }
@@ -43,7 +50,7 @@ function AnimatedNumber({ value, enabled }: { value: number; enabled: boolean })
     };
   }, [value, enabled]);
 
-  return <>{displayed.toLocaleString()}</>;
+  return <span ref={node}>{initial.current}</span>;
 }
 
 export function MetricCard({

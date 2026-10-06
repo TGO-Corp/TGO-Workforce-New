@@ -206,7 +206,7 @@ function renderTrace(
   const glow = spec.traces <= 6;
   const d = pathOf(trace.pts);
   const [ex, ey] = trace.end;
-  const dur = 3.2 + rand() * 3.4;
+  const dur = 5.5 + rand() * 4.5;
   const phase = rand() * dur;
   const staticPos = 10 + rand() * 70;
 
@@ -215,7 +215,7 @@ function renderTrace(
   const dash = `stroke-dasharray="9 191" pathLength="100"`;
   const offset = animated ? 9 : -staticPos;
   const run = animated
-    ? `<animate attributeName="stroke-dashoffset" values="9;-191" dur="${r1(dur)}s" begin="-${r1(phase)}s" repeatCount="indefinite"/>`
+    ? `<animate attributeName="stroke-dashoffset" values="9;-191" calcMode="spline" keyTimes="0;1" keySplines="0.4 0 0.6 1" dur="${r1(dur)}s" begin="-${r1(phase)}s" repeatCount="indefinite"/>`
     : "";
 
   return (
@@ -283,7 +283,7 @@ function renderScanner(spec: VariantSpec, animated: boolean): string {
   return (
     base +
     `<rect x="-${barW}" y="${h - 1.5}" width="${barW}" height="1.5" fill="url(#sweep)">` +
-    `<animate attributeName="x" values="-${barW};${w}" dur="7s" repeatCount="indefinite"/>` +
+    `<animate attributeName="x" values="-${barW};${w}" calcMode="spline" keyTimes="0;1" keySplines="0.4 0 0.6 1" dur="11s" repeatCount="indefinite"/>` +
     `</rect>`
   );
 }

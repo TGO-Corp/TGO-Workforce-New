@@ -99,7 +99,7 @@ export function SnapshotCard({
                       height,
                       transform: grown ? "scaleY(1)" : "scaleY(0)",
                       transition: animate
-                        ? `transform 650ms cubic-bezier(0.22, 1, 0.36, 1) ${i * 90}ms`
+                        ? `transform 1000ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 140}ms`
                         : "none",
                     }}
                   />

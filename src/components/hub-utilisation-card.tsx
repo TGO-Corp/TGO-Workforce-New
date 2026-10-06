@@ -64,7 +64,7 @@ export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
                   cornerRadius={4}
                   stroke="none"
                   isAnimationActive={animate}
-                  animationDuration={900}
+                  animationDuration={1400}
                 >
                   {rows.map((r) => (
                     <Cell key={r.office} fill={r.color} />
@@ -105,7 +105,7 @@ export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
                       backgroundColor: r.color,
                       transform: filled ? "scaleX(1)" : "scaleX(0)",
                       transition: animate
-                        ? `transform 800ms cubic-bezier(0.22, 1, 0.36, 1) ${i * 120}ms`
+                        ? `transform 1300ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 150}ms`
                         : "none",
                     }}
                   />
