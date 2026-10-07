@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { HeaderSearch } from "@/components/header-search";
+import { INTRO_SESSION_KEY, IntroOverlay } from "@/components/intro-overlay";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,6 +49,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [isLoading, account, navigate]);
 
   async function handleSignOut() {
+    // The next sign-in gets the intro again.
+    try {
+      sessionStorage.removeItem(INTRO_SESSION_KEY);
+    } catch {
+      // ignore
+    }
     const gatewayLogoutUrl = await signOut();
     if (gatewayLogoutUrl) {
       window.location.href = gatewayLogoutUrl;
@@ -86,6 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
+      <IntroOverlay enabled={account.animations_enabled ?? true} />
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
