@@ -90,8 +90,6 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
     nameCandidates.some((candidate) => normalizeName(candidate) === normalizeName(e.name)),
   );
 
-  const greetingName = account?.first_name || account?.display_name || "there";
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -105,7 +103,7 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
     return (
       <div className="space-y-6">
         <PageHeader
-          title={`Welcome, ${greetingName}`}
+          title="My Overview"
           description="Your personal overview of your time with Torero Global Outsourcing."
         />
         {topSlot}
@@ -194,7 +192,7 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Welcome, ${greetingName}`}
+        title="My Overview"
         description="Your personal overview — your time with Torero Global Outsourcing at a glance."
       />
 

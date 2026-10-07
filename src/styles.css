@@ -222,3 +222,11 @@
 [data-sidebar="content"]::-webkit-scrollbar {
   display: none;
 }
+
+/* Welcome banner waving hand (see components/welcome-banner.tsx). */
+@keyframes tgo-wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(16deg); }
+  20%, 40% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}

@@ -167,6 +167,17 @@ function SettingsPage() {
     applyAccountToForm(account);
   }, [account, applyAccountToForm]);
 
+  // Deep links like /settings#dashboard-cards (the Dashboard's Personalize
+  // button): the section cards render immediately, so scroll once on mount.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    const frame = requestAnimationFrame(() =>
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   const showViolationReviewToggle = canApproveAttendance(account?.permissions);
   const showNewHireToggle = canManageOnboarding(account?.permissions);
   const showHmoToggle = canManageBenefits(account?.permissions);

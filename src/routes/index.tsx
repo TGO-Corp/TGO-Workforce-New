@@ -27,6 +27,7 @@ import { ImportEmployeesDialog } from "@/components/import-employees-dialog";
 import { HubUtilisationCard } from "@/components/hub-utilisation-card";
 import { MetricCard } from "@/components/metric-card";
 import { SnapshotCard } from "@/components/snapshot-card";
+import { WelcomeBanner } from "@/components/welcome-banner";
 import { MyOverview } from "@/components/my-overview";
 import { MetricDetailModal } from "@/components/metric-detail-modal";
 import { HeadcountTrendChart } from "@/components/workforce-charts";
@@ -130,7 +131,12 @@ export const Route = createFileRoute("/")({
 // so CompanyDashboard's many hooks never run conditionally.
 function Dashboard() {
   const { data: account } = useCurrentAccount();
-  return <CompanyDashboard viewerMode={getEffectiveRole(account) === "viewer"} />;
+  return (
+    <div className="space-y-6">
+      <WelcomeBanner />
+      <CompanyDashboard viewerMode={getEffectiveRole(account) === "viewer"} />
+    </div>
+  );
 }
 
 // viewerMode: the personal overview replaces the page header and the
