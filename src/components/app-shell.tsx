@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { HeaderSearch } from "@/components/header-search";
-import { INTRO_SESSION_KEY, IntroOverlay } from "@/components/intro-overlay";
+import { INTRO_SESSION_KEY, IntroGate } from "@/components/intro-overlay";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -92,89 +92,90 @@ export function AppShell({ children }: { children: ReactNode }) {
       .toUpperCase() || "?";
 
   return (
-    <SidebarProvider>
-      <IntroOverlay enabled={account.animations_enabled ?? true} />
-      <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="mr-1 h-5" />
-            <HeaderSearch />
+    <IntroGate enabled={account.animations_enabled ?? true}>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <AppSidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur">
+              <SidebarTrigger />
+              <Separator orientation="vertical" className="mr-1 h-5" />
+              <HeaderSearch />
 
-            <div className="ml-auto flex items-center gap-1">
-              <NotificationBell />
-              <ThemeToggle />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-9 gap-2 px-2">
-                    <Avatar className="size-7">
-                      {account.photo_url && (
-                        <AvatarImage src={account.photo_url} alt={displayName} />
-                      )}
-                      <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-                    </Avatar>
-                    <span className="hidden text-sm sm:inline">{displayName}</span>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <p className="text-sm font-medium">{displayName}</p>
-                    <p className="text-xs font-normal text-muted-foreground">{account.email}</p>
-                    <Badge variant="secondary" className="mt-1.5 gap-1 font-normal">
-                      <ShieldCheck className="h-3 w-3" />
-                      {ROLE_LABELS[account.role]}
-                    </Badge>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
-                    <User className="mr-2 h-4 w-4" /> Profile
-                  </DropdownMenuItem>
-                  {/* Keyed off the REAL role, not the effective one — this
+              <div className="ml-auto flex items-center gap-1">
+                <NotificationBell />
+                <ThemeToggle />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-9 gap-2 px-2">
+                      <Avatar className="size-7">
+                        {account.photo_url && (
+                          <AvatarImage src={account.photo_url} alt={displayName} />
+                        )}
+                        <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                      </Avatar>
+                      <span className="hidden text-sm sm:inline">{displayName}</span>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <p className="text-sm font-medium">{displayName}</p>
+                      <p className="text-xs font-normal text-muted-foreground">{account.email}</p>
+                      <Badge variant="secondary" className="mt-1.5 gap-1 font-normal">
+                        <ShieldCheck className="h-3 w-3" />
+                        {ROLE_LABELS[account.role]}
+                      </Badge>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+                      <User className="mr-2 h-4 w-4" /> Profile
+                    </DropdownMenuItem>
+                    {/* Keyed off the REAL role, not the effective one — this
                       control (and its sibling in SandboxBanner) must stay
                       reachable no matter what role is currently sandboxed,
                       since it's the only way back. */}
-                  {account.role === "super_admin" && (
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <FlaskConical className="mr-2 h-4 w-4" /> Sandbox as...
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuSubContent>
-                        {SANDBOXABLE_ROLES.map((role) => (
-                          <DropdownMenuItem
-                            key={role}
-                            disabled={enterSandbox.isPending || account.sandbox_role === role}
-                            onClick={() => handleEnterSandbox(role)}
-                          >
-                            {ROLE_LABELS[role]}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" /> Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </header>
-          <SandboxBanner account={account} />
-          <main
-            key={account.animations_enabled ? pathname : undefined}
-            className={
-              account.animations_enabled
-                ? "flex-1 p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 md:p-6"
-                : "flex-1 p-4 md:p-6"
-            }
-          >
-            {children}
-          </main>
+                    {account.role === "super_admin" && (
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <FlaskConical className="mr-2 h-4 w-4" /> Sandbox as...
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          {SANDBOXABLE_ROLES.map((role) => (
+                            <DropdownMenuItem
+                              key={role}
+                              disabled={enterSandbox.isPending || account.sandbox_role === role}
+                              onClick={() => handleEnterSandbox(role)}
+                            >
+                              {ROLE_LABELS[role]}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" /> Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </header>
+            <SandboxBanner account={account} />
+            <main
+              key={account.animations_enabled ? pathname : undefined}
+              className={
+                account.animations_enabled
+                  ? "flex-1 p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 md:p-6"
+                  : "flex-1 p-4 md:p-6"
+              }
+            >
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </IntroGate>
   );
 }
 
