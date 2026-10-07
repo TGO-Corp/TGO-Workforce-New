@@ -175,13 +175,28 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
     // these, unchanged.
     .filter((e) => e.years > 0)
     .map((e) => {
-      const daysAway = isUpcomingMilestoneWindow
-        ? daysUntilNextOccurrence(e.monthIndex, e.day)
-        : daysSinceLastOccurrence(e.monthIndex, e.day);
-      return { ...e, daysAway };
+      // The "next 30 days" view also keeps anniversaries that already
+      // happened EARLIER THIS MONTH, flagged `past` — otherwise someone whose
+      // anniversary was yesterday vanishes from the card the very next day,
+      // while it's still this month's news. (The "last 30 days" view already
+      // looks back on its own.)
+      const now = new Date();
+      const past =
+        isUpcomingMilestoneWindow && e.monthIndex === now.getMonth() && e.day < now.getDate();
+      const daysAway = past
+        ? daysSinceLastOccurrence(e.monthIndex, e.day)
+        : isUpcomingMilestoneWindow
+          ? daysUntilNextOccurrence(e.monthIndex, e.day)
+          : daysSinceLastOccurrence(e.monthIndex, e.day);
+      return { ...e, daysAway, past };
     })
-    .filter((e) => e.daysAway <= RECENT_MILESTONE_DAYS)
-    .sort((a, b) => a.daysAway - b.daysAway);
+    .filter((e) => e.past || e.daysAway <= RECENT_MILESTONE_DAYS)
+    // This month's already-passed ones first (oldest to newest), then the
+    // upcoming ones soonest-first.
+    .sort((a, b) => {
+      if (a.past !== b.past) return a.past ? -1 : 1;
+      return a.past ? b.daysAway - a.daysAway : a.daysAway - b.daysAway;
+    });
   const recentBirthdays = upcomingBirthdays(employees)
     .map((e) => {
       const daysAway = isUpcomingMilestoneWindow
@@ -424,9 +439,9 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
     }
   }
 
-  function formatMilestoneRelativeDays(daysAway: number): string {
+  function formatMilestoneRelativeDays(daysAway: number, past = false): string {
     if (daysAway === 0) return "today";
-    return isUpcomingMilestoneWindow ? `in ${daysAway}d` : `${daysAway}d ago`;
+    return isUpcomingMilestoneWindow && !past ? `in ${daysAway}d` : `${daysAway}d ago`;
   }
 
   const milestoneCards = (showNewHires ||
@@ -514,7 +529,9 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
                 Anniversaries ({milestoneWindowLabel})
               </CardTitle>
               <CardDescription>
-                Work anniversaries in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS} days
+                {isUpcomingMilestoneWindow
+                  ? `Work anniversaries earlier this month and in the next ${RECENT_MILESTONE_DAYS} days`
+                  : `Work anniversaries in the last ${RECENT_MILESTONE_DAYS} days`}
               </CardDescription>
             </BandedCardHeader>
             <CardContent className="max-h-80 overflow-y-auto p-0">
@@ -548,7 +565,7 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
                         <TableCell className="text-muted-foreground">
                           {e.monthName} {e.day}
                           <span className="ml-1.5 text-xs">
-                            ({formatMilestoneRelativeDays(e.daysAway)})
+                            ({formatMilestoneRelativeDays(e.daysAway, e.past)})
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
