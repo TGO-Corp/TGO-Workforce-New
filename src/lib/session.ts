@@ -86,6 +86,8 @@ export type AccountProfile = {
   // this account — purely cosmetic, so it defaults on and lives here instead
   // of a global config.
   animations_enabled: boolean;
+  // Whether the post-login intro video plays for this account (default on).
+  show_intro: boolean;
 };
 
 export type PreferencesPatch = Partial<
@@ -102,6 +104,7 @@ export type PreferencesPatch = Partial<
     | "notify_on_new_hire_added"
     | "notify_on_hmo_member_added"
     | "animations_enabled"
+    | "show_intro"
   >
 >;
 

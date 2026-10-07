@@ -92,7 +92,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       .toUpperCase() || "?";
 
   return (
-    <IntroGate enabled={account.animations_enabled ?? true}>
+    <IntroGate enabled={account.show_intro ?? true}>
       <SidebarProvider>
         <div className="flex min-h-screen w-full bg-background">
           <AppSidebar />

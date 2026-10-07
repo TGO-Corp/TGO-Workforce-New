@@ -15,8 +15,9 @@
 // can play through (`canplaythrough`), so it never stutters mid-way. It never
 // traps anyone: Skip button + Esc, an automatic exit if the video errors, is
 // blocked from autoplaying, or hasn't become playable in a few seconds. It is
-// skipped entirely when the account has turned "Interface animations" off in
-// Settings, or the OS asks for reduced motion.
+// skipped entirely when the account has switched "Welcome intro" off in
+// Settings (Account.show_intro, on by default), or the OS asks for reduced
+// motion.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 

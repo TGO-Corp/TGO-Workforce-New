@@ -166,6 +166,12 @@ class Account(Base):
     animations_enabled: Mapped[bool] = mapped_column(
         Boolean, default=True, server_default="true", nullable=False
     )
+    # Whether the post-login intro video plays for this account (default yes) —
+    # a self-service preference like the rest of this block. Independent of
+    # animations_enabled; a device-level reduced-motion setting still skips it.
+    show_intro: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true", nullable=False
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
