@@ -109,3 +109,5 @@ class SignInStatusRead(BaseModel):
     detail: str | None = None
     login_url: str | None = None
     logout_url: str | None = None
+    # Only for status "denied": the Gateway account that was turned away.
+    email: str | None = None

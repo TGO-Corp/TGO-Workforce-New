@@ -1,13 +1,32 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.routes import api_router
 from app.core.config import get_settings
+from app.services.fallback_admin import ensure_fallback_admin
 
 settings = get_settings()
 
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Seed the email + password fallback admin (a no-op unless
+    # FALLBACK_ADMIN_PASSWORD is set). Never allowed to stop the API booting.
+    try:
+        await ensure_fallback_admin(settings)
+    except Exception:
+        logger.exception("Couldn't seed the fallback admin account")
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="TGO Workforce API",
     version="0.1.0",
     docs_url="/docs" if not settings.is_production else None,

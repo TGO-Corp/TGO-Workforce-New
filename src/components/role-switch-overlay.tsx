@@ -1,7 +1,7 @@
-// Full-screen loading screen shown while a Super Admin enters or leaves a
+// Small centered loading modal shown while a Super Admin enters or leaves a
 // sandbox role (state lives in lib/role-switch.ts, driven by the sandbox hooks
-// in lib/session.ts). The app re-renders under the new role while this covers
-// it, and it fades away once that has settled.
+// in lib/session.ts). The app re-renders under the new role behind its dim
+// backdrop, and the modal fades away once that has settled.
 //
 // Built to be cheap: every moving part is a CSS transform or opacity change
 // (rotating rings, pulsing icon, the progress bar's scaleX, the cross-fading
@@ -63,96 +63,107 @@ export function RoleSwitchOverlay() {
   const closing = phase === "closing";
 
   return (
+    // A small modal over a plain dim backdrop (no blur — a blur filter over the
+    // whole app would be re-composited every frame). The backdrop also keeps
+    // clicks from reaching the app while the role is changing underneath.
     <div
-      className="fixed inset-0 z-[90] flex flex-col items-center justify-center gap-7 bg-[#0f2430] px-6 text-center text-white"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-4"
       style={{
         opacity: closing ? 0 : 1,
         transition: `opacity ${ROLE_SWITCH_CLOSE_MS}ms ease-out`,
-        background: "radial-gradient(ellipse at 50% 40%, #1e4761 0%, #14303f 45%, #0c1d27 100%)",
       }}
-      role="status"
-      aria-live="polite"
-      aria-label={title}
     >
-      <div className="relative flex h-32 w-32 items-center justify-center">
-        <svg
-          viewBox="0 0 128 128"
-          className={`absolute inset-0 h-full w-full ${animate ? "animate-spin" : ""}`}
-          style={
-            animate ? { animationDuration: "9s", animationTimingFunction: "linear" } : undefined
-          }
-          aria-hidden="true"
-        >
-          <circle
-            cx="64"
-            cy="64"
-            r="58"
-            fill="none"
-            stroke="#fff"
-            strokeOpacity="0.22"
-            strokeWidth="3"
-            strokeDasharray="1.5 7"
-            strokeLinecap="round"
-          />
-        </svg>
-        <svg
-          viewBox="0 0 128 128"
-          className={`absolute inset-0 h-full w-full ${animate ? "animate-spin" : ""}`}
-          style={
-            animate
-              ? {
-                  animationDuration: "4.2s",
-                  animationTimingFunction: "linear",
-                  animationDirection: "reverse",
-                }
-              : undefined
-          }
-          aria-hidden="true"
-        >
-          <circle
-            cx="64"
-            cy="64"
-            r="44"
-            fill="none"
-            stroke="#72b360"
-            strokeOpacity="0.85"
-            strokeWidth="2"
-            strokeDasharray="46 18 8 18"
-            strokeLinecap="round"
-          />
-        </svg>
-        <Icon className={`h-9 w-9 text-white ${animate ? "animate-pulse" : ""}`} />
-      </div>
-
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h2>
-        {/* Stacked lines cross-fade (opacity only) instead of swapping text. */}
-        <div className="relative h-5 w-72 max-w-full">
-          {STEPS.map((label, i) => (
-            <p
-              key={label}
-              className="absolute inset-0 text-sm text-white/70"
-              style={{
-                opacity: i === step ? 1 : 0,
-                transition: animate ? "opacity 350ms ease" : "none",
-              }}
-            >
-              {label}…
-            </p>
-          ))}
+      <div
+        className="flex w-full max-w-[22rem] flex-col items-center gap-5 rounded-2xl border border-white/10 px-8 py-8 text-center text-white shadow-2xl"
+        style={{
+          background: "linear-gradient(160deg, #1e4761 0%, #183445 55%, #112936 100%)",
+          transform: closing ? "scale(0.96)" : "scale(1)",
+          transition: `transform ${ROLE_SWITCH_CLOSE_MS}ms ease-out`,
+        }}
+        role="status"
+        aria-live="polite"
+        aria-label={title}
+      >
+        <div className="relative flex h-20 w-20 items-center justify-center">
+          <svg
+            viewBox="0 0 128 128"
+            className={`absolute inset-0 h-full w-full ${animate ? "animate-spin" : ""}`}
+            style={
+              animate ? { animationDuration: "9s", animationTimingFunction: "linear" } : undefined
+            }
+            aria-hidden="true"
+          >
+            <circle
+              cx="64"
+              cy="64"
+              r="58"
+              fill="none"
+              stroke="#fff"
+              strokeOpacity="0.22"
+              strokeWidth="3"
+              strokeDasharray="1.5 7"
+              strokeLinecap="round"
+            />
+          </svg>
+          <svg
+            viewBox="0 0 128 128"
+            className={`absolute inset-0 h-full w-full ${animate ? "animate-spin" : ""}`}
+            style={
+              animate
+                ? {
+                    animationDuration: "4.2s",
+                    animationTimingFunction: "linear",
+                    animationDirection: "reverse",
+                  }
+                : undefined
+            }
+            aria-hidden="true"
+          >
+            <circle
+              cx="64"
+              cy="64"
+              r="44"
+              fill="none"
+              stroke="#72b360"
+              strokeOpacity="0.85"
+              strokeWidth="2"
+              strokeDasharray="46 18 8 18"
+              strokeLinecap="round"
+            />
+          </svg>
+          <Icon className={`h-6 w-6 text-white ${animate ? "animate-pulse" : ""}`} />
         </div>
-      </div>
 
-      <div className="h-1 w-64 max-w-full overflow-hidden rounded-full bg-white/15">
-        <div
-          className="h-full w-full origin-left rounded-full bg-[#72b360]"
-          style={{
-            transform: closing ? "scaleX(1)" : started ? "scaleX(0.94)" : "scaleX(0)",
-            transition: closing
-              ? "transform 250ms ease-out"
-              : `transform ${durationMs}ms cubic-bezier(0.3, 0.05, 0.25, 1)`,
-          }}
-        />
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+          {/* Stacked lines cross-fade (opacity only) instead of swapping text. */}
+          <div className="relative h-5 w-full">
+            {STEPS.map((label, i) => (
+              <p
+                key={label}
+                className="absolute inset-0 text-sm text-white/70"
+                style={{
+                  opacity: i === step ? 1 : 0,
+                  transition: animate ? "opacity 350ms ease" : "none",
+                }}
+              >
+                {label}…
+              </p>
+            ))}
+          </div>
+        </div>
+
+        <div className="h-1 w-full overflow-hidden rounded-full bg-white/15">
+          <div
+            className="h-full w-full origin-left rounded-full bg-[#72b360]"
+            style={{
+              transform: closing ? "scaleX(1)" : started ? "scaleX(0.94)" : "scaleX(0)",
+              transition: closing
+                ? "transform 250ms ease-out"
+                : `transform ${durationMs}ms cubic-bezier(0.3, 0.05, 0.25, 1)`,
+            }}
+          />
+        </div>
       </div>
     </div>
   );

@@ -67,6 +67,13 @@ class AccountSession(Base):
     last_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    # Which module (page) this browser was last reported in — a display label
+    # such as "HMO Management", mapped server-side from the path the app
+    # reports (see app/services/session_info.py's module_for_path). Kept on
+    # the session after they navigate away or sign out, which is what powers
+    # the panel's "Last in ..." as well as "In ...".
+    current_module: Mapped[str | None] = mapped_column(String(80))
+    module_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Set either by POST /accounts/sessions/{id}/terminate (Super Admin) or by
     # this same browser calling POST /auth/logout. Null = still live.
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

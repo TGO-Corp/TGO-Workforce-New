@@ -63,6 +63,12 @@ SESSION_LAST_SEEN_THROTTLE = timedelta(seconds=60)
 # session somehow carried a stale value.
 SANDBOX_SESSION_KEY = "sandbox_role"
 
+# Set by POST /auth/login (the email + password fallback). In Gateway mode a
+# session carrying this is honoured on its own, without a Gateway cookie — that
+# is the whole point of a fallback for when the Gateway is down or unreachable.
+AUTH_METHOD_SESSION_KEY = "auth_method"
+AUTH_METHOD_PASSWORD = "password"
+
 
 def get_effective_role(account: Account, request: Request) -> AccountRole:
     """The role every permission check in this module actually uses — the
@@ -159,6 +165,9 @@ GATEWAY_STATUS_DETAIL: dict[str, str] = {
 class GatewaySignIn:
     status: GatewaySignInStatus
     account: Account | None = None
+    # For "denied": the email the Gateway reported, so the login page can say
+    # which Gateway account was turned away.
+    email: str | None = None
 
 
 async def resolve_gateway_account(
@@ -178,7 +187,9 @@ async def resolve_gateway_account(
     if result.status != "ok" or result.profile is None:
         if result.status == "denied":
             await _log_gateway_denial(db, token, result.email)
-        return GatewaySignIn(result.status)  # denied / unavailable
+        if result.status == "denied":
+            return GatewaySignIn("denied", email=result.email)
+        return GatewaySignIn(result.status)  # unavailable
     profile = result.profile
     fingerprint = token_fingerprint(token)
 
@@ -330,6 +341,12 @@ async def get_current_account(
     if not settings.gateway_enabled:
         account, _ = await _account_from_session(request, db)
         return account
+
+    if request.session.get(AUTH_METHOD_SESSION_KEY) == AUTH_METHOD_PASSWORD:
+        local_account, _ = await _account_from_session(request, db)
+        if local_account is not None:
+            return local_account
+        # Stale or revoked local session: fall through to the Gateway check.
 
     sign_in = await resolve_gateway_account(request, db, settings)
     if sign_in.status == "signed_in":

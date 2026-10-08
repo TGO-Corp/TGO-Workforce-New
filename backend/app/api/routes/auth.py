@@ -28,6 +28,7 @@
                      Gateway or explain a denial instead of looping.
 """
 
+import asyncio
 import secrets
 import uuid
 from datetime import UTC, datetime
@@ -35,11 +36,14 @@ from datetime import UTC, datetime
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from pydantic import BaseModel, Field
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import gateway
 from app.core.auth import (
+    AUTH_METHOD_PASSWORD,
+    AUTH_METHOD_SESSION_KEY,
     GATEWAY_STATUS_DETAIL,
     SANDBOX_SESSION_KEY,
     get_current_account,
@@ -59,11 +63,17 @@ from app.schemas.account import (
     SandboxRoleRequest,
     SignInStatusRead,
 )
-from app.services import zoho
+from app.services import login_throttle, zoho
 from app.services.activity_log import record_activity
 from app.services.app_settings import get_app_settings
+from app.services.passwords import hash_password, verify_password
 from app.services.permissions import MATRIX_ROLES, get_account_permissions
-from app.services.session_info import get_client_ip, lookup_location_label, parse_device_label
+from app.services.session_info import (
+    get_client_ip,
+    lookup_location_label,
+    module_for_path,
+    parse_device_label,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -98,6 +108,7 @@ async def sign_in_status(
         detail=GATEWAY_STATUS_DETAIL.get(sign_in.status),
         login_url=gateway.login_url(settings, f"{settings.frontend_url.rstrip('/')}/"),
         logout_url=gateway.logout_url(settings),
+        email=sign_in.email,
     )
 
 
@@ -327,6 +338,144 @@ async def me(
     if account is None:
         return None
     return await _account_read(db, account, request)
+
+
+class PasswordLoginRequest(BaseModel):
+    email: str = Field(min_length=3, max_length=255)
+    password: str = Field(min_length=1, max_length=256)
+
+
+# Verified against when the email is unknown (or has no password), so a wrong
+# email and a wrong password take the same time and can't be told apart.
+_dummy_hash: str | None = None
+
+
+def _get_dummy_hash() -> str:
+    global _dummy_hash
+    if _dummy_hash is None:
+        _dummy_hash = hash_password(secrets.token_urlsafe(12))
+    return _dummy_hash
+
+
+@router.post("/login", response_model=AccountRead)
+async def password_login(
+    payload: PasswordLoginRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> AccountRead:
+    """Email + password fallback sign-in — works whether Zoho or the Gateway is
+    in front, so someone can still get in when SSO is down or misconfigured.
+    Only accounts with a password_hash can use it (the seeded fallback admin,
+    see app/services/fallback_admin.py). Failed attempts are throttled per
+    email and per IP, never reveal whether the email exists, and are recorded
+    in the Activity Log under the email that was tried."""
+    if not settings.password_login_enabled:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
+
+    email = payload.email.strip().lower()
+    client_ip = get_client_ip(request)
+
+    wait = login_throttle.retry_after_seconds(email, client_ip)
+    if wait:
+        minutes = max(1, round(wait / 60))
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many failed attempts. Try again in about {minutes} minute(s).",
+            headers={"Retry-After": str(wait)},
+        )
+
+    result = await db.execute(select(Account).where(func.lower(Account.email) == email))
+    account = result.scalar_one_or_none()
+    stored_hash = account.password_hash if account else None
+    password_ok = await asyncio.to_thread(
+        verify_password, payload.password, stored_hash or _get_dummy_hash()
+    )
+
+    if not (password_ok and stored_hash and account is not None and account.is_active):
+        login_throttle.record_failure(email, client_ip)
+        reason = (
+            "account inactive"
+            if password_ok and stored_hash and account is not None and not account.is_active
+            else "wrong email or password"
+        )
+        await _log_login_attempt(
+            db,
+            success=False,
+            action=f"Sign-in failed (email & password): {reason}",
+            actor_label=email,
+            ip_address=client_ip,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password."
+        )
+
+    login_throttle.clear_email(email)
+    account_session = AccountSession(
+        id=uuid.uuid4(),
+        account_id=account.id,
+        ip_address=client_ip,
+        device_label=parse_device_label(request.headers.get("user-agent")),
+        location_label=await lookup_location_label(client_ip),
+    )
+    db.add(account_session)
+    account.last_login_at = datetime.now(UTC)
+    await db.commit()
+    await db.refresh(account)
+
+    request.session.pop(SANDBOX_SESSION_KEY, None)
+    request.session["account_id"] = str(account.id)
+    request.session["session_id"] = str(account_session.id)
+    request.session[AUTH_METHOD_SESSION_KEY] = AUTH_METHOD_PASSWORD
+
+    await _log_login_attempt(
+        db,
+        success=True,
+        action="Signed in with email & password",
+        account=account,
+        ip_address=client_ip,
+    )
+    return await _account_read(db, account, request)
+
+
+class PresenceReport(BaseModel):
+    """Which page this browser just opened — see POST /auth/me/presence."""
+
+    path: str = Field(max_length=200)
+
+
+@router.post("/me/presence", status_code=status.HTTP_204_NO_CONTENT)
+async def report_presence(
+    payload: PresenceReport,
+    request: Request,
+    account: Account = Depends(require_account),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """The app calls this on every page change so the Super Admin's Active
+    Sessions panel can show which module each person is in (or was last in).
+    Best-effort and silent: a cookie from before session tracking existed has
+    no session id (nothing to update), and any non-page path is ignored."""
+    raw_session_id = request.session.get("session_id")
+    module = module_for_path(payload.path)
+    if not raw_session_id or module is None:
+        return
+    try:
+        session_id = uuid.UUID(raw_session_id)
+    except ValueError:
+        return
+    account_session = await db.get(AccountSession, session_id)
+    if (
+        account_session is None
+        or account_session.account_id != account.id
+        or account_session.revoked_at is not None
+    ):
+        return
+    now = datetime.now(UTC)
+    if account_session.current_module != module:
+        account_session.current_module = module
+        account_session.module_changed_at = now
+    account_session.last_seen_at = now
+    await db.commit()
 
 
 @router.patch("/me/preferences", response_model=AccountRead)

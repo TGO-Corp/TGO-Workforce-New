@@ -1,4 +1,4 @@
-// Tiny external store backing the full-screen "switching role" loading screen
+// Tiny external store backing the small "switching role" loading modal
 // (see components/role-switch-overlay.tsx). A Super Admin entering or leaving a
 // sandbox role re-renders the whole app under a different set of permissions;
 // this keeps a deliberate, longer loading screen up for that moment instead of

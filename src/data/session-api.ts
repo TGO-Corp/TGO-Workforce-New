@@ -20,6 +20,11 @@ export type AccountPresence = {
   ipAddress: string | null;
   locationLabel: string | null;
   deviceLabel: string | null;
+  // The module the latest session was last reported in (e.g. "HMO
+  // Management") and when they got there — "In ..." while active now, "Last
+  // in ..." otherwise.
+  currentModule: string | null;
+  moduleChangedAt: string | null;
 };
 
 type BackendPresence = {
@@ -33,6 +38,8 @@ type BackendPresence = {
   ip_address: string | null;
   location_label: string | null;
   device_label: string | null;
+  current_module: string | null;
+  module_changed_at: string | null;
 };
 
 function fromBackend(row: BackendPresence): AccountPresence {
@@ -47,6 +54,8 @@ function fromBackend(row: BackendPresence): AccountPresence {
     ipAddress: row.ip_address,
     locationLabel: row.location_label,
     deviceLabel: row.device_label,
+    currentModule: row.current_module,
+    moduleChangedAt: row.module_changed_at,
   };
 }
 
@@ -73,4 +82,21 @@ export async function terminateSession(sessionId: string): Promise<void> {
   await request<void>(`/accounts/sessions/${encodeURIComponent(sessionId)}/terminate`, {
     method: "POST",
   });
+}
+
+/** Tells the backend which page this browser just opened, so the Super Admin's
+ * Active Sessions panel can show which module each person is in. Fire-and-
+ * forget: presence is a nicety, so a failure is never surfaced. */
+export async function reportPresence(path: string): Promise<void> {
+  try {
+    await fetch(apiUrl("/auth/me/presence"), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path }),
+      keepalive: true,
+    });
+  } catch {
+    // ignore
+  }
 }

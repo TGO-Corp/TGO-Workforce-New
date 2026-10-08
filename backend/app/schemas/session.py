@@ -27,3 +27,7 @@ class AccountPresence(BaseModel):
     ip_address: str | None
     location_label: str | None
     device_label: str | None
+    # The module the latest session was last reported in (see
+    # AccountSession.current_module), and when they got there.
+    current_module: str | None = None
+    module_changed_at: datetime | None = None

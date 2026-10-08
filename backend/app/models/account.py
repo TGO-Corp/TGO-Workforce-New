@@ -120,6 +120,12 @@ class Account(Base):
         Boolean, default=False, server_default="false", nullable=False
     )
 
+    # Only set for accounts that can use the email + password fallback sign-in
+    # (see POST /auth/login) — a scrypt hash from app/services/passwords.py,
+    # never the password itself, and never serialized into AccountRead. Null
+    # for every normal Zoho/Gateway account, which simply can't use it.
+    password_hash: Mapped[str | None] = mapped_column(String(255))
+
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # --- Personalization -------------------------------------------------------

@@ -137,6 +137,8 @@ export interface SignInStatus {
   detail: string | null;
   login_url: string | null;
   logout_url: string | null;
+  // Only for status "denied": the Gateway account that was turned away.
+  email?: string | null;
 }
 
 export async function fetchSignInStatus(): Promise<SignInStatus> {
@@ -295,4 +297,32 @@ export async function signOut(): Promise<string | null> {
   }
   const signIn = await fetchSignInStatus();
   return signIn.mode === "gateway" ? signIn.logout_url : null;
+}
+
+/** Email + password fallback sign-in (POST /auth/login) — for when Zoho / the
+ * TGO Gateway can't be used. Resolves to the signed-in account; throws an Error
+ * whose message is safe to show the person. */
+export async function signInWithPassword(email: string, password: string): Promise<AccountProfile> {
+  let response: Response;
+  try {
+    response = await fetch(apiUrl("/auth/login"), {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch {
+    throw new Error("Couldn't reach the server. Try again in a minute.");
+  }
+  if (!response.ok) {
+    let message = "Couldn't sign in. Please try again.";
+    try {
+      const body = (await response.json()) as { detail?: unknown };
+      if (typeof body.detail === "string") message = body.detail;
+    } catch {
+      // keep the generic message
+    }
+    throw new Error(message);
+  }
+  return (await response.json()) as AccountProfile;
 }

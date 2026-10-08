@@ -7,6 +7,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { HeaderSearch } from "@/components/header-search";
 import { INTRO_SESSION_KEY, IntroGate } from "@/components/intro-overlay";
 import { RoleSwitchOverlay } from "@/components/role-switch-overlay";
+import { reportPresence } from "@/data/session-api";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,6 +49,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       navigate({ to: "/login" });
     }
   }, [isLoading, account, navigate]);
+
+  // Tell the backend which module this browser is in (for the Super Admin's
+  // Active Sessions panel). Debounced so a quick redirect chain only reports
+  // where the person actually lands.
+  const signedIn = !!account;
+  useEffect(() => {
+    if (!signedIn) return;
+    const timer = window.setTimeout(() => void reportPresence(pathname), 400);
+    return () => window.clearTimeout(timer);
+  }, [pathname, signedIn]);
 
   async function handleSignOut() {
     // The next sign-in gets the intro again.

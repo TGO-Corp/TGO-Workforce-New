@@ -96,6 +96,18 @@ class Settings(BaseSettings):
     onboarding_portal_base_url: str = ""
     onboarding_portal_api_key: str = ""
 
+    # --- Email + password fallback sign-in ----------------------------------
+    # A local sign-in that works whichever of Zoho / the Gateway is in front,
+    # for when SSO is down or misconfigured. Only accounts with a
+    # password_hash can use it. PASSWORD_LOGIN_ENABLED=false switches it off.
+    password_login_enabled: bool = True
+    # If FALLBACK_ADMIN_PASSWORD is set, startup makes sure this Admin account
+    # exists with that password (see app/services/fallback_admin.py). The
+    # password lives ONLY in the environment, never in code or git. An
+    # existing password is never overwritten.
+    fallback_admin_email: str = "admin@tgocorp.com"
+    fallback_admin_password: str = ""
+
     # --- TGO Gateway single sign-on ----------------------------------------
     # Set GATEWAY_URL (https://gateway.tgocorp.com) and the Gateway owns
     # sign-in: every request forwards the shared Gateway cookie to

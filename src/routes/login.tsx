@@ -1,13 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { BarChart3, ScrollText, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
+  CURRENT_ACCOUNT_KEY,
   fetchCurrentAccount,
   fetchSignInStatus,
+  signInWithPassword,
   signInWithZoho,
   type SignInStatus,
 } from "@/lib/session";
@@ -19,7 +24,8 @@ export const Route = createFileRoute("/login")({
       { title: "Sign In — Torero Global Outsourcing HR Operations" },
       {
         name: "description",
-        content: "Sign in to the Torero Global Outsourcing HR Operations portal with your Zoho account.",
+        content:
+          "Sign in to the Torero Global Outsourcing HR Operations portal with your Zoho account.",
       },
       { property: "og:title", content: "Sign In — Torero Global Outsourcing HR Operations" },
     ],
@@ -42,15 +48,21 @@ function LoginPage() {
   // goes straight to the Gateway, and anyone the Gateway turned away sees why
   // instead of bouncing between the two.
   const [signIn, setSignIn] = useState<SignInStatus | null>(null);
+  // The email + password form. Opened by default with /login?fallback=1 — the
+  // way in when the Gateway is the thing that's broken, since a signed-out
+  // Gateway-mode visitor is otherwise redirected before ever seeing this page.
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    const wantsFallback = new URLSearchParams(window.location.search).has("fallback");
+    if (wantsFallback) setShowPasswordForm(true);
     fetchSignInStatus().then(async (result) => {
       if (cancelled) return;
       if (result.mode === "gateway") {
         if (result.status === "signed_in") {
           navigate({ to: "/" });
-        } else if (result.status === "signed_out" && result.login_url) {
+        } else if (result.status === "signed_out" && result.login_url && !wantsFallback) {
           window.location.href = result.login_url;
         } else {
           setSignIn(result);
@@ -127,9 +139,20 @@ function LoginPage() {
                 </Button>
               </>
             )}
+            {showPasswordForm ? (
+              <PasswordSignInForm onCancel={() => setShowPasswordForm(false)} />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowPasswordForm(true)}
+                className="mt-4 w-full cursor-pointer text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Sign in with email and password instead
+              </button>
+            )}
             <p className="mt-4 text-center text-xs leading-relaxed text-muted-foreground">
-              Access is limited to authorized HR Operations staff. Contact your admin if you
-              can't sign in.
+              Access is limited to authorized HR Operations staff. Contact your admin if you can't
+              sign in.
             </p>
           </div>
         </div>
@@ -185,7 +208,9 @@ function GatewayNotice({ signIn }: { signIn: SignInStatus }) {
   const ended = signIn.status === "ended";
   const message = ended
     ? "Your session was ended by an admin. Sign in again through the TGO Gateway."
-    : (signIn.detail ?? "Sign in through the TGO Gateway to continue.");
+    : signIn.status === "denied" && signIn.email
+      ? `You're signed in to the TGO Gateway as ${signIn.email}, but that account hasn't been granted TGO Workforce there. Ask an admin to grant it in the Gateway, or sign in with a different account.`
+      : (signIn.detail ?? "Sign in through the TGO Gateway to continue.");
   const retry = signIn.status === "unavailable" || !signIn.logout_url;
 
   return (
@@ -205,5 +230,77 @@ function GatewayNotice({ signIn }: { signIn: SignInStatus }) {
         {retry ? "Try again" : ended ? "Sign in again" : "Sign in as someone else"}
       </Button>
     </>
+  );
+}
+
+// The fallback sign-in: a plain email + password form against POST /auth/login.
+// Works with either SSO mode in front. Errors come back as safe messages (and a
+// lockout message after repeated failures); success drops the account straight
+// into the query cache so the app shell doesn't have to re-fetch it.
+function PasswordSignInForm({ onCancel }: { onCancel: () => void }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const account = await signInWithPassword(email.trim(), password);
+      queryClient.setQueryData(CURRENT_ACCOUNT_KEY, account);
+      navigate({ to: "/" });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't sign in. Please try again.");
+      setPassword("");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-5 space-y-3 border-t pt-5">
+      <div className="space-y-1.5">
+        <Label htmlFor="fallback-email">Email</Label>
+        <Input
+          id="fallback-email"
+          type="email"
+          autoComplete="username"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="fallback-password">Password</Label>
+        <Input
+          id="fallback-password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      {error && (
+        <p role="alert" className="text-xs text-destructive">
+          {error}
+        </p>
+      )}
+      <Button type="submit" className="w-full" disabled={submitting || !email || !password}>
+        {submitting ? "Signing in..." : "Sign in"}
+      </Button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className="w-full cursor-pointer text-center text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      >
+        Cancel
+      </button>
+    </form>
   );
 }

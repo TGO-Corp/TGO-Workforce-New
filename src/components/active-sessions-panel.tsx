@@ -4,7 +4,7 @@
 // just drop this in without their own check.
 
 import { useState } from "react";
-import { AlertTriangle, Loader2, MapPin, Monitor, Radio, ShieldOff } from "lucide-react";
+import { AlertTriangle, Compass, Loader2, MapPin, Monitor, Radio, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -65,7 +65,10 @@ function StatusBadge({ item }: { item: AccountPresence }) {
   }
   if (item.status === "active_now") {
     return (
-      <Badge className="gap-1.5 border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" variant="outline">
+      <Badge
+        className="gap-1.5 border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+        variant="outline"
+      >
         <Radio className="h-3 w-3" />
         Active now
       </Badge>
@@ -75,6 +78,35 @@ function StatusBadge({ item }: { item: AccountPresence }) {
     <Badge variant="outline" className="text-muted-foreground">
       Active {item.lastSeenAt ? timeAgo(item.lastSeenAt) : "a while ago"}
     </Badge>
+  );
+}
+
+/** "In HMO Management" while they're active right now, "Last in Employee
+ * Directory" once they're not — the module comes from what their browser last
+ * reported, so it survives them leaving the page or signing out. */
+function ModuleCell({ item }: { item: AccountPresence }) {
+  if (!item.currentModule) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  const live = item.status === "active_now";
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5 text-sm">
+        <Compass
+          className={`h-3.5 w-3.5 shrink-0 ${live ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
+        />
+        <span className="truncate font-medium">
+          <span className="font-normal text-muted-foreground">{live ? "In " : "Last in "}</span>
+          {item.currentModule}
+        </span>
+      </div>
+      {item.moduleChangedAt && (
+        <p className="mt-0.5 pl-5 text-xs text-muted-foreground">
+          {live ? "since " : ""}
+          {timeAgo(item.moduleChangedAt)}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -98,7 +130,9 @@ export function ActiveSessionsPanel() {
       setTerminating(null);
     } catch (error) {
       console.error(error);
-      toast.error(error instanceof Error ? error.message : "Couldn't end that session. Please try again.");
+      toast.error(
+        error instanceof Error ? error.message : "Couldn't end that session. Please try again.",
+      );
     }
   }
 
@@ -110,8 +144,8 @@ export function ActiveSessionsPanel() {
           Active Sessions
         </CardTitle>
         <CardDescription>
-          {activeNowCount} active right now · Super Admin only — location and device are
-          approximate (from IP address and browser).
+          {activeNowCount} active right now · Super Admin only — location and device are approximate
+          (from IP address and browser).
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -121,6 +155,7 @@ export function ActiveSessionsPanel() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Module</TableHead>
                 <TableHead>Location / IP</TableHead>
                 <TableHead>Device</TableHead>
                 <TableHead className="w-24" />
@@ -129,19 +164,19 @@ export function ActiveSessionsPanel() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     Loading…
                   </TableCell>
                 </TableRow>
               ) : isError ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     Couldn't load active sessions. Try refreshing the page.
                   </TableCell>
                 </TableRow>
               ) : items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     No accounts yet.
                   </TableCell>
                 </TableRow>
@@ -164,13 +199,14 @@ export function ActiveSessionsPanel() {
                     <TableCell>
                       <StatusBadge item={item} />
                     </TableCell>
+                    <TableCell>
+                      <ModuleCell item={item} />
+                    </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {item.locationLabel || item.ipAddress ? (
                         <div className="flex items-center gap-1">
                           <MapPin className="h-3 w-3 shrink-0" />
-                          <span className="truncate">
-                            {item.locationLabel ?? item.ipAddress}
-                          </span>
+                          <span className="truncate">{item.locationLabel ?? item.ipAddress}</span>
                         </div>
                       ) : (
                         "—"
@@ -228,7 +264,11 @@ export function ActiveSessionsPanel() {
               disabled={terminateMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {terminateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Terminate"}
+              {terminateMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Terminate"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

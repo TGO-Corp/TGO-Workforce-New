@@ -97,3 +97,37 @@ async def lookup_location_label(ip: str | None) -> str | None:
         # sign-in over — a slow/unreachable/rate-limited lookup just means no
         # location for this session.
         return None
+
+
+# First path segment -> the label shown in the Active Sessions panel. The app
+# reports the path it's on; the label is decided here so the browser can't make
+# the panel display arbitrary text.
+_MODULE_LABELS: dict[str, str] = {
+    "": "Dashboard",
+    "directory": "Employee Directory",
+    "new-hires": "Onboarding New Hires",
+    "onboarding": "Onboarding Tracker",
+    "hmo-management": "HMO Management",
+    "anniversaries": "Anniversaries",
+    "birthdays": "Birthdays",
+    "awards": "Recognition & Awards",
+    "attendance-violations": "Violations",
+    "attendance-reports": "Violations Report",
+    "activity-logs": "Activity Logs",
+    "analytics": "Analytics",
+    "feedback": "Feedback",
+    "user-management": "User Management",
+    "database-backups": "Database Backups",
+    "settings": "Settings",
+    "profile": "My Profile",
+}
+
+
+def module_for_path(path: str) -> str | None:
+    """Maps a reported app path ("/hmo-management/123") to a module label.
+    None for anything that isn't an app page (e.g. /login), so nothing is
+    recorded for it."""
+    segment = path.strip().lstrip("/").split("/", 1)[0].split("?", 1)[0].split("#", 1)[0].lower()
+    if segment == "login":
+        return None
+    return _MODULE_LABELS.get(segment, "Other")

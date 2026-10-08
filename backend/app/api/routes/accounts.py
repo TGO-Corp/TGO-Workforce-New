@@ -204,6 +204,8 @@ async def list_account_presence(
                 ip_address=latest.ip_address,
                 location_label=latest.location_label,
                 device_label=latest.device_label,
+                current_module=latest.current_module,
+                module_changed_at=latest.module_changed_at,
             )
         )
 
