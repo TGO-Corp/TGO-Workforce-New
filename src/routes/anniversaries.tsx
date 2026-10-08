@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Award, CalendarClock, ShieldAlert, Star, Trophy } from "lucide-react";
 
@@ -19,10 +19,14 @@ import {
   anniversaries,
   formatDate,
   formatYears,
+  arrangedMonths,
+  MONTH_ARRANGEMENT_LABELS,
+  MONTH_ARRANGEMENTS,
   matchesMilestoneTimeFilter,
   MILESTONE_TIME_FILTER_LABELS,
   OFFICES,
   type MilestoneTimeFilter,
+  type MonthArrangement,
 } from "@/data/employees";
 import { useEmployees } from "@/data/employee-store";
 import { canViewMilestones } from "@/lib/permissions";
@@ -79,15 +83,21 @@ function AnniversariesPage() {
   const canView = canViewMilestones(account?.permissions);
   const employees = useEmployees();
   const [timeFilter, setTimeFilter] = useState<MilestoneTimeFilter>("all");
+  const [arrangement, setArrangement] = useState<MonthArrangement>("calendar");
   const [officeFilter, setOfficeFilter] = useState<OfficeFilter>(ALL_OFFICES);
   const allMilestones = anniversaries(employees);
   const officeMilestones = allMilestones.filter(
     (e) => officeFilter === ALL_OFFICES || e.office === officeFilter,
   );
-  const list = officeMilestones.filter((e) =>
-    matchesMilestoneTimeFilter(e.monthIndex, e.day, timeFilter),
-  );
-  const months = [...new Set(list.map((e) => e.monthName))];
+  // Which months show, and in what order, comes from the arrangement picker;
+  // the time-range filter then narrows within them.
+  const arranged = arrangedMonths(arrangement);
+  const visibleMonths = new Set(arranged.map((m) => m.monthIndex));
+  const list = officeMilestones
+    .filter((e) => matchesMilestoneTimeFilter(e.monthIndex, e.day, timeFilter))
+    .filter((e) => visibleMonths.has(e.monthIndex));
+  const monthGroups = arranged.filter((m) => list.some((e) => e.monthIndex === m.monthIndex));
+  const months = monthGroups.map((m) => list.find((e) => e.monthIndex === m.monthIndex)!.monthName);
   const currentMonthName = new Date().toLocaleString("en-US", { month: "long" });
   const thisMonth = officeMilestones.filter((e) => e.monthName === currentMonthName).length;
   const milestoneYears = list.filter((e) => e.years > 0);
@@ -164,6 +174,21 @@ function AnniversariesPage() {
                 ))}
               </SelectContent>
             </Select>
+            <Select
+              value={arrangement}
+              onValueChange={(v) => setArrangement(v as MonthArrangement)}
+            >
+              <SelectTrigger className="w-[220px]" aria-label="Arrange months">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTH_ARRANGEMENTS.map((a) => (
+                  <SelectItem key={a} value={a}>
+                    {MONTH_ARRANGEMENT_LABELS[a]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         }
       />
@@ -206,38 +231,47 @@ function AnniversariesPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {months.map((month) => (
-            <Card key={month}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Award className="h-4 w-4 text-muted-foreground" /> {month}
-                </CardTitle>
-                <CardDescription>
-                  {list.filter((e) => e.monthName === month).length} milestone(s)
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {list
-                  .filter((e) => e.monthName === month)
-                  .map((e) => (
-                    <div key={e.id} className="flex items-center gap-3">
-                      <Avatar className="size-8">
-                        <AvatarFallback className="text-xs">{initials(e.name)}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          <EmployeeNameLink employee={e} />
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {e.monthName} {e.day}, {CURRENT_YEAR} · Joined {formatDate(e.startDate)} ·{" "}
-                          {e.office}
-                        </p>
+          {months.map((month, index) => (
+            <Fragment key={month}>
+              {monthGroups[index]?.past && !monthGroups[index - 1]?.past && (
+                <div className="col-span-full flex items-center gap-3 pt-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <span className="h-px flex-1 bg-border" />
+                  Earlier this year
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Award className="h-4 w-4 text-muted-foreground" /> {month}
+                  </CardTitle>
+                  <CardDescription>
+                    {list.filter((e) => e.monthName === month).length} milestone(s)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {list
+                    .filter((e) => e.monthName === month)
+                    .map((e) => (
+                      <div key={e.id} className="flex items-center gap-3">
+                        <Avatar className="size-8">
+                          <AvatarFallback className="text-xs">{initials(e.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">
+                            <EmployeeNameLink employee={e} />
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {e.monthName} {e.day}, {CURRENT_YEAR} · Joined {formatDate(e.startDate)}{" "}
+                            · {e.office}
+                          </p>
+                        </div>
+                        <Badge variant="secondary">{formatYears(e.years)}</Badge>
                       </div>
-                      <Badge variant="secondary">{formatYears(e.years)}</Badge>
-                    </div>
-                  ))}
-              </CardContent>
-            </Card>
+                    ))}
+                </CardContent>
+              </Card>
+            </Fragment>
           ))}
         </div>
       )}

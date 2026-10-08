@@ -232,6 +232,43 @@ export function anniversaries(employees: Employee[]) {
     .sort((a, b) => a.monthIndex - b.monthIndex || a.day - b.day);
 }
 
+// --- Month arrangement (Anniversaries + Birthdays pages) ---------------------
+// How the month cards are ordered/limited:
+//   calendar       January -> December (the original, default order)
+//   current-onward only the current month through December
+//   current-first  the current month through December, then the months that
+//                  have already passed (January ...) underneath
+export type MonthArrangement = "calendar" | "current-onward" | "current-first";
+
+export const MONTH_ARRANGEMENTS: MonthArrangement[] = [
+  "calendar",
+  "current-onward",
+  "current-first",
+];
+
+export const MONTH_ARRANGEMENT_LABELS: Record<MonthArrangement, string> = {
+  calendar: "January \u2192 December",
+  "current-onward": "Current & remaining months",
+  "current-first": "Current month first",
+};
+
+/** Month indexes (0-11) in display order for an arrangement. `past` marks the
+ * months that already went by this year and are shown below the rest. */
+export function arrangedMonths(
+  arrangement: MonthArrangement,
+  now: Date = new Date(),
+): { monthIndex: number; past: boolean }[] {
+  const current = now.getMonth();
+  const range = (from: number, to: number) =>
+    Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => from + i);
+  if (arrangement === "calendar") {
+    return range(0, 11).map((monthIndex) => ({ monthIndex, past: false }));
+  }
+  const upcoming = range(current, 11).map((monthIndex) => ({ monthIndex, past: false }));
+  if (arrangement === "current-onward") return upcoming;
+  return [...upcoming, ...range(0, current - 1).map((monthIndex) => ({ monthIndex, past: true }))];
+}
+
 // --- Recurring-date windows (birthdays, anniversaries) -----------------
 // Shared by the Dashboard's "recent" cards and the dedicated Anniversaries/
 // Birthdays pages' own time filters — one implementation instead of three
