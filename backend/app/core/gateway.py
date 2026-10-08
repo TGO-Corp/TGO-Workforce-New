@@ -41,6 +41,9 @@ class GatewayProfile:
 class GatewayResult:
     status: GatewayStatus
     profile: GatewayProfile | None = None
+    # The email the Gateway reported for a "denied" verdict, when it shared one
+    # — lets the Activity Log say WHO was turned away.
+    email: str | None = None
 
 
 # The frontend polls several endpoints every 15s while a tab is open, and each
@@ -109,7 +112,7 @@ async def _ask_gateway(token: str, settings: Settings) -> GatewayResult:
     if response.status_code == 401:
         return GatewayResult("unauthenticated")
     if response.status_code == 403:
-        return GatewayResult("denied")
+        return GatewayResult("denied", email=_email_from_body(response))
     if response.status_code != 200:
         return GatewayResult("unavailable")
 
@@ -119,7 +122,7 @@ async def _ask_gateway(token: str, settings: Settings) -> GatewayResult:
         return GatewayResult("unavailable")
     email = str(body.get("email") or "").strip().lower()
     if not body.get("allowed") or not email:
-        return GatewayResult("denied")
+        return GatewayResult("denied", email=email or None)
     return GatewayResult(
         "ok",
         GatewayProfile(
@@ -129,3 +132,14 @@ async def _ask_gateway(token: str, settings: Settings) -> GatewayResult:
             role=body.get("role"),
         ),
     )
+
+
+def _email_from_body(response: httpx.Response) -> str | None:
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    if not isinstance(body, dict):
+        return None
+    email = str(body.get("email") or "").strip().lower()
+    return email or None

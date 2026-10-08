@@ -142,7 +142,15 @@ async def _log_login_attempt(
         action=action,
         category=ActivityCategory.ACCESS,
         account=account,
-        actor_label=actor_label if account is None else None,
+        # A failed attempt is attributed to the EMAIL that was used (not the
+        # account's display name) so an admin reviewing the log sees exactly
+        # which address tried to get in. Successful sign-ins keep the usual
+        # display-name actor.
+        actor_label=(
+            account.email
+            if account is not None and not success
+            else (actor_label if account is None else None)
+        ),
         severity=ActivitySeverity.INFO if success else ActivitySeverity.WARNING,
         details={"ip_address": ip_address} if ip_address else None,
         commit=True,
@@ -168,8 +176,14 @@ async def zoho_callback(
         await _log_login_attempt(
             db,
             success=False,
-            action="Sign-in failed: Zoho OAuth error or invalid state",
-            actor_label="Unknown",
+            action=(
+                f"Sign-in failed: Zoho returned an error ({error})"
+                if error
+                else "Sign-in failed: invalid or expired sign-in state"
+            ),
+            # Zoho never told us who this was — the email is simply not known
+            # at this point of the flow.
+            actor_label="Unknown (no email available)",
             ip_address=client_ip,
         )
         return RedirectResponse(failure_redirect)
@@ -182,7 +196,7 @@ async def zoho_callback(
             db,
             success=False,
             action="Sign-in failed: couldn't complete the Zoho OAuth exchange",
-            actor_label="Unknown",
+            actor_label="Unknown (no email available)",
             ip_address=client_ip,
         )
         return RedirectResponse(failure_redirect)
@@ -194,7 +208,7 @@ async def zoho_callback(
             db,
             success=False,
             action="Sign-in failed: Zoho profile missing ZUID or email",
-            actor_label=email or "Unknown",
+            actor_label=email or "Unknown (no email available)",
             ip_address=client_ip,
         )
         return RedirectResponse(failure_redirect)

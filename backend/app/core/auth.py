@@ -19,6 +19,7 @@ governed by the dynamic permission matrix — see require_permission() below
 and app/services/permissions.py. Admin and Super Admin bypass it entirely.
 """
 
+import time
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -175,6 +176,8 @@ async def resolve_gateway_account(
     if result.status == "unauthenticated":
         return GatewaySignIn("signed_out")
     if result.status != "ok" or result.profile is None:
+        if result.status == "denied":
+            await _log_gateway_denial(db, token, result.email)
         return GatewaySignIn(result.status)  # denied / unavailable
     profile = result.profile
     fingerprint = token_fingerprint(token)
@@ -198,6 +201,8 @@ async def resolve_gateway_account(
             action="Sign-in rejected: account inactive",
             category=ActivityCategory.ACCESS,
             account=account,
+            # The email that tried to sign in, not the display name.
+            actor_label=account.email,
             severity=ActivitySeverity.WARNING,
             commit=True,
         )
@@ -232,6 +237,32 @@ async def resolve_gateway_account(
         commit=True,
     )
     return GatewaySignIn("signed_in", account)
+
+
+# A denied Gateway session is re-checked on every poll (every 15s per open tab),
+# so log each denied session once per window instead of once per poll.
+_DENIAL_LOG_WINDOW_SECONDS = 30 * 60
+_MAX_DENIAL_ENTRIES = 500
+_denial_logged_at: dict[str, float] = {}
+
+
+async def _log_gateway_denial(db: AsyncSession, token: str, email: str | None) -> None:
+    key = token_fingerprint(token)
+    now = time.monotonic()
+    last = _denial_logged_at.get(key)
+    if last is not None and now - last < _DENIAL_LOG_WINDOW_SECONDS:
+        return
+    if len(_denial_logged_at) >= _MAX_DENIAL_ENTRIES:
+        _denial_logged_at.clear()
+    _denial_logged_at[key] = now
+    await record_activity(
+        db,
+        action="Sign-in denied: no access to TGO Workforce in the Gateway",
+        category=ActivityCategory.ACCESS,
+        actor_label=email or "Unknown (Gateway shared no email)",
+        severity=ActivitySeverity.WARNING,
+        commit=True,
+    )
 
 
 async def _upsert_gateway_account(

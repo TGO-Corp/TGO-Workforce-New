@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
 import { HeaderSearch } from "@/components/header-search";
 import { INTRO_SESSION_KEY, IntroGate } from "@/components/intro-overlay";
+import { RoleSwitchOverlay } from "@/components/role-switch-overlay";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -94,6 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <IntroGate enabled={account.show_intro ?? true}>
       <SidebarProvider>
+        <RoleSwitchOverlay />
         <div className="flex min-h-screen w-full bg-background">
           <AppSidebar />
           <div className="flex min-w-0 flex-1 flex-col">

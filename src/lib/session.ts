@@ -4,9 +4,17 @@
 // every check here just asks the backend "who is this cookie for, if
 // anyone."
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 
 import { apiUrl } from "@/lib/api";
+import {
+  ROLE_SWITCH_MIN_MS,
+  ROLE_SWITCH_REDUCED_MS,
+  beginRoleSwitch,
+  endRoleSwitch,
+  wait,
+  type RoleSwitchTarget,
+} from "@/lib/role-switch";
 
 export type AccountRole =
   | "super_admin"
@@ -226,21 +234,51 @@ async function postForAccount(path: string, body?: unknown): Promise<AccountProf
 export function useEnterSandbox() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (role: AccountRole) => postForAccount("/auth/sandbox/enter", { role }),
+    mutationFn: (role: AccountRole) =>
+      withRoleSwitchScreen(queryClient, { kind: "enter", role }, () =>
+        postForAccount("/auth/sandbox/enter", { role }),
+      ),
     onSuccess: (account) => {
       queryClient.setQueryData(CURRENT_ACCOUNT_KEY, account);
+      endRoleSwitch();
     },
+    onError: () => endRoleSwitch(true),
   });
 }
 
 export function useExitSandbox() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => postForAccount("/auth/sandbox/exit"),
+    mutationFn: () =>
+      withRoleSwitchScreen(queryClient, { kind: "exit" }, () =>
+        postForAccount("/auth/sandbox/exit"),
+      ),
     onSuccess: (account) => {
       queryClient.setQueryData(CURRENT_ACCOUNT_KEY, account);
+      endRoleSwitch();
     },
+    onError: () => endRoleSwitch(true),
   });
+}
+
+/** Runs a role switch behind the full-screen loading screen: the overlay goes
+ * up first, the request runs under it, and the result isn't returned until the
+ * screen has been up for its full intended duration (so it reads as a
+ * deliberate transition, not a flash). The caller's onSuccess then swaps the
+ * account in — still under the cover — and fades it out. */
+async function withRoleSwitchScreen<T>(
+  queryClient: QueryClient,
+  target: RoleSwitchTarget,
+  run: () => Promise<T>,
+): Promise<T> {
+  const cached = queryClient.getQueryData<AccountProfile>(CURRENT_ACCOUNT_KEY);
+  const durationMs =
+    (cached?.animations_enabled ?? true) ? ROLE_SWITCH_MIN_MS : ROLE_SWITCH_REDUCED_MS;
+  const started = Date.now();
+  beginRoleSwitch(target, durationMs);
+  const result = await run();
+  await wait(Math.max(0, durationMs - (Date.now() - started)));
+  return result;
 }
 
 /** Ends this app's session. Resolves to the TGO Gateway's logout URL when the
