@@ -4,10 +4,11 @@ import { fetchAccountPresence, terminateSession } from "@/data/session-api";
 
 const PRESENCE_KEY = ["account-presence"] as const;
 
-// Shorter poll than most of this app's 15s data (see employee-store.ts etc.)
-// — "who's active right now" is the whole point of this panel, so it should
-// feel closer to live than a directory listing needs to.
-const PRESENCE_POLL_MS = 10_000;
+// "Who's active right now" is the whole point of this panel, so it refreshes
+// every few seconds (the rest of the app polls at 15s) — but only while the
+// tab is actually visible, so a forgotten background tab costs nothing, and
+// it refetches the instant you come back to the tab.
+export const PRESENCE_POLL_MS = 3_000;
 
 /** `enabled` should be false for anyone who isn't Super Admin — the backend
  * 403s otherwise, and there's no reason to poll a query that will only ever
@@ -18,6 +19,8 @@ export function useAccountPresenceQuery(enabled: boolean) {
     queryFn: fetchAccountPresence,
     enabled,
     refetchInterval: enabled ? PRESENCE_POLL_MS : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always",
   });
 }
 

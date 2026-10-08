@@ -20,7 +20,7 @@ from app.services.activity_log import record_activity
 # if it's both unrevoked and its last_seen_at is within this window — a bit
 # wider than SESSION_LAST_SEEN_THROTTLE in app/core/auth.py (60s) so the
 # throttle's own lag never makes a genuinely-active tab flicker to "ago".
-ACTIVE_NOW_WINDOW = timedelta(minutes=3)
+ACTIVE_NOW_WINDOW = timedelta(seconds=75)
 
 # Every route on this router requires the caller to already be signed in as
 # an admin (see app.core.auth.require_admin) — that's what makes this "user

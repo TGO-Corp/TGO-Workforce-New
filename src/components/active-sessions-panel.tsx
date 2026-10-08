@@ -110,10 +110,31 @@ function ModuleCell({ item }: { item: AccountPresence }) {
   );
 }
 
+/** "Live" badge: a pulsing dot (still when animations are off) that flickers
+ * brighter for a moment each time fresh data lands, so you can see it's
+ * really updating. */
+function LiveIndicator({ fetching }: { fetching: boolean }) {
+  const { data: account } = useCurrentAccount();
+  const animate = account?.animations_enabled ?? true;
+  return (
+    <span className="ml-1 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+      <span className="relative flex h-2 w-2">
+        {animate && (
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
+        )}
+        <span
+          className={`relative inline-flex h-2 w-2 rounded-full bg-emerald-500 transition-opacity duration-300 ${fetching ? "opacity-60" : "opacity-100"}`}
+        />
+      </span>
+      Live
+    </span>
+  );
+}
+
 export function ActiveSessionsPanel() {
   const { data: account } = useCurrentAccount();
   const isSuperAdmin = isSuperAdminRole(getEffectiveRole(account));
-  const { data, isLoading, isError } = useAccountPresenceQuery(isSuperAdmin);
+  const { data, isLoading, isError, isFetching } = useAccountPresenceQuery(isSuperAdmin);
   const terminateMutation = useTerminateSession();
   const [terminating, setTerminating] = useState<AccountPresence | null>(null);
 
@@ -142,10 +163,11 @@ export function ActiveSessionsPanel() {
         <CardTitle className="flex items-center gap-2">
           <Radio className="h-4 w-4 text-muted-foreground" />
           Active Sessions
+          <LiveIndicator fetching={isFetching} />
         </CardTitle>
         <CardDescription>
-          {activeNowCount} active right now · Super Admin only — location and device are approximate
-          (from IP address and browser).
+          {activeNowCount} active right now · updates every few seconds · Super Admin only —
+          location and device are approximate (from IP address and browser).
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">

@@ -60,6 +60,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [pathname, signedIn]);
 
+  // Heartbeat: while this tab is open and visible, say so every 20s, so the
+  // Super Admin's Active Sessions panel can tell "here right now" from "left
+  // a minute ago" (a session counts as active for ~75s after its last beat).
+  // Also beats the moment the tab becomes visible again.
+  useEffect(() => {
+    if (!signedIn) return;
+    const beat = () => {
+      if (document.visibilityState === "visible") void reportPresence(pathname);
+    };
+    const interval = window.setInterval(beat, 20_000);
+    document.addEventListener("visibilitychange", beat);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", beat);
+    };
+  }, [pathname, signedIn]);
+
   async function handleSignOut() {
     // The next sign-in gets the intro again.
     try {
