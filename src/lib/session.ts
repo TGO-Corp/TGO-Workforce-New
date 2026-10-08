@@ -96,6 +96,21 @@ export type AccountProfile = {
   animations_enabled: boolean;
   // Whether the post-login intro video plays for this account (default on).
   show_intro: boolean;
+  // Per-page saved list filters (see SavedFilters above) — stored on the account
+  // so a person's choices follow them across devices.
+  saved_filters: SavedFilters;
+};
+
+// Saved filters for the Anniversaries / Birthdays pages — mirrors
+// MilestoneFilterPrefs / SavedFilters in backend/app/schemas/account.py.
+export type MilestoneFilterPrefs = {
+  arrangement: "calendar" | "current-onward" | "current-first";
+  office: string;
+  time: "all" | "this-month" | "last-7" | "next-7" | "last-30" | "next-30";
+};
+export type SavedFilters = {
+  anniversaries?: MilestoneFilterPrefs | null;
+  birthdays?: MilestoneFilterPrefs | null;
 };
 
 export type PreferencesPatch = Partial<
@@ -113,6 +128,7 @@ export type PreferencesPatch = Partial<
     | "notify_on_hmo_member_added"
     | "animations_enabled"
     | "show_intro"
+    | "saved_filters"
   >
 >;
 

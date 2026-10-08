@@ -1,10 +1,11 @@
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Award, CalendarClock, ShieldAlert, Star, Trophy } from "lucide-react";
 
 import { PageHeader } from "@/components/app-shell";
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { MetricCard } from "@/components/metric-card";
+import { SavedFiltersIndicator } from "@/components/saved-filters-indicator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import { useEmployees } from "@/data/employee-store";
 import { canViewMilestones } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useCurrentAccount } from "@/lib/session";
+import { useSavedMilestoneFilters } from "@/lib/use-saved-milestone-filters";
 
 const TIME_FILTERS: MilestoneTimeFilter[] = [
   "all",
@@ -82,9 +84,17 @@ function AnniversariesPage() {
   const { data: account, isLoading: accountLoading } = useCurrentAccount();
   const canView = canViewMilestones(account?.permissions);
   const employees = useEmployees();
-  const [timeFilter, setTimeFilter] = useState<MilestoneTimeFilter>("all");
-  const [arrangement, setArrangement] = useState<MonthArrangement>("calendar");
-  const [officeFilter, setOfficeFilter] = useState<OfficeFilter>(ALL_OFFICES);
+  // Filters live on the account (see use-saved-milestone-filters.ts): they
+  // load with it and save themselves when changed.
+  const {
+    time: timeFilter,
+    office: officeFilter,
+    arrangement,
+    setTime: setTimeFilter,
+    setOffice: setOfficeFilter,
+    setArrangement,
+    status: saveStatus,
+  } = useSavedMilestoneFilters("anniversaries");
   const allMilestones = anniversaries(employees);
   const officeMilestones = allMilestones.filter(
     (e) => officeFilter === ALL_OFFICES || e.office === officeFilter,
@@ -189,6 +199,7 @@ function AnniversariesPage() {
                 ))}
               </SelectContent>
             </Select>
+            <SavedFiltersIndicator status={saveStatus} />
           </div>
         }
       />

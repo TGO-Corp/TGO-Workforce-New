@@ -2,12 +2,29 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.account import AccountRole
 from app.models.permission import Permission
 
 Theme = Literal["light", "dark"]
+
+
+class MilestoneFilterPrefs(BaseModel):
+    """Saved filters for one Anniversaries/Birthdays page. Mirrors the page's
+    own dropdowns (see src/lib/use-saved-milestone-filters.ts)."""
+
+    arrangement: Literal["calendar", "current-onward", "current-first"] = "calendar"
+    # "all" or an office name — not checked against the office list, so adding
+    # an office never needs a migration; the page falls back to "all" for one
+    # it doesn't know.
+    office: str = Field(default="all", max_length=60)
+    time: Literal["all", "this-month", "last-7", "next-7", "last-30", "next-30"] = "all"
+
+
+class SavedFilters(BaseModel):
+    anniversaries: MilestoneFilterPrefs | None = None
+    birthdays: MilestoneFilterPrefs | None = None
 
 
 class AccountRead(BaseModel):
@@ -36,6 +53,7 @@ class AccountRead(BaseModel):
     notify_on_hmo_member_added: bool
     animations_enabled: bool
     show_intro: bool
+    saved_filters: SavedFilters = SavedFilters()
     # Not a mapped column — populated by the /auth/me route (and anywhere else
     # that returns AccountRead for "the signed-in caller") via
     # get_account_permissions(). The frontend uses this instead of hardcoding
@@ -89,6 +107,9 @@ class AccountPreferencesUpdate(BaseModel):
     notify_on_hmo_member_added: bool | None = None
     animations_enabled: bool | None = None
     show_intro: bool | None = None
+    # Merged per page on save (see PATCH /auth/me/preferences), so saving the
+    # Birthdays filters never wipes the Anniversaries ones.
+    saved_filters: SavedFilters | None = None
 
 
 class SandboxRoleRequest(BaseModel):

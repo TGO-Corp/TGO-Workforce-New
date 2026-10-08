@@ -490,8 +490,18 @@ async def update_my_preferences(
     the admin-only /accounts router — anyone signed in can change their own
     preferences, same as they could always toggle their own theme."""
     changes = payload.model_dump(exclude_unset=True)
+    # Saved filters are merged page by page into what's already stored.
+    incoming_filters = changes.pop("saved_filters", None)
     for field, value in changes.items():
         setattr(account, field, value)
+    if incoming_filters:
+        merged = dict(account.saved_filters or {})
+        for page, prefs in incoming_filters.items():
+            if prefs is not None:
+                merged[page] = prefs
+        # Reassigned (not mutated in place) so SQLAlchemy sees the change.
+        account.saved_filters = merged
+        changes["saved_filters"] = merged
     if changes:
         await db.commit()
         await db.refresh(account)

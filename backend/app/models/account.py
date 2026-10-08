@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Enum, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Enum, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -177,6 +177,14 @@ class Account(Base):
     # animations_enabled; a device-level reduced-motion setting still skips it.
     show_intro: Mapped[bool] = mapped_column(
         Boolean, default=True, server_default="true", nullable=False
+    )
+    # Saved list filters, one entry per page that has them (today the
+    # Anniversaries and Birthdays pages: month arrangement, office, time
+    # range) — a small JSON object validated by SavedFilters in
+    # app/schemas/account.py. Lives on the account, not in the browser, so the
+    # person's choice follows them across devices.
+    saved_filters: Mapped[dict] = mapped_column(
+        JSON, default=dict, server_default=text("'{}'"), nullable=False
     )
 
     created_at: Mapped[datetime] = mapped_column(
