@@ -17,7 +17,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { SandboxBanner } from "@/components/sandbox-banner";
 import { Button } from "@/components/ui/button";
-import { leaveGateway, signOut, useCurrentAccount, useEnterSandbox } from "@/lib/session";
+import {
+  fetchSignInStatus,
+  leaveGateway,
+  signOut,
+  useCurrentAccount,
+  useEnterSandbox,
+} from "@/lib/session";
 import { ROLE_LABELS, SANDBOXABLE_ROLES } from "@/lib/roles";
 import {
   DropdownMenu,
@@ -46,9 +52,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: account, isLoading } = useCurrentAccount();
 
   useEffect(() => {
-    if (!isLoading && !account) {
-      navigate({ to: "/login" });
-    }
+    if (isLoading || account) return;
+    let cancelled = false;
+    // Signed out: with the TGO Gateway in front, go straight to its login (which
+    // returns here afterwards) instead of stopping at a Workforce login page.
+    // Anything else (a denial, Zoho mode, the Gateway down) goes to /login, which
+    // then explains it.
+    void fetchSignInStatus().then((signIn) => {
+      if (cancelled) return;
+      if (signIn.mode === "gateway" && signIn.status === "signed_out" && signIn.login_url) {
+        window.location.href = signIn.login_url;
+      } else {
+        navigate({ to: "/login" });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [isLoading, account, navigate]);
 
   // Tell the backend which module this browser is in (for the Super Admin's
