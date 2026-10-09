@@ -302,7 +302,44 @@ async function withRoleSwitchScreen<T>(
 /** Ends this app's session. Resolves to the TGO Gateway's logout URL when the
  * Gateway owns sign-in: the caller must go there too, or the still-live
  * Gateway session signs them straight back in on the next request. */
-export async function signOut(): Promise<string | null> {
+/** Where to send the browser to leave the TGO Gateway: end its session at
+ * `logoutUrl`, then land on `loginUrl` — the Gateway's login page already
+ * pointed back at this app (login_url from /auth/status), so signing in again
+ * returns here instead of stopping at the Gateway's own dashboard. */
+export type GatewayExit = { logoutUrl: string; loginUrl: string | null };
+
+/** Ends the Gateway session, then goes to its login page (with `next` back to
+ * this app). The Gateway's own /auth/logout always lands on its bare login page
+ * and takes no return address, so the logout is fired in the background (the
+ * browser still processes its cookie-clearing response) and we navigate
+ * ourselves. Never leaves the person stuck: a slow or failed logout call is
+ * given up on after a few seconds and the navigation happens anyway. */
+export async function leaveGateway({ logoutUrl, loginUrl }: GatewayExit): Promise<void> {
+  if (loginUrl) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 4000);
+    try {
+      await fetch(logoutUrl, {
+        mode: "no-cors",
+        credentials: "include",
+        redirect: "manual",
+        signal: controller.signal,
+      });
+    } catch {
+      // Fall through: navigate to the logout URL itself below so the session
+      // still ends even if the background call couldn't be made.
+      window.clearTimeout(timer);
+      window.location.href = logoutUrl;
+      return;
+    }
+    window.clearTimeout(timer);
+    window.location.href = loginUrl;
+    return;
+  }
+  window.location.href = logoutUrl;
+}
+
+export async function signOut(): Promise<GatewayExit | null> {
   try {
     await fetch(apiUrl("/auth/logout"), {
       method: "POST",
@@ -312,7 +349,10 @@ export async function signOut(): Promise<string | null> {
     // Best-effort — the cookie expires on its own even if this call fails.
   }
   const signIn = await fetchSignInStatus();
-  return signIn.mode === "gateway" ? signIn.logout_url : null;
+  if (signIn.mode === "gateway" && signIn.logout_url) {
+    return { logoutUrl: signIn.logout_url, loginUrl: signIn.login_url };
+  }
+  return null;
 }
 
 /** Email + password fallback sign-in (POST /auth/login) — for when Zoho / the

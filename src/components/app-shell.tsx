@@ -16,7 +16,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { SandboxBanner } from "@/components/sandbox-banner";
 import { Button } from "@/components/ui/button";
-import { signOut, useCurrentAccount, useEnterSandbox } from "@/lib/session";
+import { leaveGateway, signOut, useCurrentAccount, useEnterSandbox } from "@/lib/session";
 import { ROLE_LABELS, SANDBOXABLE_ROLES } from "@/lib/roles";
 import {
   DropdownMenu,
@@ -84,9 +84,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     }
-    const gatewayLogoutUrl = await signOut();
-    if (gatewayLogoutUrl) {
-      window.location.href = gatewayLogoutUrl;
+    const gatewayExit = await signOut();
+    if (gatewayExit) {
+      // Ends the Gateway session, then lands on its login page pointed back here.
+      await leaveGateway(gatewayExit);
       return;
     }
     navigate({ to: "/login" });

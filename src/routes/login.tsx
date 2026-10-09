@@ -12,6 +12,7 @@ import {
   CURRENT_ACCOUNT_KEY,
   fetchCurrentAccount,
   fetchSignInStatus,
+  leaveGateway,
   signInWithPassword,
   signInWithZoho,
   type SignInStatus,
@@ -223,7 +224,7 @@ function GatewayNotice({ signIn }: { signIn: SignInStatus }) {
           if (retry) {
             window.location.reload();
           } else if (signIn.logout_url) {
-            window.location.href = signIn.logout_url;
+            void leaveGateway({ logoutUrl: signIn.logout_url, loginUrl: signIn.login_url });
           }
         }}
       >
