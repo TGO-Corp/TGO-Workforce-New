@@ -4,7 +4,17 @@
 // just drop this in without their own check.
 
 import { useState } from "react";
-import { AlertTriangle, Compass, Loader2, MapPin, Monitor, Radio, ShieldOff } from "lucide-react";
+import {
+  AlertTriangle,
+  Compass,
+  Loader2,
+  MapPin,
+  Monitor,
+  Radio,
+  ShieldOff,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -29,6 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { NAV_ITEMS } from "@/components/app-sidebar";
 import type { AccountPresence } from "@/data/session-api";
 import { useAccountPresenceQuery, useTerminateSession } from "@/data/session-store";
 import { getEffectiveRole, isSuperAdminRole } from "@/lib/permissions";
@@ -84,28 +95,47 @@ function StatusBadge({ item }: { item: AccountPresence }) {
 /** "In HMO Management" while they're active right now, "Last in Employee
  * Directory" once they're not — the module comes from what their browser last
  * reported, so it survives them leaving the page or signing out. */
+// Each module's icon is the one its sidebar entry uses, so the Module column
+// reads the same as the navigation. The labels are the ones the backend reports
+// (module_for_path in backend/app/services/session_info.py) — they match the
+// sidebar titles, plus "My Profile" which has no sidebar entry. Anything
+// unrecognised falls back to a compass.
+const MODULE_ICONS: Map<string, LucideIcon> = new Map([
+  ...NAV_ITEMS.map((item): [string, LucideIcon] => [item.title, item.icon]),
+  ["My Profile", UserRound],
+]);
+
 function ModuleCell({ item }: { item: AccountPresence }) {
   if (!item.currentModule) {
     return <span className="text-xs text-muted-foreground">—</span>;
   }
   const live = item.status === "active_now";
+  const Icon = MODULE_ICONS.get(item.currentModule) ?? Compass;
   return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-1.5 text-sm">
-        <Compass
-          className={`h-3.5 w-3.5 shrink-0 ${live ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
-        />
-        <span className="truncate font-medium">
-          <span className="font-normal text-muted-foreground">{live ? "In " : "Last in "}</span>
-          {item.currentModule}
-        </span>
-      </div>
-      {item.moduleChangedAt && (
-        <p className="mt-0.5 pl-5 text-xs text-muted-foreground">
-          {live ? "since " : ""}
-          {timeAgo(item.moduleChangedAt)}
+    <div className="flex min-w-0 items-center gap-2.5">
+      {/* A small tile around the module icon: green while they're there right
+          now, muted once it's just where they last were. */}
+      <span
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+          live
+            ? "bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/25 dark:text-emerald-400"
+            : "bg-muted text-muted-foreground"
+        }`}
+      >
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-sm">
+          <span className="text-muted-foreground">{live ? "In " : "Last in "}</span>
+          <span className="font-medium">{item.currentModule}</span>
         </p>
-      )}
+        {item.moduleChangedAt && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {live ? "since " : ""}
+            {timeAgo(item.moduleChangedAt)}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
