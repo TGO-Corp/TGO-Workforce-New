@@ -12,6 +12,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { HardRefreshButton } from "@/components/hard-refresh-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { SandboxBanner } from "@/components/sandbox-banner";
@@ -134,6 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <HeaderSearch />
 
               <div className="ml-auto flex items-center gap-1">
+                <HardRefreshButton />
                 <NotificationBell />
                 <ThemeToggle />
                 <DropdownMenu>
