@@ -309,25 +309,31 @@ async function withRoleSwitchScreen<T>(
 export type GatewayExit = { logoutUrl: string; loginUrl: string | null };
 
 /** Ends the Gateway session, then goes to its login page (with `next` back to
- * this app). The Gateway's own /auth/logout always lands on its bare login page
- * and takes no return address, so the logout is fired in the background (the
- * browser still processes its cookie-clearing response) and we navigate
- * ourselves. Never leaves the person stuck: a slow or failed logout call is
- * given up on after a few seconds and the navigation happens anyway. */
+ * this app). The Gateway's GET /auth/logout always lands on its bare login
+ * page and takes no return address, so we use its POST /auth/logout instead —
+ * it answers 204 and clears the session cookie, with no redirect — and then
+ * navigate ourselves. It is sent as a no-cors POST (a "simple request", so no
+ * CORS setup is needed on the Gateway) with credentials, which is same-site
+ * for *.tgocorp.com; the response is opaque but the browser still applies the
+ * cookie-clearing header. (A GET with redirect:"manual" throws in no-cors
+ * mode — tried first, and it silently fell back to the bare login page.)
+ * Never leaves the person stuck: a slow or failed call is given up on after a
+ * few seconds and we still navigate. */
 export async function leaveGateway({ logoutUrl, loginUrl }: GatewayExit): Promise<void> {
   if (loginUrl) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 4000);
     try {
       await fetch(logoutUrl, {
+        method: "POST",
         mode: "no-cors",
         credentials: "include",
-        redirect: "manual",
         signal: controller.signal,
       });
     } catch {
-      // Fall through: navigate to the logout URL itself below so the session
-      // still ends even if the background call couldn't be made.
+      // The background call couldn't be made (offline, blocked, timed out).
+      // Falling back to the Gateway's own logout page still ends the session,
+      // it just can't carry the return address.
       window.clearTimeout(timer);
       window.location.href = logoutUrl;
       return;
