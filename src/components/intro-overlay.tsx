@@ -13,7 +13,7 @@
 //
 // Playback is preloaded: the video only starts once the browser reports it
 // can play through (`canplaythrough`), so it never stutters mid-way. It never
-// traps anyone: Skip button + Esc, an automatic exit if the video errors, is
+// traps anyone: double tap / double click to skip, Esc, an automatic exit if the video errors, is
 // blocked from autoplaying, or hasn't become playable in a few seconds. It is
 // skipped entirely when the account has switched "Welcome intro" off in
 // Settings (Account.show_intro, on by default), or the OS asks for reduced
@@ -28,6 +28,13 @@ const FADE_MS = 500;
 // first (heaviest) render happens out of sight instead of mid-fade.
 const SETTLE_MS = 250;
 const READY_TIMEOUT_MS = 8000;
+// Double-tap / double-click to skip: two taps within this window and this
+// distance of each other. Handled with pointer events (not `dblclick`) so it
+// behaves the same on touch screens, where dblclick is unreliable.
+const DOUBLE_TAP_MS = 350;
+const DOUBLE_TAP_SLOP_PX = 48;
+// How long the "double tap to skip" hint stays visible once the video starts.
+const HINT_VISIBLE_MS = 4500;
 
 type Phase = "checking" | "loading" | "playing" | "revealing" | "done";
 
@@ -42,6 +49,8 @@ function markPlayed() {
 export function IntroGate({ enabled, children }: { enabled: boolean; children: ReactNode }) {
   const [phase, setPhase] = useState<Phase>("checking");
   const videoRef = useRef<HTMLVideoElement>(null);
+  const lastTap = useRef<{ time: number; x: number; y: number } | null>(null);
+  const [hintVisible, setHintVisible] = useState(false);
 
   useEffect(() => {
     let alreadyPlayed = false;
@@ -83,6 +92,30 @@ export function IntroGate({ enabled, children }: { enabled: boolean; children: R
     };
   }, [phase, finish]);
 
+  // The skip hint shows for a few seconds after the video starts, then fades.
+  useEffect(() => {
+    if (phase !== "playing") return;
+    setHintVisible(true);
+    const timer = window.setTimeout(() => setHintVisible(false), HINT_VISIBLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  function handlePointerUp(event: React.PointerEvent) {
+    if (phase !== "playing") return;
+    const now = Date.now();
+    const previous = lastTap.current;
+    if (
+      previous &&
+      now - previous.time <= DOUBLE_TAP_MS &&
+      Math.hypot(event.clientX - previous.x, event.clientY - previous.y) <= DOUBLE_TAP_SLOP_PX
+    ) {
+      lastTap.current = null;
+      finish();
+      return;
+    }
+    lastTap.current = { time: now, x: event.clientX, y: event.clientY };
+  }
+
   const appVisible = phase === "revealing" || phase === "done";
   const coverVisible = phase === "loading" || phase === "playing" || phase === "revealing";
 
@@ -91,8 +124,11 @@ export function IntroGate({ enabled, children }: { enabled: boolean; children: R
       {appVisible ? children : null}
       {coverVisible && (
         <div
-          className="fixed inset-0 z-[100] overflow-hidden bg-black"
+          className="fixed inset-0 z-[100] select-none overflow-hidden bg-black"
+          onPointerUp={handlePointerUp}
           style={{
+            // Stops the browser treating the double tap as a zoom gesture.
+            touchAction: "manipulation",
             opacity: phase === "revealing" ? 0 : 1,
             transition:
               phase === "revealing" ? `opacity ${FADE_MS}ms ease-out ${SETTLE_MS}ms` : "none",
@@ -119,16 +155,15 @@ export function IntroGate({ enabled, children }: { enabled: boolean; children: R
             onEnded={finish}
             onError={finish}
           />
-          {/* Solid, not backdrop-blurred: a blur filter over a playing video
-              is re-composited every frame and was part of the lag. */}
+          {/* A quiet hint, not a button: skipping is a double tap / double click
+              anywhere on the video (or Esc). Fades out after a few seconds. */}
           {phase === "playing" && (
-            <button
-              type="button"
-              onClick={finish}
-              className="absolute bottom-6 right-6 cursor-pointer rounded-full border border-white/25 bg-black/60 px-4 py-1.5 text-xs font-medium tracking-wide text-white/80 transition-colors hover:bg-black/80 hover:text-white"
+            <p
+              className="pointer-events-none absolute inset-x-0 bottom-6 text-center text-xs tracking-wide text-white/60 transition-opacity duration-700"
+              style={{ opacity: hintVisible ? 1 : 0 }}
             >
-              Skip
-            </button>
+              Double tap to skip
+            </p>
           )}
         </div>
       )}
