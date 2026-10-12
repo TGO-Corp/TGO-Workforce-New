@@ -20,6 +20,7 @@ import { PageHeader } from "@/components/app-shell";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListToolbar, TablePager } from "@/components/list-toolbar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +52,7 @@ import { useHmoMembersQuery, useUpdateHmoMember } from "@/data/hmo-store";
 import { canManageBenefits, canViewBenefits } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useCurrentAccount } from "@/lib/session";
+import { uniqueOptions, useListControls } from "@/lib/use-list-controls";
 
 export const Route = createFileRoute("/hmo-management/$memberId")({
   head: () => ({
@@ -132,6 +134,18 @@ function HmoMemberProfilePage() {
     : undefined;
 
   const { data: activityLogs } = useHmoMemberActivityLogs(memberId);
+  // Search, filter-by-person and paging for the Activity History panel.
+  const activityControls = useListControls(activityLogs ?? [], {
+    searchFields: (log) => [log.action, log.actor, log.timestamp],
+    filters: [
+      {
+        key: "actor",
+        label: "people",
+        options: uniqueOptions((activityLogs ?? []).map((log) => log.actor)),
+        get: (log) => log.actor,
+      },
+    ],
+  });
 
   const updateMutation = useUpdateHmoMember();
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
@@ -957,22 +971,38 @@ function HmoMemberProfilePage() {
           {!activityLogs || activityLogs.length === 0 ? (
             <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
           ) : (
-            <div className="space-y-3">
-              {activityLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-start justify-between gap-4 border-b pb-2 text-sm last:border-0"
-                >
-                  <div>
-                    <p>{log.action}</p>
-                    <p className="text-xs text-muted-foreground">{log.actor}</p>
-                  </div>
-                  <span className="whitespace-nowrap text-xs text-muted-foreground">
-                    {log.timestamp}
-                  </span>
+            <>
+              <ListToolbar
+                controls={activityControls}
+                searchPlaceholder="Search activity..."
+                noun="entries"
+              />
+              {activityControls.pageItems.length === 0 ? (
+                <p className="mt-4 text-sm text-muted-foreground">
+                  No activity matches your search or filters.
+                </p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {activityControls.pageItems.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-start justify-between gap-4 border-b pb-2 text-sm last:border-0"
+                    >
+                      <div>
+                        <p>{log.action}</p>
+                        <p className="text-xs text-muted-foreground">{log.actor}</p>
+                      </div>
+                      <span className="whitespace-nowrap text-xs text-muted-foreground">
+                        {log.timestamp}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+              <div className="-mx-6 -mb-6 mt-4">
+                <TablePager controls={activityControls} noun="entries" />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

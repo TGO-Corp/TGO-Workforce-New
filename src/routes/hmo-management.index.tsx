@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/app-shell";
 import { HmoMemberFormDialog } from "@/components/hmo-member-form-dialog";
+import { ListToolbar, TablePager } from "@/components/list-toolbar";
 import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,7 @@ import { exportHmoMembersCsv, exportHmoMembersPdf } from "@/lib/hmo-export";
 import { canManageBenefits, canViewBenefits } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useCurrentAccount } from "@/lib/session";
+import { uniqueOptions, useListControls } from "@/lib/use-list-controls";
 
 export const Route = createFileRoute("/hmo-management/")({
   head: () => ({
@@ -233,24 +235,158 @@ function HmoManagementPage() {
     }
   }
 
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState(ALL);
-  const [enrollmentFilter, setEnrollmentFilter] = useState(ALL);
-
-  const filteredMembers = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return members.filter((m) => {
-      const matchesQuery = !q || m.displayName.toLowerCase().includes(q);
-      const matchesType = typeFilter === ALL || m.memberType === typeFilter;
-      const matchesEnrollment = enrollmentFilter === ALL || m.enrollmentStatus === enrollmentFilter;
-      return matchesQuery && matchesType && matchesEnrollment;
-    });
-  }, [members, search, typeFilter, enrollmentFilter]);
-
   const enrollmentQueue = useMemo(
     () => members.filter((m) => PENDING_ENROLLMENT_STATUSES.includes(m.enrollmentStatus)),
     [members],
   );
+
+  // --- Search, filters and pagination: one set of controls per tab ------------
+  // (see @/lib/use-list-controls). Every tab searches its own columns, offers
+  // dropdown filters for its status-like fields, and pages 10/25/50 rows at a time.
+  const memberStatusOptions = Object.keys(MEMBER_STATUS_VARIANT);
+  const principalNameOf = (d: HmoMember) =>
+    d.principalMemberId ? (memberById.get(d.principalMemberId)?.displayName ?? null) : null;
+  const monthLabel = (iso: string) =>
+    new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long" });
+  // Newest month first, so page 1 is always the latest billing period.
+  const billingRows = useMemo(() => [...billingPeriods].reverse(), [billingPeriods]);
+
+  const membersControls = useListControls(members, {
+    searchFields: (m) => [m.displayName, m.department, m.hmoCardNumber, m.rank],
+    filters: [
+      { key: "type", label: "types", options: HMO_MEMBER_TYPES, get: (m) => m.memberType },
+      {
+        key: "enrollment",
+        label: "enrollment statuses",
+        options: HMO_ENROLLMENT_STATUSES,
+        get: (m) => m.enrollmentStatus,
+      },
+      {
+        key: "status",
+        label: "member statuses",
+        options: memberStatusOptions,
+        get: (m) => m.memberStatus,
+      },
+      {
+        key: "department",
+        label: "departments",
+        options: uniqueOptions(members.map((m) => m.department)),
+        get: (m) => m.department,
+      },
+      {
+        key: "card",
+        label: "card statuses",
+        options: HMO_PHYSICAL_CARD_STATUSES,
+        get: (m) => m.physicalCardStatus,
+      },
+    ],
+  });
+  // What the Export button writes: every row matching the search/filters, not just this page.
+  const filteredMembers = membersControls.filtered;
+
+  const queueControls = useListControls(enrollmentQueue, {
+    searchFields: (m) => [m.displayName, m.department],
+    filters: [
+      {
+        key: "enrollment",
+        label: "enrollment statuses",
+        options: PENDING_ENROLLMENT_STATUSES,
+        get: (m) => m.enrollmentStatus,
+      },
+      {
+        key: "evaluation",
+        label: "manager evaluations",
+        options: uniqueOptions(enrollmentQueue.map((m) => m.managerEvaluation)),
+        get: (m) => m.managerEvaluation,
+      },
+      {
+        key: "department",
+        label: "departments",
+        options: uniqueOptions(enrollmentQueue.map((m) => m.department)),
+        get: (m) => m.department,
+      },
+    ],
+  });
+
+  const dependentsControls = useListControls(dependents, {
+    searchFields: (d) => [d.displayName, d.relationshipToPrincipal, principalNameOf(d)],
+    filters: [
+      {
+        key: "relationship",
+        label: "relationships",
+        options: uniqueOptions(dependents.map((d) => d.relationshipToPrincipal)),
+        get: (d) => d.relationshipToPrincipal,
+      },
+      {
+        key: "status",
+        label: "member statuses",
+        options: memberStatusOptions,
+        get: (d) => d.memberStatus,
+      },
+      {
+        key: "principal",
+        label: "principal members",
+        options: uniqueOptions(dependents.map(principalNameOf)),
+        get: principalNameOf,
+      },
+    ],
+  });
+
+  const cardsControls = useListControls(members, {
+    searchFields: (m) => [m.displayName, m.hmoCardNumber],
+    filters: [
+      {
+        key: "virtual",
+        label: "virtual cards",
+        options: HMO_VIRTUAL_CARD_STATUSES,
+        get: (m) => m.virtualCardStatus,
+      },
+      {
+        key: "physical",
+        label: "physical cards",
+        options: HMO_PHYSICAL_CARD_STATUSES,
+        get: (m) => m.physicalCardStatus,
+      },
+      {
+        key: "status",
+        label: "member statuses",
+        options: memberStatusOptions,
+        get: (m) => m.memberStatus,
+      },
+    ],
+  });
+
+  const requestsControls = useListControls(requests, {
+    searchFields: (r) => [memberById.get(r.memberId)?.displayName, r.requestType, r.notes],
+    filters: [
+      {
+        key: "status",
+        label: "statuses",
+        options: ["Pending", "Approved", "Rejected"],
+        get: (r) => r.status,
+      },
+      {
+        key: "type",
+        label: "request types",
+        options: uniqueOptions(requests.map((r) => r.requestType)),
+        get: (r) => r.requestType,
+      },
+    ],
+  });
+
+  const billingControls = useListControls(billingRows, {
+    searchFields: (b) => [monthLabel(b.month), b.notes],
+    filters: [
+      {
+        key: "year",
+        label: "years",
+        options: uniqueOptions(
+          billingRows.map((b) => String(new Date(b.month).getFullYear())),
+        ).reverse(),
+        get: (b) => String(new Date(b.month).getFullYear()),
+      },
+    ],
+  });
 
   // --- SOP dashboard KPIs (section 3) --------------------------------------
   const activeMembers = members.filter((m) => m.memberStatus === "Active").length;
@@ -588,6 +724,11 @@ function HmoManagementPage() {
 
         {/* --- Enrollment Queue --- */}
         <TabsContent value="queue" className="space-y-4">
+          <ListToolbar
+            controls={queueControls}
+            searchPlaceholder="Search name or department..."
+            noun="members"
+          />
           <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -604,14 +745,16 @@ function HmoManagementPage() {
                   <TableBody>
                     {membersLoading ? (
                       <TableSkeletonRows columns={5} />
-                    ) : enrollmentQueue.length === 0 ? (
+                    ) : queueControls.pageItems.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                          Nothing in the enrollment queue.
+                          {queueControls.total === 0
+                            ? "Nothing in the enrollment queue."
+                            : "No members match your search or filters."}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      enrollmentQueue.map((m) => (
+                      queueControls.pageItems.map((m) => (
                         <TableRow key={m.id}>
                           <TableCell className="font-medium whitespace-nowrap">
                             <Link
@@ -658,12 +801,18 @@ function HmoManagementPage() {
                   </TableBody>
                 </Table>
               </div>
+              <TablePager controls={queueControls} noun="members" />
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* --- Dependents --- */}
         <TabsContent value="dependents" className="space-y-4">
+          <ListToolbar
+            controls={dependentsControls}
+            searchPlaceholder="Search dependent or principal..."
+            noun="dependents"
+          />
           <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -678,14 +827,18 @@ function HmoManagementPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dependents.length === 0 ? (
+                    {membersLoading ? (
+                      <TableSkeletonRows columns={5} />
+                    ) : dependentsControls.pageItems.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                          No dependents on file.
+                          {dependentsControls.total === 0
+                            ? "No dependents on file."
+                            : "No dependents match your search or filters."}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      dependents.map((d) => (
+                      dependentsControls.pageItems.map((d) => (
                         <TableRow key={d.id}>
                           <TableCell className="font-medium whitespace-nowrap">
                             <Link
@@ -698,9 +851,7 @@ function HmoManagementPage() {
                           </TableCell>
                           <TableCell>{d.relationshipToPrincipal ?? "—"}</TableCell>
                           <TableCell className="whitespace-nowrap">
-                            {d.principalMemberId
-                              ? (memberById.get(d.principalMemberId)?.displayName ?? "—")
-                              : "—"}
+                            {principalNameOf(d) ?? "—"}
                           </TableCell>
                           <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                             {formatDate(d.birthday)}
@@ -716,45 +867,18 @@ function HmoManagementPage() {
                   </TableBody>
                 </Table>
               </div>
+              <TablePager controls={dependentsControls} noun="dependents" />
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* --- HMO Members --- */}
         <TabsContent value="members" className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search member name..."
-              className="max-w-xs"
-            />
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="All types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>All types</SelectItem>
-                {HMO_MEMBER_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={enrollmentFilter} onValueChange={setEnrollmentFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="All enrollment statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>All enrollment statuses</SelectItem>
-                {HMO_ENROLLMENT_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <ListToolbar
+            controls={membersControls}
+            searchPlaceholder="Search name, department, card no..."
+            noun="members"
+          >
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" disabled={exportingMembers}>
@@ -781,7 +905,7 @@ function HmoManagementPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </ListToolbar>
 
           {/* SOP section 6: keep this grid narrow, full detail lives on the
               member's own profile page (hmo-management.$memberId.tsx). */}
@@ -805,14 +929,16 @@ function HmoManagementPage() {
                   <TableBody>
                     {membersLoading ? (
                       <TableSkeletonRows columns={9} />
-                    ) : filteredMembers.length === 0 ? (
+                    ) : membersControls.pageItems.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
-                          No members match your search.
+                          {membersControls.total === 0
+                            ? "No HMO members yet."
+                            : "No members match your search or filters."}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredMembers.map((m) => (
+                      membersControls.pageItems.map((m) => (
                         <TableRow key={m.id}>
                           <TableCell className="font-medium whitespace-nowrap">
                             {m.displayName}
@@ -862,12 +988,18 @@ function HmoManagementPage() {
                   </TableBody>
                 </Table>
               </div>
+              <TablePager controls={membersControls} noun="members" />
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* --- Card Tracking --- */}
         <TabsContent value="cards" className="space-y-4">
+          <ListToolbar
+            controls={cardsControls}
+            searchPlaceholder="Search member or card no..."
+            noun="members"
+          />
           <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -880,72 +1012,90 @@ function HmoManagementPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {members.map((m) => (
-                      <TableRow key={m.id}>
-                        <TableCell className="font-medium whitespace-nowrap">
-                          {m.displayName}
-                        </TableCell>
-                        <TableCell>
-                          {canManage ? (
-                            <Select
-                              value={m.virtualCardStatus}
-                              onValueChange={(v) =>
-                                updateMemberField(m.id, {
-                                  virtualCardStatus: v as HmoVirtualCardStatus,
-                                })
-                              }
-                            >
-                              <SelectTrigger className="h-8 w-[170px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {HMO_VIRTUAL_CARD_STATUSES.map((s) => (
-                                  <SelectItem key={s} value={s}>
-                                    {s}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Badge variant="outline">{m.virtualCardStatus}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {canManage ? (
-                            <Select
-                              value={m.physicalCardStatus}
-                              onValueChange={(v) =>
-                                updateMemberField(m.id, {
-                                  physicalCardStatus: v as HmoPhysicalCardStatus,
-                                })
-                              }
-                            >
-                              <SelectTrigger className="h-8 w-[190px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {HMO_PHYSICAL_CARD_STATUSES.map((s) => (
-                                  <SelectItem key={s} value={s}>
-                                    {s}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Badge variant="outline">{m.physicalCardStatus}</Badge>
-                          )}
+                    {membersLoading ? (
+                      <TableSkeletonRows columns={3} />
+                    ) : cardsControls.pageItems.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                          {cardsControls.total === 0
+                            ? "No members to track cards for yet."
+                            : "No members match your search or filters."}
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      cardsControls.pageItems.map((m) => (
+                        <TableRow key={m.id}>
+                          <TableCell className="font-medium whitespace-nowrap">
+                            {m.displayName}
+                          </TableCell>
+                          <TableCell>
+                            {canManage ? (
+                              <Select
+                                value={m.virtualCardStatus}
+                                onValueChange={(v) =>
+                                  updateMemberField(m.id, {
+                                    virtualCardStatus: v as HmoVirtualCardStatus,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="h-8 w-[170px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {HMO_VIRTUAL_CARD_STATUSES.map((s) => (
+                                    <SelectItem key={s} value={s}>
+                                      {s}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge variant="outline">{m.virtualCardStatus}</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {canManage ? (
+                              <Select
+                                value={m.physicalCardStatus}
+                                onValueChange={(v) =>
+                                  updateMemberField(m.id, {
+                                    physicalCardStatus: v as HmoPhysicalCardStatus,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="h-8 w-[190px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {HMO_PHYSICAL_CARD_STATUSES.map((s) => (
+                                    <SelectItem key={s} value={s}>
+                                      {s}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Badge variant="outline">{m.physicalCardStatus}</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
+              <TablePager controls={cardsControls} noun="members" />
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* --- Requests --- */}
         <TabsContent value="requests" className="space-y-4">
+          <ListToolbar
+            controls={requestsControls}
+            searchPlaceholder="Search member, type or notes..."
+            noun="requests"
+          />
           <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -961,17 +1111,19 @@ function HmoManagementPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {requests.length === 0 ? (
+                    {requestsControls.pageItems.length === 0 ? (
                       <TableRow>
                         <TableCell
                           colSpan={canManage ? 6 : 5}
                           className="h-24 text-center text-muted-foreground"
                         >
-                          No requests yet.
+                          {requestsControls.total === 0
+                            ? "No requests yet."
+                            : "No requests match your search or filters."}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      requests.map((r) => (
+                      requestsControls.pageItems.map((r) => (
                         <TableRow key={r.id}>
                           <TableCell className="font-medium whitespace-nowrap">
                             {memberById.get(r.memberId)?.displayName ?? "—"}
@@ -1023,6 +1175,7 @@ function HmoManagementPage() {
                   </TableBody>
                 </Table>
               </div>
+              <TablePager controls={requestsControls} noun="requests" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -1046,6 +1199,13 @@ function HmoManagementPage() {
               )}
             </CardHeader>
             <CardContent className="p-0">
+              <div className="border-b px-4 pb-4">
+                <ListToolbar
+                  controls={billingControls}
+                  searchPlaceholder="Search month or notes..."
+                  noun="periods"
+                />
+              </div>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -1058,23 +1218,20 @@ function HmoManagementPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {billingPeriods.length === 0 ? (
+                    {billingControls.pageItems.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                          No billing periods recorded yet.
+                          {billingControls.total === 0
+                            ? "No billing periods recorded yet."
+                            : "No billing periods match your search or filters."}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      billingPeriods.map((b) => {
+                      billingControls.pageItems.map((b) => {
                         const variance = expectedBilling - b.providerInvoiceAmount;
                         return (
                           <TableRow key={b.id}>
-                            <TableCell className="font-medium">
-                              {new Date(b.month).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                              })}
-                            </TableCell>
+                            <TableCell className="font-medium">{monthLabel(b.month)}</TableCell>
                             <TableCell>{formatCurrency(expectedBilling)}</TableCell>
                             <TableCell>{formatCurrency(b.providerInvoiceAmount)}</TableCell>
                             <TableCell
@@ -1096,6 +1253,7 @@ function HmoManagementPage() {
                   </TableBody>
                 </Table>
               </div>
+              <TablePager controls={billingControls} noun="periods" />
             </CardContent>
           </Card>
         </TabsContent>
