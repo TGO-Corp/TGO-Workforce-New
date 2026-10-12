@@ -40,7 +40,9 @@ async def list_awards(
     limit: Annotated[int, Query(le=500)] = 200,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[Award]:
-    stmt = select(Award).order_by(Award.awarded_date.desc(), Award.created_at.desc())
+    stmt = select(Award).order_by(
+        Award.awarded_date.desc(), Award.created_at.desc(), Award.id.desc()
+    )
     if employee_id:
         stmt = stmt.where(Award.employee_id == employee_id)
     stmt = stmt.offset(offset).limit(limit)

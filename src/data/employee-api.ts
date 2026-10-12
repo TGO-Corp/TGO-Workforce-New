@@ -6,6 +6,7 @@
 // Query hooks; components should use that, not this file, directly.
 
 import { apiUrl } from "@/lib/api";
+import { fetchAllPages } from "@/lib/paged-fetch";
 import type { Employee, EmployeeStatus } from "@/data/employees";
 
 type BackendEmployee = {
@@ -83,7 +84,10 @@ async function readErrorMessage(response: Response, path: string): Promise<strin
 }
 
 export async function fetchEmployees(): Promise<Employee[]> {
-  const rows = await request<BackendEmployee[]>("/employees?limit=1000");
+  // Every page, not one capped request — the whole app reads this full list.
+  const rows = await fetchAllPages((limit, offset) =>
+    request<BackendEmployee[]>(`/employees?limit=${limit}&offset=${offset}`),
+  );
   return rows.map(fromBackend);
 }
 

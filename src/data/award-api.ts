@@ -2,6 +2,7 @@
 // Recognition & Awards, under the Milestones nav group.
 
 import { apiUrl } from "@/lib/api";
+import { fetchAllPages } from "@/lib/paged-fetch";
 
 export type Award = {
   id: string;
@@ -69,7 +70,9 @@ async function readErrorMessage(response: Response, path: string): Promise<strin
     if (typeof parsed.detail === "string") return parsed.detail;
     if (Array.isArray(parsed.detail)) {
       const messages = parsed.detail
-        .map((item) => (item && typeof item === "object" && "msg" in item ? String(item.msg) : null))
+        .map((item) =>
+          item && typeof item === "object" && "msg" in item ? String(item.msg) : null,
+        )
         .filter((msg): msg is string => Boolean(msg));
       if (messages.length > 0) return messages.join("; ");
     }
@@ -80,8 +83,12 @@ async function readErrorMessage(response: Response, path: string): Promise<strin
 }
 
 export async function fetchAwards(employeeId?: string): Promise<Award[]> {
-  const params = employeeId ? `?employee_id=${encodeURIComponent(employeeId)}` : "";
-  const rows = await request<BackendAward[]>(`/awards${params}`);
+  // Every page — the server's default page is only 200 awards.
+  const rows = await fetchAllPages((limit, offset) => {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (employeeId) params.set("employee_id", employeeId);
+    return request<BackendAward[]>(`/awards?${params.toString()}`);
+  });
   return rows.map(fromBackend);
 }
 

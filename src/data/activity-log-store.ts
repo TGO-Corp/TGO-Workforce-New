@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiUrl } from "@/lib/api";
 
@@ -119,6 +119,68 @@ export function useHmoMemberActivityLogs(memberId: string | undefined, limit = 2
     queryFn: () =>
       fetchActivityLogs({ category: "benefits", ...(memberId ? { target: memberId } : {}), limit }),
     enabled: !!memberId,
+    refetchInterval: REALTIME_POLL_MS,
+  });
+}
+
+// --- Server-side paging (the Activity Logs page) -----------------------------
+// GET /activity-logs/page does the searching, module/severity/time filtering and
+// paging in the database, so the page never loads the whole audit trail.
+
+export type ActivitySummary = { total: number; critical: number; warning: number; info: number };
+
+export type ActivityLogPageResult = {
+  items: ActivityLogEntry[];
+  /** Entries matching the filters, across every page. */
+  total: number;
+  /** Counts over everything the caller may see, ignoring the filters. */
+  summary: ActivitySummary;
+};
+
+export type ActivityLogPageParams = {
+  page: number;
+  pageSize: number;
+  /** "all" or a title-cased ActivityCategory, as the page's dropdown holds it. */
+  category: string;
+  /** "all" or an ActivitySeverity. */
+  severity: string;
+  query: string;
+  /** Only entries from the last N days; null for all time. */
+  sinceDays: number | null;
+};
+
+async function fetchActivityLogPage(p: ActivityLogPageParams): Promise<ActivityLogPageResult> {
+  const params = new URLSearchParams({
+    limit: String(p.pageSize),
+    offset: String((p.page - 1) * p.pageSize),
+  });
+  if (p.category !== "all") params.set("category", p.category.toLowerCase());
+  if (p.severity !== "all") params.set("severity", p.severity);
+  if (p.query.trim()) params.set("q", p.query.trim());
+  if (p.sinceDays) {
+    params.set("since", new Date(Date.now() - p.sinceDays * 86_400_000).toISOString());
+  }
+  const response = await fetch(apiUrl(`/activity-logs/page?${params.toString()}`), {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load activity logs (${response.status})`);
+  }
+  const body = (await response.json()) as {
+    items: BackendActivityLog[];
+    total: number;
+    summary: ActivitySummary;
+  };
+  return { items: body.items.map(fromBackend), total: body.total, summary: body.summary };
+}
+
+/** One page of the audit trail. `keepPreviousData` keeps the old rows on screen
+ * while the next page or filter loads, instead of flashing an empty table. */
+export function useActivityLogPage(params: ActivityLogPageParams) {
+  return useQuery({
+    queryKey: ["activity-logs", "page", params],
+    queryFn: () => fetchActivityLogPage(params),
+    placeholderData: keepPreviousData,
     refetchInterval: REALTIME_POLL_MS,
   });
 }

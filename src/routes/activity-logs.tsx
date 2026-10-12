@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   ShieldAlert,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/app-shell";
+import { cn } from "@/lib/utils";
 import { TableStateRow } from "@/components/table-state-row";
 import { canViewActivityLogs } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
@@ -37,7 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  useActivityLogs,
+  useActivityLogPage,
   type ActivityCategory,
   type ActivitySeverity,
 } from "@/data/activity-log-store";
@@ -88,14 +89,6 @@ export const Route = createFileRoute("/activity-logs")({
 const PAGE_SIZE = 15;
 type ActivityTimeFilter = "all" | "7" | "30" | "90";
 
-function matchesTimeFilter(occurredAt: string, filter: ActivityTimeFilter): boolean {
-  if (filter === "all") return true;
-  const occurred = new Date(occurredAt);
-  if (Number.isNaN(occurred.getTime())) return false;
-  const days = Number(filter);
-  return Date.now() - occurred.getTime() <= days * 86_400_000;
-}
-
 function ActivityLogsPage() {
   const { data: account, isLoading } = useCurrentAccount();
   if (isLoading) {
@@ -136,42 +129,54 @@ function ActivityLogsPage() {
 }
 
 function ActivityLogsContent() {
-  const { data, isLoading, isError, refetch } = useActivityLogs();
-  const logs = data ?? [];
-
-  const [query, setQuery] = useState("");
+  // Everything below is done by the server (GET /activity-logs/page): the search,
+  // module / severity / time filters and the paging, so this page never holds more
+  // than one page of the audit trail no matter how long it grows.
+  const [queryInput, setQueryInput] = useState(""); // what's typed
+  const [query, setQuery] = useState(""); // what's sent, once typing pauses
   const [category, setCategory] = useState<string>("all");
   const [severity, setSeverity] = useState<string>("all");
   const [timeFilter, setTimeFilter] = useState<ActivityTimeFilter>("all");
   const [page, setPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return logs.filter((log) => {
-      const matchesQuery =
-        !q || [log.id, log.actor, log.action, log.target].some((v) => v.toLowerCase().includes(q));
-      const matchesCategory = category === "all" || log.category === category;
-      const matchesSeverity = severity === "all" || log.severity === severity;
-      return (
-        matchesQuery &&
-        matchesCategory &&
-        matchesSeverity &&
-        matchesTimeFilter(log.occurredAt, timeFilter)
-      );
-    });
-  }, [logs, query, category, severity, timeFilter]);
+  // Wait for a pause in typing before searching, so each keystroke isn't a request.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setQuery(queryInput);
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [queryInput]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const { data, isLoading, isError, isPlaceholderData, refetch } = useActivityLogPage({
+    page,
+    pageSize: PAGE_SIZE,
+    category,
+    severity,
+    query,
+    sinceDays: timeFilter === "all" ? null : Number(timeFilter),
+  });
+  const rows = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const summary = data?.summary;
+
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // If the list shrinks under you (filters, new data), step back onto a real page.
+  useEffect(() => {
+    if (!isPlaceholderData && page > pageCount) setPage(pageCount);
+  }, [page, pageCount, isPlaceholderData]);
   const currentPage = Math.min(page, pageCount);
-  const rows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const firstShown = total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const lastShown = firstShown === 0 ? 0 : firstShown + rows.length - 1;
   const hasFilters =
-    !!query.trim() || category !== "all" || severity !== "all" || timeFilter !== "all";
+    !!queryInput.trim() || category !== "all" || severity !== "all" || timeFilter !== "all";
 
-  const critical = logs.filter((l) => l.severity === "critical").length;
-  const warning = logs.filter((l) => l.severity === "warning").length;
-  const info = logs.filter((l) => l.severity === "info").length;
+  const critical = summary?.critical ?? 0;
+  const warning = summary?.warning ?? 0;
+  const info = summary?.info ?? 0;
 
   function clearFilters() {
+    setQueryInput("");
     setQuery("");
     setCategory("all");
     setSeverity("all");
@@ -189,7 +194,7 @@ function ActivityLogsContent() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Total Events"
-          value={logs.length}
+          value={summary?.total ?? 0}
           hint="All recorded events"
           icon={ScrollText}
         />
@@ -218,11 +223,8 @@ function ActivityLogsContent() {
             <div className="relative min-w-[220px] flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setPage(1);
-                }}
+                value={queryInput}
+                onChange={(e) => setQueryInput(e.target.value)}
                 placeholder="Search actor, action or record..."
                 className="pl-8"
               />
@@ -285,7 +287,12 @@ function ActivityLogsContent() {
             </Button>
           </div>
 
-          <div className="rounded-md border">
+          <div
+            className={cn(
+              "rounded-md border transition-opacity",
+              isPlaceholderData && "opacity-60",
+            )}
+          >
             <Table>
               <TableHeader>
                 <TableRow>
@@ -344,7 +351,7 @@ function ActivityLogsContent() {
           {rows.length > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm text-muted-foreground">
-                Showing {rows.length} of {filtered.length} events
+                Showing {firstShown}–{lastShown} of {total} events
               </p>
               <div className="flex items-center gap-2">
                 <Button

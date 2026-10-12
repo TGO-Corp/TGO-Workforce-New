@@ -69,7 +69,8 @@ async def list_employees(
         stmt = stmt.where(Employee.status == status_filter)
     if level_filter:
         stmt = stmt.where(Employee.level == level_filter)
-    stmt = stmt.order_by(Employee.name).offset(offset).limit(limit)
+    # id breaks name ties so paged fetches never repeat or skip a row.
+    stmt = stmt.order_by(Employee.name, Employee.id).offset(offset).limit(limit)
 
     result = await db.execute(stmt)
     return list(result.scalars().all())
