@@ -1,5 +1,16 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Lock, Mail, Send, ShieldAlert, ShieldCheck, UserCheck, Users, X } from "lucide-react";
+import {
+  Lock,
+  Mail,
+  Send,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
+  UserCheck,
+  Users,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { ActiveSessionsPanel } from "@/components/active-sessions-panel";
@@ -7,6 +18,16 @@ import { AddUserDialog } from "@/components/add-user-dialog";
 import { PageHeader } from "@/components/app-shell";
 import { MetricCard } from "@/components/metric-card";
 import { PermissionMatrixEditor } from "@/components/permission-matrix";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,7 +55,9 @@ import {
   usePendingInvitesQuery,
   useRevokePendingInvite,
   useUpdateAccount,
+  useDeleteAccount,
 } from "@/data/account-store";
+import type { Account } from "@/data/account-api";
 import { useAppSettingsQuery, useUpdateAppSettings } from "@/data/app-settings-store";
 import { useCurrentAccount, type AccountRole } from "@/lib/session";
 import { assignableRoleOptions, ROLE_LABELS } from "@/lib/roles";
@@ -90,6 +113,9 @@ function UserManagementPage() {
 
   const accountsQuery = useAccountsQuery(isAdmin);
   const updateAccount = useUpdateAccount();
+  const deleteAccount = useDeleteAccount();
+  // The account the "Remove account" confirmation dialog is open for.
+  const [removeTarget, setRemoveTarget] = useState<Account | null>(null);
   const invitesQuery = usePendingInvitesQuery(isAdmin);
   const revokeInvite = useRevokePendingInvite();
   const appSettingsQuery = useAppSettingsQuery(isSuperAdmin);
@@ -154,6 +180,18 @@ function UserManagementPage() {
       toast.success(`Revoked invite for ${email}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Couldn't revoke invite");
+    }
+  }
+
+  async function confirmRemoveAccount() {
+    if (!removeTarget) return;
+    const label = removeTarget.displayName || removeTarget.email;
+    try {
+      await deleteAccount.mutateAsync(removeTarget.id);
+      toast.success(`Removed ${label}`);
+      setRemoveTarget(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn't remove that account.");
     }
   }
 
@@ -236,14 +274,15 @@ function UserManagementPage() {
                     <TableHead>Status</TableHead>
                     {isSuperAdmin && <TableHead>Restrict</TableHead>}
                     <TableHead>Last sign-in</TableHead>
-                    <TableHead className="pr-4 text-right">Joined</TableHead>
+                    <TableHead className="text-right">Joined</TableHead>
+                    <TableHead className="w-14 pr-4" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {accountsQuery.isLoading ? (
                     <TableRow>
                       <TableCell
-                        colSpan={isSuperAdmin ? 6 : 5}
+                        colSpan={isSuperAdmin ? 7 : 6}
                         className="h-24 text-center text-muted-foreground"
                       >
                         Loading accounts...
@@ -252,7 +291,7 @@ function UserManagementPage() {
                   ) : accountsQuery.isError ? (
                     <TableRow>
                       <TableCell
-                        colSpan={isSuperAdmin ? 6 : 5}
+                        colSpan={isSuperAdmin ? 7 : 6}
                         className="h-24 text-center text-muted-foreground"
                       >
                         Couldn't load accounts. Try refreshing the page.
@@ -261,7 +300,7 @@ function UserManagementPage() {
                   ) : accounts.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={isSuperAdmin ? 6 : 5}
+                        colSpan={isSuperAdmin ? 7 : 6}
                         className="h-24 text-center text-muted-foreground"
                       >
                         No one has signed in yet.
@@ -362,8 +401,24 @@ function UserManagementPage() {
                           <TableCell className="py-3 text-sm text-muted-foreground">
                             {formatDateTime(account.lastLoginAt)}
                           </TableCell>
-                          <TableCell className="py-3 pr-4 text-right text-sm text-muted-foreground">
+                          <TableCell className="py-3 text-right text-sm text-muted-foreground">
                             {formatDateTime(account.createdAt)}
+                          </TableCell>
+                          <TableCell className="py-3 pr-4 text-right">
+                            {/* Not yourself, and only a Super Admin can remove an Admin or
+                                Super Admin — the same rules the server enforces. */}
+                            {!isSelf && (isSuperAdmin || !isFullAccessRole(account.role)) && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                title="Remove account"
+                                aria-label={`Remove ${displayName}`}
+                                onClick={() => setRemoveTarget(account)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       );
@@ -539,6 +594,54 @@ function UserManagementPage() {
           </TabsContent>
         )}
       </Tabs>
+
+      <AlertDialog
+        open={!!removeTarget}
+        onOpenChange={(open) => {
+          if (!open && !deleteAccount.isPending) setRemoveTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Remove {removeTarget?.displayName || removeTarget?.email}?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  This deletes <strong>{removeTarget?.email}</strong>'s Workforce account and signs
+                  out any browser they have open. Their past activity stays in the logs under their
+                  name.
+                </p>
+                {removeTarget && isFullAccessRole(removeTarget.role) && (
+                  <p className="font-medium text-destructive">
+                    This account has {ROLE_LABELS[removeTarget.role]} access.
+                  </p>
+                )}
+                <p>
+                  This does not remove them from the TGO Gateway: if they still have access there,
+                  they can sign in again and would start over as a new Viewer. To keep someone out
+                  for good, deactivate the account or remove their Gateway access instead.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteAccount.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteAccount.isPending}
+              onClick={(event) => {
+                // Keep the dialog open until the request finishes.
+                event.preventDefault();
+                void confirmRemoveAccount();
+              }}
+            >
+              {deleteAccount.isPending ? "Removing..." : "Remove account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

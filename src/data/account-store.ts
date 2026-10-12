@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createPendingInvite,
+  deleteAccount,
   fetchAccounts,
   fetchPendingInvites,
   revokePendingInvite,
@@ -31,11 +32,22 @@ export function useAccountsQuery(enabled: boolean) {
   });
 }
 
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteAccount(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY });
+      // The Active Sessions panel lists every account too.
+      queryClient.invalidateQueries({ queryKey: ["account-presence"] });
+    },
+  });
+}
+
 export function useUpdateAccount() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: AccountPatch }) =>
-      updateAccount(id, patch),
+    mutationFn: ({ id, patch }: { id: string; patch: AccountPatch }) => updateAccount(id, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY });
       // Covers the edge case of an admin editing their own row (blocked

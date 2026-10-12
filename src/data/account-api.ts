@@ -70,10 +70,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 /** FastAPI error responses are JSON — `{"detail": "message"}` for a plain
  * HTTPException, or a Pydantic validation-error array for a 422. Surface the
  * human-readable message either way instead of a raw JSON blob in a toast. */
-async function readErrorMessage(
-  response: Response,
-  path: string,
-): Promise<string> {
+async function readErrorMessage(response: Response, path: string): Promise<string> {
   const fallback = `Request to ${path} failed (${response.status})`;
   const body = await response.text();
   if (!body) return fallback;
@@ -83,9 +80,7 @@ async function readErrorMessage(
     if (Array.isArray(parsed.detail)) {
       const messages = parsed.detail
         .map((item) =>
-          item && typeof item === "object" && "msg" in item
-            ? String(item.msg)
-            : null,
+          item && typeof item === "object" && "msg" in item ? String(item.msg) : null,
         )
         .filter((msg): msg is string => Boolean(msg));
       if (messages.length > 0) return messages.join("; ");
@@ -103,22 +98,22 @@ export async function fetchAccounts(): Promise<Account[]> {
 
 export type AccountPatch = { role?: AccountRole; isActive?: boolean; isRestricted?: boolean };
 
-export async function updateAccount(
-  id: string,
-  patch: AccountPatch,
-): Promise<Account> {
+export async function updateAccount(id: string, patch: AccountPatch): Promise<Account> {
   const payload: Record<string, unknown> = {};
   if (patch.role !== undefined) payload["role"] = patch.role;
   if (patch.isActive !== undefined) payload["is_active"] = patch.isActive;
   if (patch.isRestricted !== undefined) payload["is_restricted"] = patch.isRestricted;
-  const row = await request<BackendAccount>(
-    `/accounts/${encodeURIComponent(id)}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    },
-  );
+  const row = await request<BackendAccount>(`/accounts/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
   return fromBackend(row);
+}
+
+/** Removes an account from Workforce (DELETE /accounts/{id}). Their history
+ * stays; they can sign in again through the Gateway as a new Viewer. */
+export async function deleteAccount(id: string): Promise<void> {
+  await request<void>(`/accounts/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 // --- Pending invites ---------------------------------------------------------

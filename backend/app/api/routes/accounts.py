@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import require_admin, require_super_admin
@@ -332,3 +332,76 @@ async def update_account(
     await db.commit()
     await db.refresh(account)
     return account
+
+
+@router.delete("/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    account_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_admin: Account = Depends(require_admin),
+) -> None:
+    """Removes an account from Workforce (User Management's "Remove account").
+
+    Their sessions are deleted with them (ON DELETE CASCADE) and signed out on
+    their next request; every other table that points at an account (activity
+    logs, awards, HMO/violation audit columns, ...) just clears that link, so
+    history stays and keeps the name it was written with. It does NOT remove
+    them from the TGO Gateway — someone who still has access there signs in
+    again as a brand-new Viewer.
+
+    Guards, in the same spirit as update_account: nobody removes themselves, only
+    a Super Admin removes an Admin or another Super Admin, and the last active
+    Super Admin can never be removed (there'd be nobody left to run the
+    permission matrix)."""
+    account = await db.get(Account, account_id)
+    if account is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+
+    if account.id == current_admin.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You can't remove your own account.",
+        )
+
+    if account.role in (AccountRole.ADMIN, AccountRole.SUPER_ADMIN) and (
+        current_admin.role != AccountRole.SUPER_ADMIN
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only a Super Admin can remove an Admin or Super Admin account.",
+        )
+
+    if account.role == AccountRole.SUPER_ADMIN:
+        remaining = (
+            await db.execute(
+                select(func.count())
+                .select_from(Account)
+                .where(
+                    Account.role == AccountRole.SUPER_ADMIN,
+                    Account.is_active.is_(True),
+                    Account.id != account.id,
+                )
+            )
+        ).scalar_one()
+        if remaining == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You can't remove the last Super Admin.",
+            )
+
+    email = account.email
+    role = account.role.value
+    # Logged before the delete (same transaction) so the entry names who did it
+    # and whose account it was, even though that account no longer exists.
+    await record_activity(
+        db,
+        action="Removed account",
+        category=ActivityCategory.ACCESS,
+        account=current_admin,
+        target=email,
+        details={"role": role},
+        severity=ActivitySeverity.WARNING,
+        commit=False,
+    )
+    await db.delete(account)
+    await db.commit()
