@@ -6,6 +6,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       className="toaster group"
+      // Top-right of the page, tucked just under the 56px navbar (not over the
+      // bell / avatar menu). Anything passed as a prop below still overrides this.
+      position="top-right"
+      offset={{ top: 68, right: 16 }}
+      mobileOffset={{ top: 68, right: 12, left: 12 }}
       toastOptions={{
         classNames: {
           toast:
