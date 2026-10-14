@@ -240,7 +240,7 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
             title="Dashboard"
             description={
               isFullAccess
-                ? "Your workforce at a glance. Start with what needs attention."
+                ? "People updates, workforce metrics, and daily priorities across TGO."
                 : "Your modules, pending work, and people updates in one place."
             }
             action={
@@ -252,6 +252,7 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
               />
             }
           />
+          {showPeople && milestoneCards}
           {isFullAccess && canViewEmployeesModule && (
             <CompanyMetrics
               employees={employees}
@@ -317,8 +318,6 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
         attendance={violationStats}
         states={states}
       />
-
-      {!viewerMode && showPeople && milestoneCards}
 
       {!viewerMode && isFullAccess && canViewEmployeesModule && (
         <div className="grid items-start gap-4 lg:grid-cols-3">

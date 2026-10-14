@@ -5,9 +5,10 @@
 // cards so all four lists can be scanned together.
 
 import { useState, type ComponentProps } from "react";
+import { Link } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCircuitBand } from "@/lib/use-circuit-background";
-import { Award as AwardIcon, Cake, Trophy, UserPlus } from "lucide-react";
+import { Award as AwardIcon, Cake, Trophy, UserPlus, ArrowUpRight } from "lucide-react";
 
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { Badge } from "@/components/ui/badge";
@@ -47,17 +48,69 @@ import {
   type DashboardMilestoneWindow,
 } from "@/lib/dashboard-data";
 
-// Preserve the branded headers in the reference layout without restyling other modules.
-function MilestoneHeader({ seed, ...props }: ComponentProps<typeof CardHeader> & { seed: string }) {
+// These four panels stay together at the top of the dashboard.
+function MilestoneHeader({
+  seed,
+  count,
+  loading,
+  unavailable,
+  children,
+  ...props
+}: ComponentProps<typeof CardHeader> & {
+  seed: string;
+  count: number;
+  loading: boolean;
+  unavailable: boolean;
+}) {
   const { setRef, style } = useCircuitBand("card", seed);
   return (
     <CardHeader
       ref={setRef}
       style={style}
-      className="text-white [&_.text-muted-foreground]:text-white/70"
+      className="min-h-[104px] justify-center border-b border-white/10 p-4 text-white [&_.text-muted-foreground]:text-white/75 [&_svg]:shrink-0 [&_svg]:text-[#a9d698]"
       {...props}
-    />
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1.5">{children}</div>
+        <span
+          aria-label={
+            loading
+              ? "Loading record count"
+              : unavailable
+                ? "Record count unavailable"
+                : `${count} records`
+          }
+          className="flex min-w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 px-2 py-1 text-sm font-semibold tabular-nums"
+        >
+          {loading || unavailable ? "—" : count.toLocaleString()}
+        </span>
+      </div>
+    </CardHeader>
   );
+}
+
+function MilestoneFooter({
+  to,
+  children,
+}: {
+  to: "/directory" | "/anniversaries" | "/birthdays" | "/awards";
+  children: string;
+}) {
+  return (
+    <div className="border-t border-border/70 bg-muted/15 px-4 py-2.5">
+      <Link
+        to={to}
+        className="flex items-center justify-between gap-2 rounded-sm text-xs font-medium text-primary transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {children}
+        <ArrowUpRight className="size-3.5" aria-hidden="true" />
+      </Link>
+    </div>
+  );
+}
+
+function compactDate(date: string) {
+  return formatDate(date).replace(/, \d{4}$/, "");
 }
 
 export function MilestoneCards({
@@ -88,7 +141,6 @@ export function MilestoneCards({
 }) {
   const [milestoneWindow, setMilestoneWindow] = useState<DashboardMilestoneWindow>("next-30");
   const isUpcomingMilestoneWindow = milestoneWindow === "next-30";
-  const milestoneWindowLabel = MILESTONE_TIME_FILTER_LABELS[milestoneWindow];
   const milestoneWindowDirection = isUpcomingMilestoneWindow ? "next" : "last";
 
   if (!(showNewHires || showAnniversaries || showBirthdays || showAwards)) return null;
@@ -114,38 +166,58 @@ export function MilestoneCards({
   }
 
   return (
-    <div className="space-y-3">
-      {(showAnniversaries || showBirthdays) && (
-        <div className="flex justify-end">
-          <Select
-            value={milestoneWindow}
-            onValueChange={(value) => setMilestoneWindow(value as DashboardMilestoneWindow)}
-          >
-            <SelectTrigger className="w-[160px]" aria-label="Milestone time window">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DASHBOARD_MILESTONE_WINDOWS.map((window) => (
-                <SelectItem key={window} value={window}>
-                  {MILESTONE_TIME_FILTER_LABELS[window]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <section aria-label="People and milestones" className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">People & milestones</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            New faces, work anniversaries, and moments worth celebrating.
+          </p>
         </div>
-      )}
-
+        {(showAnniversaries || showBirthdays) && (
+          <div className="flex items-center gap-2">
+            <span className="hidden text-xs text-muted-foreground sm:inline">Milestone window</span>
+            <Select
+              value={milestoneWindow}
+              onValueChange={(value) => setMilestoneWindow(value as DashboardMilestoneWindow)}
+            >
+              <SelectTrigger className="w-[160px]" aria-label="Milestone time window">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DASHBOARD_MILESTONE_WINDOWS.map((window) => (
+                  <SelectItem key={window} value={window}>
+                    {MILESTONE_TIME_FILTER_LABELS[window]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
       <div className={`grid gap-4 ${visibleCount > 1 ? "md:grid-cols-2" : ""} ${desktopColumns}`}>
         {showNewHires && (
-          <Card className="overflow-hidden">
-            <MilestoneHeader seed="new-hires">
+          <Card className="flex min-w-0 flex-col overflow-hidden border-border/80">
+            <MilestoneHeader
+              seed="new-hires"
+              count={newHires.length}
+              loading={employeesLoading}
+              unavailable={employeesError}
+            >
               <CardTitle className="flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-muted-foreground" />
-                New Hires ({RECENT_HIRE_DAYS} days)
+                New Hires
               </CardTitle>
-              <CardDescription>Started in the last {RECENT_HIRE_DAYS} days</CardDescription>
+              <CardDescription className="text-xs leading-relaxed">
+                Started in the last {RECENT_HIRE_DAYS} days
+              </CardDescription>
             </MilestoneHeader>
-            <CardContent className="max-h-80 overflow-y-auto p-0">
+            <CardContent
+              role="region"
+              aria-label="Recent new hires"
+              tabIndex={0}
+              className="h-72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring overflow-y-auto overscroll-contain p-0 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+            >
               {employeesLoading ? (
                 <div role="status" aria-label="Loading records" className="p-4">
                   <Skeleton className="h-52 w-full" />
@@ -159,12 +231,15 @@ export function MilestoneCards({
                   No new hires in the last {RECENT_HIRE_DAYS} days.
                 </p>
               ) : (
-                <Table>
-                  <TableHeader className="bg-[#183445] [&_th]:text-white/90">
+                <Table
+                  containerClassName="overflow-visible"
+                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2"
+                >
+                  <TableHeader className="sticky top-0 z-10 bg-[#183445] [&_th]:h-9 [&_th]:px-2 [&_th]:text-xs [&_th]:text-white/80">
                     <TableRow>
-                      <TableHead>Name</TableHead>
+                      <TableHead className="w-[40%]">Name</TableHead>
                       <TableHead>Office</TableHead>
-                      <TableHead className="text-right">Started</TableHead>
+                      <TableHead className="w-[30%] text-right">Started</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -180,8 +255,14 @@ export function MilestoneCards({
                           </TableCell>
                           <TableCell className="text-muted-foreground">{e.office}</TableCell>
                           <TableCell className="text-right text-muted-foreground">
-                            {formatDate(e.startDate)}
-                            <span className="ml-1.5 text-xs">
+                            <time
+                              dateTime={e.startDate}
+                              title={formatDate(e.startDate)}
+                              className="whitespace-nowrap text-foreground"
+                            >
+                              {compactDate(e.startDate)}
+                            </time>
+                            <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
                               ({daysAgo === 0 ? "today" : `${daysAgo}d ago`})
                             </span>
                           </TableCell>
@@ -192,23 +273,34 @@ export function MilestoneCards({
                 </Table>
               )}
             </CardContent>
+            <MilestoneFooter to="/directory">Open employee directory</MilestoneFooter>
           </Card>
         )}
 
         {showAnniversaries && (
-          <Card className="overflow-hidden">
-            <MilestoneHeader seed="anniversaries">
+          <Card className="flex min-w-0 flex-col overflow-hidden border-border/80">
+            <MilestoneHeader
+              seed="anniversaries"
+              count={anniversaryRows.length}
+              loading={employeesLoading}
+              unavailable={employeesError}
+            >
               <CardTitle className="flex items-center gap-2">
                 <AwardIcon className="h-4 w-4 text-muted-foreground" />
-                Anniversaries ({milestoneWindowLabel})
+                Anniversaries
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs leading-relaxed">
                 {isUpcomingMilestoneWindow
-                  ? `Work anniversaries earlier this month and in the next ${RECENT_MILESTONE_DAYS} days`
+                  ? `Next ${RECENT_MILESTONE_DAYS} days, plus earlier this month`
                   : `Work anniversaries in the last ${RECENT_MILESTONE_DAYS} days`}
               </CardDescription>
             </MilestoneHeader>
-            <CardContent className="max-h-80 overflow-y-auto p-0">
+            <CardContent
+              role="region"
+              aria-label="Work anniversaries"
+              tabIndex={0}
+              className="h-72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring overflow-y-auto overscroll-contain p-0 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+            >
               {employeesLoading ? (
                 <div role="status" aria-label="Loading records" className="p-4">
                   <Skeleton className="h-52 w-full" />
@@ -222,12 +314,15 @@ export function MilestoneCards({
                   No anniversaries in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS} days.
                 </p>
               ) : (
-                <Table>
-                  <TableHeader className="bg-[#183445] [&_th]:text-white/90">
+                <Table
+                  containerClassName="overflow-visible"
+                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2"
+                >
+                  <TableHeader className="sticky top-0 z-10 bg-[#183445] [&_th]:h-9 [&_th]:px-2 [&_th]:text-xs [&_th]:text-white/80">
                     <TableRow>
-                      <TableHead>Name</TableHead>
+                      <TableHead className="w-[40%]">Name</TableHead>
                       <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Years</TableHead>
+                      <TableHead className="w-[22%] text-right">Years</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -245,8 +340,10 @@ export function MilestoneCards({
                           </p>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {e.monthName} {e.day}
-                          <span className="ml-1.5 text-xs">
+                          <span className="whitespace-nowrap text-foreground">
+                            {e.monthName.slice(0, 3)} {e.day}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
                             ({formatMilestoneRelativeDays(e.daysAway, e.past)})
                           </span>
                         </TableCell>
@@ -259,21 +356,32 @@ export function MilestoneCards({
                 </Table>
               )}
             </CardContent>
+            <MilestoneFooter to="/anniversaries">View anniversaries</MilestoneFooter>
           </Card>
         )}
 
         {showBirthdays && (
-          <Card className="overflow-hidden">
-            <MilestoneHeader seed="birthdays">
+          <Card className="flex min-w-0 flex-col overflow-hidden border-border/80">
+            <MilestoneHeader
+              seed="birthdays"
+              count={birthdayRows.length}
+              loading={employeesLoading}
+              unavailable={employeesError}
+            >
               <CardTitle className="flex items-center gap-2">
                 <Cake className="h-4 w-4 text-muted-foreground" />
-                Birthdays ({milestoneWindowLabel})
+                Birthdays
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs leading-relaxed">
                 Celebrations in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS} days
               </CardDescription>
             </MilestoneHeader>
-            <CardContent className="max-h-80 overflow-y-auto p-0">
+            <CardContent
+              role="region"
+              aria-label="Employee birthdays"
+              tabIndex={0}
+              className="h-72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring overflow-y-auto overscroll-contain p-0 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+            >
               {employeesLoading ? (
                 <div role="status" aria-label="Loading records" className="p-4">
                   <Skeleton className="h-52 w-full" />
@@ -287,12 +395,15 @@ export function MilestoneCards({
                   No birthdays in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS} days.
                 </p>
               ) : (
-                <Table>
-                  <TableHeader className="bg-[#183445] [&_th]:text-white/90">
+                <Table
+                  containerClassName="overflow-visible"
+                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2"
+                >
+                  <TableHeader className="sticky top-0 z-10 bg-[#183445] [&_th]:h-9 [&_th]:px-2 [&_th]:text-xs [&_th]:text-white/80">
                     <TableRow>
-                      <TableHead>Name</TableHead>
+                      <TableHead className="w-[40%]">Name</TableHead>
                       <TableHead>Office</TableHead>
-                      <TableHead className="text-right">Date</TableHead>
+                      <TableHead className="w-[28%] text-right">Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -306,8 +417,10 @@ export function MilestoneCards({
                         </TableCell>
                         <TableCell className="text-muted-foreground">{e.office}</TableCell>
                         <TableCell className="text-right text-muted-foreground">
-                          {e.monthName.slice(0, 3)} {e.day}
-                          <span className="ml-1.5 text-xs">
+                          <span className="whitespace-nowrap text-foreground">
+                            {e.monthName.slice(0, 3)} {e.day}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
                             ({formatMilestoneRelativeDays(e.daysAway)})
                           </span>
                         </TableCell>
@@ -317,21 +430,32 @@ export function MilestoneCards({
                 </Table>
               )}
             </CardContent>
+            <MilestoneFooter to="/birthdays">View birthdays</MilestoneFooter>
           </Card>
         )}
 
         {showAwards && (
-          <Card className="overflow-hidden">
-            <MilestoneHeader seed="awards">
+          <Card className="flex min-w-0 flex-col overflow-hidden border-border/80">
+            <MilestoneHeader
+              seed="awards"
+              count={awardRows.length}
+              loading={awardsLoading}
+              unavailable={awardsError}
+            >
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-muted-foreground" />
-                Awards ({RECENT_MILESTONE_DAYS} days)
+                Awards
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs leading-relaxed">
                 Recognition given in the last {RECENT_MILESTONE_DAYS} days
               </CardDescription>
             </MilestoneHeader>
-            <CardContent className="max-h-80 overflow-y-auto p-0">
+            <CardContent
+              role="region"
+              aria-label="Recent awards"
+              tabIndex={0}
+              className="h-72 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring overflow-y-auto overscroll-contain p-0 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+            >
               {awardsLoading ? (
                 <div role="status" aria-label="Loading records" className="p-4">
                   <Skeleton className="h-52 w-full" />
@@ -345,12 +469,15 @@ export function MilestoneCards({
                   No awards given in the last {RECENT_MILESTONE_DAYS} days.
                 </p>
               ) : (
-                <Table>
-                  <TableHeader className="bg-[#183445] [&_th]:text-white/90">
+                <Table
+                  containerClassName="overflow-visible"
+                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2"
+                >
+                  <TableHeader className="sticky top-0 z-10 bg-[#183445] [&_th]:h-9 [&_th]:px-2 [&_th]:text-xs [&_th]:text-white/80">
                     <TableRow>
-                      <TableHead>Employee</TableHead>
+                      <TableHead className="w-[37%]">Employee</TableHead>
                       <TableHead>Award</TableHead>
-                      <TableHead className="text-right">Date</TableHead>
+                      <TableHead className="w-[28%] text-right">Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -387,8 +514,14 @@ export function MilestoneCards({
                           )}
                         </TableCell>
                         <TableCell className="text-right text-muted-foreground">
-                          {formatDate(a.awardedDate)}
-                          <span className="ml-1.5 text-xs">
+                          <time
+                            dateTime={a.awardedDate}
+                            title={formatDate(a.awardedDate)}
+                            className="whitespace-nowrap text-foreground"
+                          >
+                            {compactDate(a.awardedDate)}
+                          </time>
+                          <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
                             ({a.daysAgo === 0 ? "today" : `${a.daysAgo}d ago`})
                           </span>
                         </TableCell>
@@ -398,9 +531,10 @@ export function MilestoneCards({
                 </Table>
               )}
             </CardContent>
+            <MilestoneFooter to="/awards">View awards</MilestoneFooter>
           </Card>
         )}
       </div>
-    </div>
+    </section>
   );
 }
