@@ -42,7 +42,6 @@ import {
   isSuperAdminRole,
   hasPermission,
 } from "@/lib/permissions";
-import { useCircuitBackground } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
 export type NavItem = {
@@ -228,43 +227,41 @@ export function getAccessibleNavItems(
 }
 
 export function AppSidebar() {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  const collapsed = !isMobile && state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { data: account } = useCurrentAccount();
   const effectiveRole = getEffectiveRole(account);
   const isAdmin = isFullAccessRole(effectiveRole);
   const isSuperAdmin = isSuperAdminRole(effectiveRole);
-  // Circuit line art (see @/lib/circuit-art): a full dark band behind the logo,
-  // and a faint rail of stubs down both edges of the nav area. Both go static
-  // when "Interface animations" is off in Settings.
-  const headerBand = useCircuitBackground("sidebarHeader", "sidebar-header");
-  const navBackdrop = useCircuitBackground("sidebar", "sidebar-nav");
 
   return (
-    <Sidebar collapsible="icon" className="shadow-[2px_0_20px_-4px_rgba(0,0,0,0.35)]">
-      <SidebarHeader className={cn("gap-3 py-4", collapsed ? "px-2" : "px-4")} style={headerBand}>
-        <div className={cn("flex min-h-11 items-center", collapsed ? "justify-center" : "gap-3")}>
-          {/* Always the light-on-dark logo variant — the sidebar is a
-              constant brand green regardless of the app's light/dark theme,
-              so the logo no longer needs to switch with it. */}
+    <Sidebar collapsible="icon" className="border-sidebar-border shadow-none">
+      <SidebarHeader className={cn("gap-3 bg-white/[0.015] py-4", collapsed ? "px-2" : "px-4")}>
+        <Link
+          to="/"
+          aria-label="TGO Workforce home"
+          onClick={() => {
+            if (isMobile) setOpenMobile(false);
+          }}
+          className={cn(
+            "flex min-h-11 items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+            collapsed ? "justify-center" : "gap-3",
+          )}
+        >
           <img
             src={logoDark}
             alt="Torero Global Outsourcing logo"
             width={1000}
             height={521}
-            className={cn(
-              "shrink-0 object-contain drop-shadow-sm",
-              collapsed ? "h-8 max-w-8" : "h-10 w-auto",
-            )}
+            className={cn("shrink-0 object-contain", collapsed ? "h-8 max-w-8" : "h-10 w-auto")}
           />
-
           {!collapsed && (
             <div
               className="flex min-w-0 flex-col justify-center leading-none"
               aria-label="Workforce Portal"
             >
-              <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/85">
+              <span className="whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] text-white/90">
                 Workforce
               </span>
               <span className="mt-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/65">
@@ -272,14 +269,11 @@ export function AppSidebar() {
               </span>
             </div>
           )}
-        </div>
-        {/* A thin brand-green underline beneath the header — the one
-            deliberate accent stroke that ties the whole navy sidebar back
-            to the green used everywhere else in the app. */}
-        <div className="h-px w-full bg-gradient-to-r from-[#72b360] via-[#72b360]/40 to-transparent" />
+        </Link>
+        <div className="h-px w-full bg-sidebar-border" />
       </SidebarHeader>
 
-      <SidebarContent className="pb-3" style={navBackdrop}>
+      <SidebarContent role="navigation" aria-label="Main navigation" className="pb-3">
         {NAV_GROUPS.map((group) => {
           const visibleItems = group.items.filter(
             (item) =>
@@ -296,7 +290,7 @@ export function AppSidebar() {
 
           return (
             <SidebarGroup key={group.label} className="px-2 py-1.5">
-              <SidebarGroupLabel className="mb-1 h-7 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/60">
+              <SidebarGroupLabel className="mb-1 h-7 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/70">
                 {group.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -307,28 +301,17 @@ export function AppSidebar() {
                         asChild
                         tooltip={item.title}
                         isActive={isNavItemActive(pathname, item.url)}
-                        className={cn(
-                          "relative px-4 transition-[width,height,padding,transform] duration-200",
-                          "hover:translate-x-0.5",
-                          // The green accent bar/icon only ever marks the
-                          // active item — hover stays a neutral lightening
-                          // (bg-sidebar-accent, from the shared component),
-                          // so green reads as "you are here", not "you're
-                          // pointing at me".
-                          "before:absolute before:inset-y-1.5 before:left-0 before:w-[3px]",
-                          "before:rounded-r-full before:bg-[#72b360] before:opacity-0",
-                          "before:transition-opacity before:duration-200",
-                          "data-[active=true]:before:opacity-100",
-                          // Icons come alive on hover (a little lift + tilt)
-                          // and settle into a slightly larger, green-tinted
-                          // state once their page is the active one.
-                          "[&>svg]:transition-[color,transform] [&>svg]:duration-200 [&>svg]:ease-out",
-                          "hover:[&>svg]:scale-110 hover:[&>svg]:-rotate-6",
-                          "data-[active=true]:[&>svg]:scale-110 data-[active=true]:[&>svg]:text-[#72b360]",
-                        )}
+                        className="workforce-nav-item relative rounded-lg px-4 text-sidebar-foreground/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                       >
-                        <Link to={item.url} className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
+                        <Link
+                          to={item.url}
+                          onClick={() => {
+                            if (isMobile) setOpenMobile(false);
+                          }}
+                          aria-current={isNavItemActive(pathname, item.url) ? "page" : undefined}
+                          className="flex items-center gap-2"
+                        >
+                          <item.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                           <span>{item.title}</span>
                         </Link>
                       </SidebarMenuButton>
@@ -341,7 +324,7 @@ export function AppSidebar() {
         })}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border" />
+      <SidebarFooter className="border-t border-sidebar-border p-0" />
     </Sidebar>
   );
 }
