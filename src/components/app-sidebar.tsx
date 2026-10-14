@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   FileBarChart,
   Trophy,
+  ArrowUpRight,
 } from "lucide-react";
 
 import logoDark from "@/assets/tgo-logo-dark.png";
@@ -226,6 +227,20 @@ export function getAccessibleNavItems(
   );
 }
 
+// Frame the globe directly from the official logo rather than recreating the artwork.
+function TgoGlobeIcon() {
+  return (
+    <svg
+      className="h-4 w-4 shrink-0"
+      viewBox="809 181 246 246"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <image href={logoDark} width="1376" height="768" />
+    </svg>
+  );
+}
+
 export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = !isMobile && state === "collapsed";
@@ -324,7 +339,35 @@ export function AppSidebar() {
         })}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-0" />
+      <SidebarFooter className="border-t border-sidebar-border px-2 py-3">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              tooltip="TGO Gateway Portal (opens in a new tab)"
+              className="workforce-nav-item relative rounded-lg px-4 text-sidebar-foreground/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            >
+              <a
+                href="https://gateway.tgocorp.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TGO Gateway Portal (opens in a new tab)"
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                }}
+                className="flex items-center gap-2"
+              >
+                <TgoGlobeIcon />
+                <span>TGO Gateway Portal</span>
+                <ArrowUpRight
+                  className="ml-auto h-3.5 w-3.5 shrink-0 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden"
+                  aria-hidden="true"
+                />
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
