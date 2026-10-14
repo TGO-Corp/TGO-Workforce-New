@@ -23,10 +23,10 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 
 export const INTRO_SESSION_KEY = "tgo-intro-played";
 const INTRO_SRC = "/tgo-intro.mp4";
-const FADE_MS = 500;
+const FADE_MS = 180;
 // The cover stays fully opaque this long after the app mounts, so the app's
 // first (heaviest) render happens out of sight instead of mid-fade.
-const SETTLE_MS = 250;
+const SETTLE_MS = 100;
 const READY_TIMEOUT_MS = 8000;
 // Double-tap / double-click to skip: two taps within this window and this
 // distance of each other. Handled with pointer events (not `dblclick`) so it
@@ -34,7 +34,6 @@ const READY_TIMEOUT_MS = 8000;
 const DOUBLE_TAP_MS = 350;
 const DOUBLE_TAP_SLOP_PX = 48;
 // How long the "double tap to skip" hint stays visible once the video starts.
-const HINT_VISIBLE_MS = 4500;
 
 type Phase = "checking" | "loading" | "playing" | "revealing" | "done";
 
@@ -50,7 +49,6 @@ export function IntroGate({ enabled, children }: { enabled: boolean; children: R
   const [phase, setPhase] = useState<Phase>("checking");
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTap = useRef<{ time: number; x: number; y: number } | null>(null);
-  const [hintVisible, setHintVisible] = useState(false);
 
   useEffect(() => {
     let alreadyPlayed = false;
@@ -91,14 +89,6 @@ export function IntroGate({ enabled, children }: { enabled: boolean; children: R
       window.clearTimeout(failsafe);
     };
   }, [phase, finish]);
-
-  // The skip hint shows for a few seconds after the video starts, then fades.
-  useEffect(() => {
-    if (phase !== "playing") return;
-    setHintVisible(true);
-    const timer = window.setTimeout(() => setHintVisible(false), HINT_VISIBLE_MS);
-    return () => window.clearTimeout(timer);
-  }, [phase]);
 
   function handlePointerUp(event: React.PointerEvent) {
     if (phase !== "playing") return;
@@ -155,15 +145,15 @@ export function IntroGate({ enabled, children }: { enabled: boolean; children: R
             onEnded={finish}
             onError={finish}
           />
-          {/* A quiet hint, not a button: skipping is a double tap / double click
-              anywhere on the video (or Esc). Fades out after a few seconds. */}
-          {phase === "playing" && (
-            <p
-              className="pointer-events-none absolute inset-x-0 bottom-6 text-center text-xs tracking-wide text-white/60 transition-opacity duration-700"
-              style={{ opacity: hintVisible ? 1 : 0 }}
+          {(phase === "loading" || phase === "playing") && (
+            <button
+              type="button"
+              autoFocus
+              onClick={finish}
+              className="absolute bottom-6 right-6 rounded-lg border border-white/30 bg-black/50 px-4 py-2 text-sm font-medium text-white backdrop-blur transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              Double tap to skip
-            </p>
+              Skip intro
+            </button>
           )}
         </div>
       )}

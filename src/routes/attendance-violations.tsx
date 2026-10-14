@@ -190,7 +190,11 @@ function AttendanceViolationsPage() {
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const { data: overview } = useAnalyticsOverviewQuery(canView);
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    isError: overviewError,
+  } = useAnalyticsOverviewQuery(canView);
 
   useEffect(() => {
     setCheckedIds(new Set());
@@ -277,24 +281,35 @@ function AttendanceViolationsPage() {
       {overview && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <MetricCard
+            loading={overviewLoading}
+            unavailable={overviewError}
             title="Total Records"
             value={overview.totalRecords}
             hint="All offices"
             icon={ClipboardList}
           />
           <MetricCard
+            loading={overviewLoading}
+            unavailable={overviewError}
+            tone="warning"
             title="Pending Preparation"
             value={overview.pendingPreparation}
             hint="Ready to Prepare"
             icon={Timer}
           />
           <MetricCard
+            loading={overviewLoading}
+            unavailable={overviewError}
+            tone="warning"
             title="Pending Approval"
             value={overview.pendingApproval}
             hint="Email Prepared"
             icon={ShieldAlert}
           />
           <MetricCard
+            loading={overviewLoading}
+            unavailable={overviewError}
+            tone="danger"
             title="Failed"
             value={overview.failedCount}
             hint="Send failures"

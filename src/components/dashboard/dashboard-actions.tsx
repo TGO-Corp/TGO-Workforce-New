@@ -1,5 +1,5 @@
 // The buttons in the Dashboard's page header: Import (when allowed), Open
-// directory, and the "Export All Data" menu. Owns the export's busy state and
+// directory, and the "Export data" menu. Owns the export's busy state and
 // download; the page supplies what to export. Moved out of src/routes/index.tsx
 // unchanged.
 
@@ -25,8 +25,12 @@ import {
 export function DashboardActions({
   canManage,
   buildExportData,
+  canViewEmployees = true,
+  disabled = false,
 }: {
   canManage: boolean;
+  canViewEmployees?: boolean;
+  disabled?: boolean;
   /** Called when an export is requested, so it always reflects the latest data. */
   buildExportData: () => AnalyticsExportData;
 }) {
@@ -48,29 +52,31 @@ export function DashboardActions({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {canManage && <ImportEmployeesDialog />}
-      <Button asChild size="sm" variant="outline">
-        <Link to="/directory">
-          Open directory <ArrowRight className="ml-2 h-4 w-4" />
-        </Link>
-      </Button>
+      {canViewEmployees && (
+        <Button asChild size="sm" variant="outline">
+          <Link to="/directory">
+            Open directory <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" disabled={exporting}>
+          <Button variant="outline" size="sm" disabled={exporting || disabled}>
             {exporting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Download className="mr-2 h-4 w-4" />
             )}
-            Export All Data
+            Export data
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem disabled={exporting} onSelect={() => handleExport("xlsx")}>
+          <DropdownMenuItem disabled={exporting || disabled} onSelect={() => handleExport("xlsx")}>
             <FileSpreadsheet className="mr-2 h-4 w-4" /> Export as Excel
           </DropdownMenuItem>
-          <DropdownMenuItem disabled={exporting} onSelect={() => handleExport("pdf")}>
+          <DropdownMenuItem disabled={exporting || disabled} onSelect={() => handleExport("pdf")}>
             <FileText className="mr-2 h-4 w-4" /> Export as PDF
           </DropdownMenuItem>
         </DropdownMenuContent>

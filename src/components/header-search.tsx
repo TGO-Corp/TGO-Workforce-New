@@ -141,7 +141,7 @@ export function HeaderSearch() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full max-w-xs sm:max-w-sm"
+      className="relative min-w-0 flex-1 sm:max-w-sm"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           setOpen(false);
@@ -166,7 +166,8 @@ export function HeaderSearch() {
             onValueChange={setQuery}
             onFocus={() => setOpen(true)}
             placeholder={canSeeEmployees ? "Search pages or employees..." : "Search pages..."}
-            className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            aria-label={canSeeEmployees ? "Search pages or employees" : "Search pages"}
+            className="h-full min-w-0 w-full flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           {!open && !query && (
             <kbd className="hidden shrink-0 rounded border bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-block">
@@ -178,7 +179,7 @@ export function HeaderSearch() {
         {open && (
           <CommandList
             onMouseDown={(e) => e.preventDefault()}
-            className="absolute left-0 top-full z-50 mt-2 max-h-80 w-full overflow-y-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-lg"
+            className="fixed inset-x-4 top-14 z-50 mt-2 max-h-80 overflow-y-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-lg sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:w-full"
           >
             {searching ? (
               <LoadingPulse icon={Search} title="Searching..." />

@@ -20,8 +20,8 @@ import { useCircuitBand } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
 export const WELCOME_SESSION_KEY = "tgo-welcome-dismissed";
-const CLOSE_MS = 320;
-const OPEN_MS = 700;
+const CLOSE_MS = 150;
+const OPEN_MS = 180;
 
 type State = "pending" | "open" | "closing" | "hidden";
 
@@ -75,26 +75,23 @@ export function WelcomeBanner() {
         animationDuration: state === "closing" ? `${CLOSE_MS}ms` : `${OPEN_MS}ms`,
       }}
       className={cn(
-        "relative overflow-hidden rounded-xl border border-white/10 p-5 text-white shadow-md sm:px-6",
+        "relative overflow-hidden rounded-xl border border-white/10 px-4 py-3 text-white shadow-sm sm:px-5",
         animate &&
           (state === "closing"
             ? "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:slide-out-to-top-3"
             : "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-3"),
       )}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4 pr-8">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20">
-            <Hand
-              className="h-6 w-6 origin-[70%_80%] text-[#72b360]"
-              style={animate ? { animation: "tgo-wave 2.2s ease-in-out 0.7s 2 both" } : undefined}
-            />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 pr-8">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20">
+            <Hand className="h-6 w-6 origin-[70%_80%] text-[#72b360]" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold tracking-tight sm:text-xl">
+            <h2 className="truncate text-base font-semibold tracking-tight">
               Welcome back, {name}
             </h2>
-            <p className="mt-0.5 text-sm text-white/70">
+            <p className="mt-0.5 text-xs text-white/70">
               {today} · signed in as {ROLE_LABELS[account.role]}
             </p>
           </div>

@@ -164,21 +164,35 @@ function NewHiresContent() {
         description="Candidates in the onboarding pipeline, pulled live from the Onboarding/Offboarding portal."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
+          loading={isLoading}
+          unavailable={isError}
           title="Total"
           value={stats.total}
           hint="In the portal's pipeline"
           icon={Users}
         />
-        <MetricCard title="Pending" value={stats.pending} hint="Not yet started" icon={Circle} />
         <MetricCard
+          loading={isLoading}
+          unavailable={isError}
+          title="Pending"
+          value={stats.pending}
+          hint="Not yet started"
+          icon={Circle}
+        />
+        <MetricCard
+          loading={isLoading}
+          unavailable={isError}
           title="In Progress"
           value={stats.inProgress}
           hint="Currently onboarding"
           icon={TrendingUp}
         />
         <MetricCard
+          loading={isLoading}
+          unavailable={isError}
+          tone="positive"
           title="Completed"
           value={stats.completed}
           hint="Finished the portal's process"

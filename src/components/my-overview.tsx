@@ -1,3 +1,4 @@
+import { useChartMotion } from "@/hooks/use-interface-motion";
 // The Viewer role's Dashboard: their OWN overview instead of the company-wide
 // numbers — personal metric cards and charts built from just their own
 // Employee Directory row (and their own awards, when the matrix lets them see
@@ -79,6 +80,7 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
   const { data: account, isLoading } = useCurrentAccount();
   const employees = useEmployees();
   const mounted = useMounted();
+  const animate = useChartMotion();
   const showAwards = canViewAwards(account?.permissions);
   const allAwards = useAwards(showAwards);
 
@@ -232,7 +234,7 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Time with TGO"
           value={tenure(me.startDate, me.exitDate)}
@@ -285,6 +287,8 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
                   <PieChart>
                     <ChartTooltip content={<ChartTooltipContent nameKey="slice" />} />
                     <Pie
+                      isAnimationActive={animate}
+                      animationDuration={300}
                       data={yearProgress}
                       dataKey="days"
                       nameKey="slice"
@@ -322,7 +326,12 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
               </p>
             ) : (
               <ChartContainer config={countdownConfig} className="h-[260px] w-full">
-                <BarChart data={countdowns} layout="vertical" margin={{ left: 12 }}>
+                <BarChart
+                  accessibilityLayer
+                  data={countdowns}
+                  layout="vertical"
+                  margin={{ left: 12 }}
+                >
                   <CartesianGrid horizontal={false} />
                   <XAxis type="number" tickLine={false} axisLine={false} />
                   <YAxis
@@ -333,7 +342,13 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
                     width={120}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="days" fill="var(--color-days)" radius={4} />
+                  <Bar
+                    isAnimationActive={animate}
+                    animationDuration={300}
+                    dataKey="days"
+                    fill="var(--color-days)"
+                    radius={4}
+                  />
                 </BarChart>
               </ChartContainer>
             )}
@@ -389,12 +404,18 @@ export function MyOverview({ topSlot }: { topSlot?: ReactNode } = {}) {
                 </p>
               ) : (
                 <ChartContainer config={awardsConfig} className="h-[220px] w-full">
-                  <BarChart data={awardsByYear}>
+                  <BarChart accessibilityLayer data={awardsByYear}>
                     <CartesianGrid vertical={false} />
                     <XAxis dataKey="year" tickLine={false} axisLine={false} />
                     <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={28} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="awards" fill="var(--color-awards)" radius={4} />
+                    <Bar
+                      isAnimationActive={animate}
+                      animationDuration={300}
+                      dataKey="awards"
+                      fill="var(--color-awards)"
+                      radius={4}
+                    />
                   </BarChart>
                 </ChartContainer>
               )}

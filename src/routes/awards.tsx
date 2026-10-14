@@ -161,15 +161,28 @@ function AwardsPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <MetricCard title="Total Awards" value={awards.length} hint="All time" icon={Trophy} />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCard
+          loading={isLoading}
+          unavailable={isError}
+          tone="positive"
+          title="Total Awards"
+          value={awards.length}
+          hint="All time"
+          icon={Trophy}
+        />
+        <MetricCard
+          loading={isLoading}
+          unavailable={isError}
           title="This Month"
           value={thisMonthCount}
           hint={`Given in ${currentMonthName}`}
           icon={Trophy}
         />
         <MetricCard
+          loading={isLoading}
+          unavailable={isError}
+          tone="positive"
           title="Employees Recognized"
           value={uniqueRecipients}
           hint="Unique recipients"

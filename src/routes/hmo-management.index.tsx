@@ -198,11 +198,19 @@ function HmoManagementPage() {
   const canView = canViewBenefits(account?.permissions);
   const canManage = canManageBenefits(account?.permissions);
 
-  const { data: membersData, isLoading: membersLoading } = useHmoMembersQuery(canView);
+  const {
+    data: membersData,
+    isLoading: membersLoading,
+    isError: membersError,
+  } = useHmoMembersQuery(canView);
   const members = useMemo(() => membersData ?? [], [membersData]);
   const { data: requestsData } = useHmoRequestsQuery(canView);
   const requests = useMemo(() => requestsData ?? [], [requestsData]);
-  const { data: billingPeriodsData } = useHmoBillingPeriodsQuery(canView);
+  const {
+    data: billingPeriodsData,
+    isLoading: billingLoading,
+    isError: billingError,
+  } = useHmoBillingPeriodsQuery(canView);
   const billingPeriods = useMemo(() => billingPeriodsData ?? [], [billingPeriodsData]);
 
   const updateMemberMutation = useUpdateHmoMember();
@@ -564,50 +572,72 @@ function HmoManagementPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
+          loading={membersLoading}
+          unavailable={membersError}
+          tone="positive"
           title="Active HMO Members"
           value={activeMembers}
           hint="ETIQA"
           icon={HeartPulse}
         />
         <MetricCard
+          loading={membersLoading}
+          unavailable={membersError}
           title="Becoming Eligible"
           value={becomingEligible}
           hint="Within the next 30 days"
           icon={Calendar}
         />
         <MetricCard
+          loading={membersLoading}
+          unavailable={membersError}
+          tone="warning"
           title="Pending Manager Evaluation"
           value={pendingManagerEvaluation}
           hint="Reached eligibility, awaiting evaluation"
           icon={UserCheck}
         />
         <MetricCard
+          loading={membersLoading}
+          unavailable={membersError}
+          tone="warning"
           title="Pending Enrollment"
           value={pendingEnrollmentCount}
           hint="In the enrollment workflow"
           icon={Users}
         />
         <MetricCard
+          loading={membersLoading}
+          unavailable={membersError}
+          tone="warning"
           title="Pending Requirements"
           value={pendingRequirements}
           hint="Missing or incomplete requirements"
           icon={AlertCircle}
         />
         <MetricCard
+          loading={membersLoading}
+          unavailable={membersError}
+          tone="warning"
           title="Physical Cards Pending"
           value={physicalCardsPending}
           hint="Active members without a released card"
           icon={IdCard}
         />
         <MetricCard
+          loading={membersLoading}
+          unavailable={membersError}
+          tone="warning"
           title="Removal Pending"
           value={removalPending}
           hint="Resigned/terminated members to remove"
           icon={UserMinus}
         />
         <MetricCard
+          loading={billingLoading}
+          unavailable={billingError}
           title="Billing Variance"
           value={`${billingVariance < 0 ? "-" : "+"}${formatCurrency(billingVariance)}`}
           hint="Expected vs. latest provider invoice"

@@ -17,11 +17,15 @@ export function CompanyMetrics({
   newHires,
   exits,
   counts,
+  loading = false,
+  unavailable = false,
 }: {
   employees: Employee[];
   newHires: Employee[];
   exits: Employee[];
   counts: { active: number; eastwood: number; medellin: number };
+  loading?: boolean;
+  unavailable?: boolean;
 }) {
   const [openMetric, setOpenMetric] = useState<DashboardMetricKey | null>(null);
 
@@ -66,7 +70,7 @@ export function CompanyMetrics({
     },
     medellin: {
       title: "CO Medellin (Active)",
-      description: "Active employees at the Columbia hub.",
+      description: "Active employees at the Colombia hub.",
       employees: medellinActiveEmployees,
       exportBaseName: "co-medellin-active",
     },
@@ -77,8 +81,11 @@ export function CompanyMetrics({
       {/* Exactly 5 cards since Resigned/Terminated moved into their own modal —
           xl:grid-cols-5 fills one full row at wide viewports instead of leaving
           a lone orphan card on its own line. */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <MetricCard
+          loading={loading}
+          unavailable={unavailable}
+          tone="positive"
           title="Active Employees"
           value={counts.active}
           hint="Currently employed"
@@ -86,6 +93,8 @@ export function CompanyMetrics({
           onClick={() => setOpenMetric("active")}
         />
         <MetricCard
+          loading={loading}
+          unavailable={unavailable}
           title="New Hires"
           value={newHires.length}
           hint={`Started in last ${RECENT_HIRE_DAYS} days`}
@@ -93,6 +102,8 @@ export function CompanyMetrics({
           onClick={() => setOpenMetric("newHires")}
         />
         <MetricCard
+          loading={loading}
+          unavailable={unavailable}
           title="Exits"
           value={exits.length}
           hint={`Departures in last ${RECENT_MILESTONE_DAYS} days`}
@@ -100,16 +111,20 @@ export function CompanyMetrics({
           onClick={() => setOpenMetric("exits")}
         />
         <MetricCard
-          title="PH Eastwood (Active)"
+          loading={loading}
+          unavailable={unavailable}
+          title="PH Eastwood"
           value={counts.eastwood}
           hint="Philippines Hub"
           icon={Building2}
           onClick={() => setOpenMetric("eastwood")}
         />
         <MetricCard
-          title="CO Medellin (Active)"
+          loading={loading}
+          unavailable={unavailable}
+          title="CO Medellin"
           value={counts.medellin}
-          hint="Columbia Hub"
+          hint="Colombia Hub"
           icon={Globe2}
           onClick={() => setOpenMetric("medellin")}
         />

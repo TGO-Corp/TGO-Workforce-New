@@ -128,7 +128,11 @@ function DatabaseBackupsPage() {
   const { data: account, isLoading: accountLoading } = useCurrentAccount();
   const isSuperAdmin = isSuperAdminRole(getEffectiveRole(account));
 
-  const { data: backups = [], isLoading: backupsLoading } = useBackupsQuery();
+  const {
+    data: backups = [],
+    isLoading: backupsLoading,
+    isError: backupsError,
+  } = useBackupsQuery();
   const { data: tables = [] } = useBackupTablesQuery();
   const { data: schedule } = useBackupScheduleQuery();
   const runBackupMutation = useRunBackup();
@@ -251,20 +255,27 @@ function DatabaseBackupsPage() {
         description="Snapshot the database on demand or on a schedule, then download the .sql file — the real Postgres export tool (pg_dump), not a partial copy."
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <MetricCard
+          loading={backupsLoading}
+          unavailable={backupsError}
           title="Backups on file"
           value={completed.length}
           hint="Downloadable now"
           icon={DatabaseBackupIcon}
         />
         <MetricCard
+          loading={backupsLoading}
+          unavailable={backupsError}
           title="Last successful"
           value={lastCompleted ? formatDateTime(lastCompleted.completedAt) : "None yet"}
           hint={lastCompleted ? `${formatBytes(lastCompleted.fileSizeBytes)}` : "Run one below"}
           icon={CheckCircle2}
         />
         <MetricCard
+          loading={backupsLoading}
+          unavailable={backupsError}
+          tone="danger"
           title="Failed runs"
           value={failed.length}
           hint={failed.length > 0 ? "See status column below" : "None"}

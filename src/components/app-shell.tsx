@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { useInterfaceMotion } from "@/hooks/use-interface-motion";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { ChevronDown, FlaskConical, LogOut, User, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -38,6 +39,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const motionEnabled = useInterfaceMotion();
+  useEffect(() => {
+    document.documentElement.dataset["interfaceMotion"] = motionEnabled ? "on" : "off";
+    return () => {
+      delete document.documentElement.dataset["interfaceMotion"];
+    };
+  }, [motionEnabled]);
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
 
@@ -151,11 +159,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex min-w-0 flex-1 flex-col">
             <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur">
               <SidebarTrigger />
-              <Separator orientation="vertical" className="mr-1 h-5" />
+              <Separator orientation="vertical" className="mr-1 hidden h-5 sm:block" />
               <HeaderSearch />
 
               <div className="ml-auto flex items-center gap-1">
-                <HardRefreshButton />
+                <div className="hidden sm:block">
+                  <HardRefreshButton />
+                </div>
                 <NotificationBell />
                 <ThemeToggle />
                 <DropdownMenu>
@@ -168,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                       </Avatar>
                       <span className="hidden text-sm sm:inline">{displayName}</span>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
@@ -216,11 +226,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </header>
             <SandboxBanner account={account} />
             <main
-              key={account.animations_enabled ? pathname : undefined}
+              key={motionEnabled ? pathname : undefined}
               className={
-                account.animations_enabled
-                  ? "flex-1 p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 md:p-6"
-                  : "flex-1 p-4 md:p-6"
+                motionEnabled
+                  ? "min-w-0 flex-1 p-4 motion-safe:animate-in motion-safe:fade-in duration-200 md:p-6 xl:p-7"
+                  : "min-w-0 flex-1 p-4 md:p-6 xl:p-7"
               }
             >
               {children}
@@ -246,13 +256,15 @@ export function PageHeader({
   badge?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div>
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {badge}
         </div>
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          {description}
+        </p>
       </div>
       {action}
     </div>

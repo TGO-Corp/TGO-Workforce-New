@@ -30,15 +30,15 @@ export function ListToolbar<T>({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="relative">
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-card p-3">
+      <div className="relative min-w-0 flex-1 sm:min-w-[200px] sm:flex-none">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={controls.search}
           onChange={(e) => controls.setSearch(e.target.value)}
           placeholder={searchPlaceholder}
           aria-label={searchPlaceholder}
-          className="w-[240px] pl-8"
+          className="w-full pl-8 sm:w-[240px]"
         />
       </div>
 

@@ -1,16 +1,17 @@
 // The Dashboard's row of milestone cards: recent New Hires, Anniversaries,
 // Birthdays and Awards, with the shared "next / last 30 days" picker above the
 // date-based ones. Each card is shown only when the page says so (permission
-// plus the person's own Settings toggles). Moved out of src/routes/index.tsx;
-// the markup and behaviour are unchanged.
+// plus the person's own Settings toggles). Keep these as separate scrollable
+// cards so all four lists can be scanned together.
 
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCircuitBand } from "@/lib/use-circuit-background";
 import { Award as AwardIcon, Cake, Trophy, UserPlus } from "lucide-react";
 
-import { BandedCardHeader } from "@/components/banded-card-header";
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -46,6 +47,19 @@ import {
   type DashboardMilestoneWindow,
 } from "@/lib/dashboard-data";
 
+// Preserve the branded headers in the reference layout without restyling other modules.
+function MilestoneHeader({ seed, ...props }: ComponentProps<typeof CardHeader> & { seed: string }) {
+  const { setRef, style } = useCircuitBand("card", seed);
+  return (
+    <CardHeader
+      ref={setRef}
+      style={style}
+      className="text-white [&_.text-muted-foreground]:text-white/70"
+      {...props}
+    />
+  );
+}
+
 export function MilestoneCards({
   employees,
   awards,
@@ -54,6 +68,10 @@ export function MilestoneCards({
   showAnniversaries,
   showBirthdays,
   showAwards,
+  employeesLoading = false,
+  employeesError = false,
+  awardsLoading = false,
+  awardsError = false,
 }: {
   employees: Employee[];
   awards: Award[];
@@ -63,6 +81,10 @@ export function MilestoneCards({
   showAnniversaries: boolean;
   showBirthdays: boolean;
   showAwards: boolean;
+  employeesLoading?: boolean;
+  employeesError?: boolean;
+  awardsLoading?: boolean;
+  awardsError?: boolean;
 }) {
   const [milestoneWindow, setMilestoneWindow] = useState<DashboardMilestoneWindow>("next-30");
   const isUpcomingMilestoneWindow = milestoneWindow === "next-30";
@@ -70,6 +92,17 @@ export function MilestoneCards({
   const milestoneWindowDirection = isUpcomingMilestoneWindow ? "next" : "last";
 
   if (!(showNewHires || showAnniversaries || showBirthdays || showAwards)) return null;
+
+  const visibleCount = [showNewHires, showAnniversaries, showBirthdays, showAwards].filter(
+    Boolean,
+  ).length;
+  const desktopColumns = [
+    "",
+    "xl:grid-cols-1",
+    "xl:grid-cols-2",
+    "xl:grid-cols-3",
+    "xl:grid-cols-4",
+  ][visibleCount];
 
   const anniversaryRows = recentAnniversaries(employees, isUpcomingMilestoneWindow);
   const birthdayRows = recentBirthdays(employees, isUpcomingMilestoneWindow);
@@ -102,24 +135,32 @@ export function MilestoneCards({
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className={`grid gap-4 ${visibleCount > 1 ? "md:grid-cols-2" : ""} ${desktopColumns}`}>
         {showNewHires && (
-          <Card>
-            <BandedCardHeader seed="new-hires">
+          <Card className="overflow-hidden">
+            <MilestoneHeader seed="new-hires">
               <CardTitle className="flex items-center gap-2">
                 <UserPlus className="h-4 w-4 text-muted-foreground" />
                 New Hires ({RECENT_HIRE_DAYS} days)
               </CardTitle>
               <CardDescription>Started in the last {RECENT_HIRE_DAYS} days</CardDescription>
-            </BandedCardHeader>
+            </MilestoneHeader>
             <CardContent className="max-h-80 overflow-y-auto p-0">
-              {newHires.length === 0 ? (
+              {employeesLoading ? (
+                <div role="status" aria-label="Loading records" className="p-4">
+                  <Skeleton className="h-52 w-full" />
+                </div>
+              ) : employeesError ? (
+                <p role="status" className="p-4 text-sm text-muted-foreground">
+                  Unable to load this list. Refresh to retry.
+                </p>
+              ) : newHires.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground">
                   No new hires in the last {RECENT_HIRE_DAYS} days.
                 </p>
               ) : (
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-[#183445] [&_th]:text-white/90">
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Office</TableHead>
@@ -155,8 +196,8 @@ export function MilestoneCards({
         )}
 
         {showAnniversaries && (
-          <Card>
-            <BandedCardHeader seed="anniversaries">
+          <Card className="overflow-hidden">
+            <MilestoneHeader seed="anniversaries">
               <CardTitle className="flex items-center gap-2">
                 <AwardIcon className="h-4 w-4 text-muted-foreground" />
                 Anniversaries ({milestoneWindowLabel})
@@ -166,15 +207,23 @@ export function MilestoneCards({
                   ? `Work anniversaries earlier this month and in the next ${RECENT_MILESTONE_DAYS} days`
                   : `Work anniversaries in the last ${RECENT_MILESTONE_DAYS} days`}
               </CardDescription>
-            </BandedCardHeader>
+            </MilestoneHeader>
             <CardContent className="max-h-80 overflow-y-auto p-0">
-              {anniversaryRows.length === 0 ? (
+              {employeesLoading ? (
+                <div role="status" aria-label="Loading records" className="p-4">
+                  <Skeleton className="h-52 w-full" />
+                </div>
+              ) : employeesError ? (
+                <p role="status" className="p-4 text-sm text-muted-foreground">
+                  Unable to load this list. Refresh to retry.
+                </p>
+              ) : anniversaryRows.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground">
                   No anniversaries in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS} days.
                 </p>
               ) : (
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-[#183445] [&_th]:text-white/90">
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Date</TableHead>
@@ -214,8 +263,8 @@ export function MilestoneCards({
         )}
 
         {showBirthdays && (
-          <Card>
-            <BandedCardHeader seed="birthdays">
+          <Card className="overflow-hidden">
+            <MilestoneHeader seed="birthdays">
               <CardTitle className="flex items-center gap-2">
                 <Cake className="h-4 w-4 text-muted-foreground" />
                 Birthdays ({milestoneWindowLabel})
@@ -223,15 +272,23 @@ export function MilestoneCards({
               <CardDescription>
                 Celebrations in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS} days
               </CardDescription>
-            </BandedCardHeader>
+            </MilestoneHeader>
             <CardContent className="max-h-80 overflow-y-auto p-0">
-              {birthdayRows.length === 0 ? (
+              {employeesLoading ? (
+                <div role="status" aria-label="Loading records" className="p-4">
+                  <Skeleton className="h-52 w-full" />
+                </div>
+              ) : employeesError ? (
+                <p role="status" className="p-4 text-sm text-muted-foreground">
+                  Unable to load this list. Refresh to retry.
+                </p>
+              ) : birthdayRows.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground">
                   No birthdays in the {milestoneWindowDirection} {RECENT_MILESTONE_DAYS} days.
                 </p>
               ) : (
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-[#183445] [&_th]:text-white/90">
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Office</TableHead>
@@ -264,8 +321,8 @@ export function MilestoneCards({
         )}
 
         {showAwards && (
-          <Card>
-            <BandedCardHeader seed="awards">
+          <Card className="overflow-hidden">
+            <MilestoneHeader seed="awards">
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-muted-foreground" />
                 Awards ({RECENT_MILESTONE_DAYS} days)
@@ -273,15 +330,23 @@ export function MilestoneCards({
               <CardDescription>
                 Recognition given in the last {RECENT_MILESTONE_DAYS} days
               </CardDescription>
-            </BandedCardHeader>
+            </MilestoneHeader>
             <CardContent className="max-h-80 overflow-y-auto p-0">
-              {awardRows.length === 0 ? (
+              {awardsLoading ? (
+                <div role="status" aria-label="Loading records" className="p-4">
+                  <Skeleton className="h-52 w-full" />
+                </div>
+              ) : awardsError ? (
+                <p role="status" className="p-4 text-sm text-muted-foreground">
+                  Unable to load this list. Refresh to retry.
+                </p>
+              ) : awardRows.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground">
                   No awards given in the last {RECENT_MILESTONE_DAYS} days.
                 </p>
               ) : (
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-[#183445] [&_th]:text-white/90">
                     <TableRow>
                       <TableHead>Employee</TableHead>
                       <TableHead>Award</TableHead>

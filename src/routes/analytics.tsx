@@ -1,3 +1,4 @@
+import { useChartMotion } from "@/hooks/use-interface-motion";
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -204,6 +205,7 @@ const feedbackStatusConfig = {
  * statuses are checked in the tab's own filter bar — takes `hires` as a prop
  * (rather than calling useNewHires() itself) so the caller controls scope. */
 function OnboardingCompletionChart({ hires }: { hires: NewHire[] }) {
+  const animate = useChartMotion();
   const data = CHECKLIST_STEPS.map((field) => ({
     step: field.label,
     count: hires.filter((h) => h[field.key]).length,
@@ -216,13 +218,23 @@ function OnboardingCompletionChart({ hires }: { hires: NewHire[] }) {
         <CardDescription>How many new hires have completed each step</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={checklistConfig} className="h-[280px] w-full">
-          <BarChart data={data} layout="vertical" margin={{ left: 16 }}>
+        <ChartContainer
+          empty={hires.length === 0}
+          config={checklistConfig}
+          className="h-[280px] w-full"
+        >
+          <BarChart accessibilityLayer data={data} layout="vertical" margin={{ left: 16 }}>
             <CartesianGrid horizontal={false} />
             <XAxis type="number" allowDecimals={false} />
             <YAxis type="category" dataKey="step" width={140} tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" fill="var(--chart-1)" radius={4} />
+            <Bar
+              isAnimationActive={animate}
+              animationDuration={300}
+              dataKey="count"
+              fill="var(--chart-1)"
+              radius={4}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>
@@ -249,6 +261,7 @@ const ONBOARDING_STATUS_COLORS: Record<OnboardingStatus, string> = {
  * filter (@/data/new-hire-api's computeStatus). Complements
  * OnboardingCompletionChart above (which step, not which hire, is behind). */
 function OnboardingStatusChart({ hires }: { hires: NewHire[] }) {
+  const animate = useChartMotion();
   const data = ONBOARDING_STATUSES.map((status) => ({
     status,
     count: hires.filter((h) => computeStatus(h) === status).length,
@@ -267,7 +280,15 @@ function OnboardingStatusChart({ hires }: { hires: NewHire[] }) {
         >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent nameKey="status" />} />
-            <Pie data={data} dataKey="count" nameKey="status" innerRadius={55} outerRadius={95}>
+            <Pie
+              isAnimationActive={animate}
+              animationDuration={300}
+              data={data}
+              dataKey="count"
+              nameKey="status"
+              innerRadius={55}
+              outerRadius={95}
+            >
               {data.map((row) => (
                 <Cell key={row.status} fill={ONBOARDING_STATUS_COLORS[row.status]} />
               ))}
@@ -289,6 +310,7 @@ const hmoEnrollmentStatusConfig = {
  * workflow" framing (@/data/hmo-api's HmoEnrollmentStatus) — a horizontal bar
  * since there are 10 possible stages, too many to read comfortably as a pie. */
 function HmoEnrollmentStatusChart({ members }: { members: HmoMember[] }) {
+  const animate = useChartMotion();
   const data = HMO_ENROLLMENT_STATUSES.map((status) => ({
     status,
     count: members.filter((m) => m.enrollmentStatus === status).length,
@@ -301,13 +323,23 @@ function HmoEnrollmentStatusChart({ members }: { members: HmoMember[] }) {
         <CardDescription>Members by enrollment-workflow stage</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={hmoEnrollmentStatusConfig} className="h-[300px] w-full">
-          <BarChart data={data} layout="vertical" margin={{ left: 16 }}>
+        <ChartContainer
+          empty={members.length === 0}
+          config={hmoEnrollmentStatusConfig}
+          className="h-[300px] w-full"
+        >
+          <BarChart accessibilityLayer data={data} layout="vertical" margin={{ left: 16 }}>
             <CartesianGrid horizontal={false} />
             <XAxis type="number" allowDecimals={false} />
             <YAxis type="category" dataKey="status" width={150} tick={{ fontSize: 11 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" fill="var(--chart-1)" radius={4} />
+            <Bar
+              isAnimationActive={animate}
+              animationDuration={300}
+              dataKey="count"
+              fill="var(--chart-1)"
+              radius={4}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>
@@ -333,6 +365,7 @@ const HMO_MEMBER_STATUS_COLORS: Record<HmoMemberStatus, string> = {
  * (@/data/hmo-api's HmoMemberStatus), separate from enrollment stage above,
  * per the SOP's own design rule that the two fields never conflate. */
 function HmoMemberStatusChart({ members }: { members: HmoMember[] }) {
+  const animate = useChartMotion();
   const data = HMO_MEMBER_STATUSES.map((status) => ({
     status,
     count: members.filter((m) => m.memberStatus === status).length,
@@ -351,7 +384,15 @@ function HmoMemberStatusChart({ members }: { members: HmoMember[] }) {
         >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent nameKey="status" />} />
-            <Pie data={data} dataKey="count" nameKey="status" innerRadius={55} outerRadius={95}>
+            <Pie
+              isAnimationActive={animate}
+              animationDuration={300}
+              data={data}
+              dataKey="count"
+              nameKey="status"
+              innerRadius={55}
+              outerRadius={95}
+            >
               {data.map((row) => (
                 <Cell key={row.status} fill={HMO_MEMBER_STATUS_COLORS[row.status]} />
               ))}
@@ -370,6 +411,7 @@ function HmoMemberStatusChart({ members }: { members: HmoMember[] }) {
  * aggregating from the already-fetched raw records here instead means the
  * tab's Office/Type filters actually take effect with no backend change. */
 function ViolationsByTypeChart({ violations }: { violations: ViolationRecord[] }) {
+  const animate = useChartMotion();
   const counts = new Map<string, number>();
   for (const v of violations) {
     counts.set(v.violationTypeLabel, (counts.get(v.violationTypeLabel) ?? 0) + 1);
@@ -383,13 +425,23 @@ function ViolationsByTypeChart({ violations }: { violations: ViolationRecord[] }
         <CardDescription>Attendance violation records by category</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={violationTypeConfig} className="h-[280px] w-full">
-          <BarChart data={rows}>
+        <ChartContainer
+          empty={violations.length === 0}
+          config={violationTypeConfig}
+          className="h-[280px] w-full"
+        >
+          <BarChart accessibilityLayer data={rows}>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="type" tick={{ fontSize: 12 }} />
             <YAxis allowDecimals={false} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" fill="var(--chart-1)" radius={4} />
+            <Bar
+              isAnimationActive={animate}
+              animationDuration={300}
+              dataKey="count"
+              fill="var(--chart-1)"
+              radius={4}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>
@@ -398,6 +450,7 @@ function ViolationsByTypeChart({ violations }: { violations: ViolationRecord[] }
 }
 
 function ViolationsByOfficeChart({ violations }: { violations: ViolationRecord[] }) {
+  const animate = useChartMotion();
   const counts = new Map<string, number>();
   for (const v of violations) {
     counts.set(v.office, (counts.get(v.office) ?? 0) + 1);
@@ -415,10 +468,22 @@ function ViolationsByOfficeChart({ violations }: { violations: ViolationRecord[]
         <CardDescription>PH vs. CO split of open and closed violations</CardDescription>
       </CardHeader>
       <CardContent className="flex justify-center">
-        <ChartContainer config={violationOfficeConfig} className="h-[280px] w-full max-w-[320px]">
+        <ChartContainer
+          empty={violations.length === 0}
+          config={violationOfficeConfig}
+          className="h-[280px] w-full max-w-[320px]"
+        >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Pie data={rows} dataKey="count" nameKey="office" innerRadius={50} outerRadius={90}>
+            <Pie
+              isAnimationActive={animate}
+              animationDuration={300}
+              data={rows}
+              dataKey="count"
+              nameKey="office"
+              innerRadius={50}
+              outerRadius={90}
+            >
               {rows.map((row) => (
                 <Cell key={row.office} fill={row.fill} />
               ))}
@@ -435,6 +500,7 @@ function ViolationsByOfficeChart({ violations }: { violations: ViolationRecord[]
  * without rotating x-axis labels (several, like "Ready to Prepare", are too
  * long to fit upright). */
 function ViolationsByStatusChart({ violations }: { violations: ViolationRecord[] }) {
+  const animate = useChartMotion();
   const counts = new Map<EmailStatus, number>();
   for (const v of violations) {
     counts.set(v.emailStatus, (counts.get(v.emailStatus) ?? 0) + 1);
@@ -450,13 +516,23 @@ function ViolationsByStatusChart({ violations }: { violations: ViolationRecord[]
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={violationStatusConfig} className="h-[300px] w-full">
-          <BarChart data={data} layout="vertical" margin={{ left: 8 }}>
+        <ChartContainer
+          empty={violations.length === 0}
+          config={violationStatusConfig}
+          className="h-[300px] w-full"
+        >
+          <BarChart accessibilityLayer data={data} layout="vertical" margin={{ left: 8 }}>
             <CartesianGrid horizontal={false} />
             <XAxis type="number" allowDecimals={false} fontSize={12} />
             <YAxis type="category" dataKey="status" width={110} tick={{ fontSize: 11 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" fill="var(--chart-1)" radius={4} />
+            <Bar
+              isAnimationActive={animate}
+              animationDuration={300}
+              dataKey="count"
+              fill="var(--chart-1)"
+              radius={4}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>
@@ -468,6 +544,7 @@ function ViolationsByStatusChart({ violations }: { violations: ViolationRecord[]
  * tab's own volume-over-time view (separate from Workforce's headcount
  * trend, which this tab doesn't share a filterable dimension with). */
 function ViolationsMonthlyTrendChart({ violations }: { violations: ViolationRecord[] }) {
+  const animate = useChartMotion();
   const months = trailingMonths(MONTH_TREND_WINDOW);
   const data = months.map(({ key, label }) => ({
     month: label,
@@ -483,13 +560,23 @@ function ViolationsMonthlyTrendChart({ violations }: { violations: ViolationReco
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={violationTrendConfig} className="h-[280px] w-full">
-          <BarChart data={data}>
+        <ChartContainer
+          empty={violations.length === 0}
+          config={violationTrendConfig}
+          className="h-[280px] w-full"
+        >
+          <BarChart accessibilityLayer data={data}>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" fill="var(--chart-1)" radius={4} />
+            <Bar
+              isAnimationActive={animate}
+              animationDuration={300}
+              dataKey="count"
+              fill="var(--chart-1)"
+              radius={4}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>
@@ -501,6 +588,7 @@ function ViolationsMonthlyTrendChart({ violations }: { violations: ViolationReco
  * months. Unfiltered (this tab has no filter bar — see AnalyticsPage), same
  * as the other two Recognition charts below. */
 function AwardsMonthlyTrendChart({ awards }: { awards: Award[] }) {
+  const animate = useChartMotion();
   const months = trailingMonths(MONTH_TREND_WINDOW);
   const data = months.map(({ key, label }) => ({
     month: label,
@@ -516,13 +604,19 @@ function AwardsMonthlyTrendChart({ awards }: { awards: Award[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={awardsTrendConfig} className="h-[280px] w-full">
-          <LineChart data={data}>
+        <ChartContainer
+          empty={awards.length === 0}
+          config={awardsTrendConfig}
+          className="h-[280px] w-full"
+        >
+          <LineChart accessibilityLayer data={data}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
             <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Line
+              isAnimationActive={animate}
+              animationDuration={300}
               type="monotone"
               dataKey="count"
               stroke="var(--chart-3)"
@@ -537,6 +631,7 @@ function AwardsMonthlyTrendChart({ awards }: { awards: Award[] }) {
 }
 
 function FeedbackByTypeChart({ feedback }: { feedback: Feedback[] }) {
+  const animate = useChartMotion();
   const data = (["bug", "improvement"] as const).map((type) => ({
     type: FEEDBACK_TYPE_LABELS[type],
     count: feedback.filter((f) => f.type === type).length,
@@ -555,7 +650,15 @@ function FeedbackByTypeChart({ feedback }: { feedback: Feedback[] }) {
         >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent nameKey="type" />} />
-            <Pie data={data} dataKey="count" nameKey="type" innerRadius={55} outerRadius={95}>
+            <Pie
+              isAnimationActive={animate}
+              animationDuration={300}
+              data={data}
+              dataKey="count"
+              nameKey="type"
+              innerRadius={55}
+              outerRadius={95}
+            >
               {data.map((row) => (
                 <Cell key={row.type} fill={`var(--color-${row.type})`} />
               ))}
@@ -569,6 +672,7 @@ function FeedbackByTypeChart({ feedback }: { feedback: Feedback[] }) {
 }
 
 function FeedbackByStatusChart({ feedback }: { feedback: Feedback[] }) {
+  const animate = useChartMotion();
   const data = (["pending", "working_on_it", "resolved", "implemented"] as const).map((status) => ({
     status: FEEDBACK_STATUS_LABELS[status],
     count: feedback.filter((f) => f.status === status).length,
@@ -581,13 +685,23 @@ function FeedbackByStatusChart({ feedback }: { feedback: Feedback[] }) {
         <CardDescription>Where every card sits on the Feedback board</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={feedbackStatusConfig} className="h-[280px] w-full">
-          <BarChart data={data}>
+        <ChartContainer
+          empty={feedback.length === 0}
+          config={feedbackStatusConfig}
+          className="h-[280px] w-full"
+        >
+          <BarChart accessibilityLayer data={data}>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="status" tick={{ fontSize: 11 }} />
             <YAxis allowDecimals={false} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" fill="var(--chart-1)" radius={4} />
+            <Bar
+              isAnimationActive={animate}
+              animationDuration={300}
+              dataKey="count"
+              fill="var(--chart-1)"
+              radius={4}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>

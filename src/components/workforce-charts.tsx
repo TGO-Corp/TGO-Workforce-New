@@ -1,3 +1,4 @@
+import { useChartMotion } from "@/hooks/use-interface-motion";
 import { useEffect, useState } from "react";
 import {
   Area,
@@ -68,6 +69,7 @@ function useMounted() {
 
 export function OfficeDistributionChart({ employees }: ChartProps) {
   const mounted = useMounted();
+  const animate = useChartMotion();
   return (
     <Card>
       <BandedCardHeader seed="chart-office">
@@ -78,15 +80,28 @@ export function OfficeDistributionChart({ employees }: ChartProps) {
         {!mounted ? (
           <Skeleton className="h-[260px] w-full" />
         ) : (
-          <ChartContainer config={officeConfig} className="h-[280px] w-full">
-            <BarChart data={officeDistribution(employees)}>
+          <ChartContainer
+            empty={employees.length === 0}
+            config={officeConfig}
+            className="h-[280px] w-full"
+          >
+            <BarChart accessibilityLayer data={officeDistribution(employees)}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="office" tickLine={false} axisLine={false} fontSize={12} />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="active" stackId="a" fill="var(--color-active)" radius={[0, 0, 4, 4]} />
               <Bar
+                isAnimationActive={animate}
+                animationDuration={300}
+                dataKey="active"
+                stackId="a"
+                fill="var(--color-active)"
+                radius={[0, 0, 4, 4]}
+              />
+              <Bar
+                isAnimationActive={animate}
+                animationDuration={300}
                 dataKey="inactive"
                 stackId="a"
                 fill="var(--color-inactive)"
@@ -102,6 +117,7 @@ export function OfficeDistributionChart({ employees }: ChartProps) {
 
 export function StatusDistributionChart({ employees }: ChartProps) {
   const mounted = useMounted();
+  const animate = useChartMotion();
   const data = statusDistribution(employees);
   return (
     <Card>
@@ -113,10 +129,22 @@ export function StatusDistributionChart({ employees }: ChartProps) {
         {!mounted ? (
           <Skeleton className="h-[260px] w-full" />
         ) : (
-          <ChartContainer config={statusConfig} className="mx-auto h-[280px] w-full">
+          <ChartContainer
+            empty={employees.length === 0}
+            config={statusConfig}
+            className="mx-auto h-[280px] w-full"
+          >
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent nameKey="status" />} />
-              <Pie data={data} dataKey="count" nameKey="status" innerRadius={60} outerRadius={100}>
+              <Pie
+                isAnimationActive={animate}
+                animationDuration={300}
+                data={data}
+                dataKey="count"
+                nameKey="status"
+                innerRadius={60}
+                outerRadius={100}
+              >
                 {data.map((entry) => (
                   <Cell key={entry.status} fill={`var(--color-${entry.status})`} />
                 ))}
@@ -132,6 +160,7 @@ export function StatusDistributionChart({ employees }: ChartProps) {
 
 export function HeadcountTrendChart({ employees, range }: TrendChartProps) {
   const mounted = useMounted();
+  const animate = useChartMotion();
   return (
     <Card>
       <BandedCardHeader seed="chart-headcount-trend">
@@ -146,13 +175,19 @@ export function HeadcountTrendChart({ employees, range }: TrendChartProps) {
         {!mounted ? (
           <Skeleton className="h-[260px] w-full" />
         ) : (
-          <ChartContainer config={trendConfig} className="h-[260px] w-full">
-            <LineChart data={headcountTrend(employees, range)}>
+          <ChartContainer
+            empty={employees.length === 0}
+            config={trendConfig}
+            className="h-[260px] w-full"
+          >
+            <LineChart accessibilityLayer data={headcountTrend(employees, range)}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Line
+                isAnimationActive={animate}
+                animationDuration={300}
                 type="monotone"
                 dataKey="headcount"
                 stroke="var(--color-headcount)"
@@ -187,6 +222,7 @@ const tenureConfig = {
 
 export function MonthlyHiringTrendChart({ employees, range }: TrendChartProps) {
   const mounted = useMounted();
+  const animate = useChartMotion();
   return (
     <Card>
       <BandedCardHeader seed="chart-hiring-trend">
@@ -201,15 +237,31 @@ export function MonthlyHiringTrendChart({ employees, range }: TrendChartProps) {
         {!mounted ? (
           <Skeleton className="h-[280px] w-full" />
         ) : (
-          <ChartContainer config={hiringConfig} className="h-[280px] w-full">
-            <BarChart data={monthlyHiringTrend(employees, range)}>
+          <ChartContainer
+            empty={employees.length === 0}
+            config={hiringConfig}
+            className="h-[280px] w-full"
+          >
+            <BarChart accessibilityLayer data={monthlyHiringTrend(employees, range)}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={11} />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="hires" fill="var(--color-hires)" radius={4} />
-              <Bar dataKey="exits" fill="var(--color-exits)" radius={4} />
+              <Bar
+                isAnimationActive={animate}
+                animationDuration={300}
+                dataKey="hires"
+                fill="var(--color-hires)"
+                radius={4}
+              />
+              <Bar
+                isAnimationActive={animate}
+                animationDuration={300}
+                dataKey="exits"
+                fill="var(--color-exits)"
+                radius={4}
+              />
             </BarChart>
           </ChartContainer>
         )}
@@ -220,6 +272,7 @@ export function MonthlyHiringTrendChart({ employees, range }: TrendChartProps) {
 
 export function HeadcountGrowthChart({ employees, range }: TrendChartProps) {
   const mounted = useMounted();
+  const animate = useChartMotion();
   return (
     <Card>
       <BandedCardHeader seed="chart-headcount-growth">
@@ -234,13 +287,19 @@ export function HeadcountGrowthChart({ employees, range }: TrendChartProps) {
         {!mounted ? (
           <Skeleton className="h-[280px] w-full" />
         ) : (
-          <ChartContainer config={growthConfig} className="h-[280px] w-full">
-            <AreaChart data={headcountGrowth(employees, range)}>
+          <ChartContainer
+            empty={employees.length === 0}
+            config={growthConfig}
+            className="h-[280px] w-full"
+          >
+            <AreaChart accessibilityLayer data={headcountGrowth(employees, range)}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={11} />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Area
+                isAnimationActive={animate}
+                animationDuration={300}
                 type="monotone"
                 dataKey="headcount"
                 stroke="var(--color-headcount)"
@@ -258,6 +317,7 @@ export function HeadcountGrowthChart({ employees, range }: TrendChartProps) {
 
 export function DepartmentDistributionChart({ employees }: ChartProps) {
   const mounted = useMounted();
+  const animate = useChartMotion();
   return (
     <Card>
       <BandedCardHeader seed="chart-department">
@@ -268,8 +328,13 @@ export function DepartmentDistributionChart({ employees }: ChartProps) {
         {!mounted ? (
           <Skeleton className="h-[300px] w-full" />
         ) : (
-          <ChartContainer config={departmentConfig} className="h-[300px] w-full">
+          <ChartContainer
+            empty={employees.length === 0}
+            config={departmentConfig}
+            className="h-[300px] w-full"
+          >
             <BarChart
+              accessibilityLayer
               data={departmentDistribution(employees)}
               layout="vertical"
               margin={{ left: 8 }}
@@ -292,8 +357,17 @@ export function DepartmentDistributionChart({ employees }: ChartProps) {
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="active" stackId="d" fill="var(--color-active)" radius={[0, 0, 0, 4]} />
               <Bar
+                isAnimationActive={animate}
+                animationDuration={300}
+                dataKey="active"
+                stackId="d"
+                fill="var(--color-active)"
+                radius={[0, 0, 0, 4]}
+              />
+              <Bar
+                isAnimationActive={animate}
+                animationDuration={300}
                 dataKey="inactive"
                 stackId="d"
                 fill="var(--color-inactive)"
@@ -309,6 +383,7 @@ export function DepartmentDistributionChart({ employees }: ChartProps) {
 
 export function TenureDistributionChart({ employees }: ChartProps) {
   const mounted = useMounted();
+  const animate = useChartMotion();
   return (
     <Card>
       <BandedCardHeader seed="chart-tenure">
@@ -319,13 +394,23 @@ export function TenureDistributionChart({ employees }: ChartProps) {
         {!mounted ? (
           <Skeleton className="h-[280px] w-full" />
         ) : (
-          <ChartContainer config={tenureConfig} className="h-[280px] w-full">
-            <BarChart data={tenureDistribution(employees)}>
+          <ChartContainer
+            empty={employees.length === 0}
+            config={tenureConfig}
+            className="h-[280px] w-full"
+          >
+            <BarChart accessibilityLayer data={tenureDistribution(employees)}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="band" tickLine={false} axisLine={false} fontSize={12} />
               <YAxis tickLine={false} axisLine={false} allowDecimals={false} fontSize={12} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="employees" fill="var(--color-employees)" radius={4} />
+              <Bar
+                isAnimationActive={animate}
+                animationDuration={300}
+                dataKey="employees"
+                fill="var(--color-employees)"
+                radius={4}
+              />
             </BarChart>
           </ChartContainer>
         )}

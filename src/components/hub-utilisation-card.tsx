@@ -11,7 +11,7 @@ import { BandedCardHeader } from "@/components/banded-card-header";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentAccount } from "@/lib/session";
+import { useChartMotion } from "@/hooks/use-interface-motion";
 
 type OfficeRow = { office: string; active: number; inactive: number };
 
@@ -19,8 +19,7 @@ type OfficeRow = { office: string; active: number; inactive: number };
 const OFFICE_COLORS = ["#72b360", "#2f6f8f", "#c9a24a", "#8a7bb5", "#d46a5e"];
 
 export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
-  const { data: account } = useCurrentAccount();
-  const animate = account?.animations_enabled ?? true;
+  const animate = useChartMotion();
   const [mounted, setMounted] = useState(false);
   const [filled, setFilled] = useState(!animate);
   useEffect(() => {
@@ -51,7 +50,7 @@ export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
           {!mounted ? (
             <Skeleton className="h-full w-full rounded-full" />
           ) : (
-            <ChartContainer config={{}} className="h-full w-full">
+            <ChartContainer empty={grandTotal === 0} config={{}} className="h-full w-full">
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent nameKey="office" hideLabel />} />
                 <Pie
@@ -64,7 +63,7 @@ export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
                   cornerRadius={4}
                   stroke="none"
                   isAnimationActive={animate}
-                  animationDuration={1400}
+                  animationDuration={300}
                 >
                   {rows.map((r) => (
                     <Cell key={r.office} fill={r.color} />
@@ -104,9 +103,7 @@ export function HubUtilisationCard({ offices }: { offices: OfficeRow[] }) {
                       width: `${pct}%`,
                       backgroundColor: r.color,
                       transform: filled ? "scaleX(1)" : "scaleX(0)",
-                      transition: animate
-                        ? `transform 1300ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 150}ms`
-                        : "none",
+                      transition: animate ? `transform 300ms ease-out ${i * 30}ms` : "none",
                     }}
                   />
                 </div>

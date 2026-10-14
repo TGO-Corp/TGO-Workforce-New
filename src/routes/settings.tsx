@@ -301,7 +301,7 @@ function SettingsPage() {
             <SettingRow
               icon={Sparkles}
               title="Interface animations"
-              description="Page transitions, animated counters on dashboard numbers, and the moving circuit lines on card, table, modal and sidebar headers. Turn off for a snappier, static interface."
+              description="Subtle page transitions, chart entrances, and branded background effects. Turn off for a static interface."
             >
               <Switch
                 checked={animationsEnabled}
@@ -399,7 +399,7 @@ function SettingsPage() {
             <SettingRow
               icon={Cake}
               title="Birthday reminders"
-              description="Show a heads-up on your Dashboard when a birthday falls this week."
+              description="Show birthdays in the next or previous 30 days on your Dashboard."
             >
               <Switch
                 checked={notifyBirthdays}

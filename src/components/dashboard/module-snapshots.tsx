@@ -5,6 +5,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ClipboardCheck, HeartPulse, ShieldAlert, Users } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { SnapshotCard } from "@/components/snapshot-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ export function ModuleSnapshots({
   onboarding,
   hmo,
   attendance,
+  states,
 }: {
   isFullAccess: boolean;
   /** A Viewer sees the personal overview instead of any module snapshot. */
@@ -32,6 +34,10 @@ export function ModuleSnapshots({
   onboarding: { total: number; inProgress: number; complete: number };
   hmo: { active: number; pendingEnrollment: number; physicalCardsPending: number };
   attendance: { pending: number; sent: number; failed: number };
+  states: Record<
+    "employees" | "onboarding" | "hmo" | "attendance",
+    { loading: boolean; unavailable: boolean }
+  >;
 }) {
   const showSection =
     (isFullAccess && (canViewOnboarding || canViewAttendance || canViewBenefits)) ||
@@ -41,7 +47,7 @@ export function ModuleSnapshots({
   if (!showSection) return null;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))]">
       {!isFullAccess && canViewEmployees && (
         <Card>
           <CardHeader>
@@ -54,19 +60,43 @@ export function ModuleSnapshots({
           <CardContent className="space-y-4">
             <div className="grid grid-cols-4 gap-3 text-center">
               <div>
-                <p className="text-2xl font-semibold">{headcount.active}</p>
+                {states.employees.loading ? (
+                  <Skeleton className="mx-auto h-8 w-10" />
+                ) : (
+                  <p className="text-2xl font-semibold tabular-nums">
+                    {states.employees.unavailable ? "—" : headcount.active}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">Active</p>
               </div>
               <div>
-                <p className="text-2xl font-semibold">{headcount.resigned}</p>
+                {states.employees.loading ? (
+                  <Skeleton className="mx-auto h-8 w-10" />
+                ) : (
+                  <p className="text-2xl font-semibold tabular-nums">
+                    {states.employees.unavailable ? "—" : headcount.resigned}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">Resigned</p>
               </div>
               <div>
-                <p className="text-2xl font-semibold">{headcount.terminated}</p>
+                {states.employees.loading ? (
+                  <Skeleton className="mx-auto h-8 w-10" />
+                ) : (
+                  <p className="text-2xl font-semibold tabular-nums">
+                    {states.employees.unavailable ? "—" : headcount.terminated}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">Terminated</p>
               </div>
               <div>
-                <p className="text-2xl font-semibold">{headcount.newHires}</p>
+                {states.employees.loading ? (
+                  <Skeleton className="mx-auto h-8 w-10" />
+                ) : (
+                  <p className="text-2xl font-semibold tabular-nums">
+                    {states.employees.unavailable ? "—" : headcount.newHires}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">New Hires</p>
               </div>
             </div>
@@ -81,6 +111,7 @@ export function ModuleSnapshots({
       {canViewOnboarding && (
         <SnapshotCard
           seed="snapshot-onboarding"
+          {...states.onboarding}
           icon={ClipboardCheck}
           title="Onboarding Snapshot"
           description="New hires moving through the checklist"
@@ -97,6 +128,7 @@ export function ModuleSnapshots({
       {canViewBenefits && (
         <SnapshotCard
           seed="snapshot-hmo"
+          {...states.hmo}
           icon={HeartPulse}
           title="HMO Snapshot"
           description="Eligibility, enrollment and card status"
@@ -113,8 +145,9 @@ export function ModuleSnapshots({
       {canViewAttendance && (
         <SnapshotCard
           seed="snapshot-attendance"
+          {...states.attendance}
           icon={ShieldAlert}
-          title="Attendance Snapshot"
+          title="Violations Snapshot"
           description="Violation records across every status"
           stats={[
             { label: "Pending", value: attendance.pending, tone: "teal" },
@@ -122,7 +155,7 @@ export function ModuleSnapshots({
             { label: "Failed", value: attendance.failed, tone: "alert" },
           ]}
           to="/attendance-violations"
-          cta="Open attendance"
+          cta="Open violations"
         />
       )}
     </div>

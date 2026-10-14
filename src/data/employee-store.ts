@@ -31,11 +31,12 @@ const EMPLOYEES_KEY = ["employees"] as const;
 // on the order of minutes, not milliseconds.
 const REALTIME_POLL_MS = 15_000;
 
-export function useEmployeesQuery() {
+export function useEmployeesQuery(enabled = true) {
   return useQuery({
     queryKey: EMPLOYEES_KEY,
     queryFn: fetchEmployees,
-    refetchInterval: REALTIME_POLL_MS,
+    enabled,
+    refetchInterval: enabled ? REALTIME_POLL_MS : false,
   });
 }
 
@@ -61,13 +62,8 @@ export function useCreateEmployee() {
 export function useUpdateEmployee() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      originalId,
-      employee,
-    }: {
-      originalId: string;
-      employee: Employee;
-    }) => updateEmployee(originalId, employee),
+    mutationFn: ({ originalId, employee }: { originalId: string; employee: Employee }) =>
+      updateEmployee(originalId, employee),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: EMPLOYEES_KEY }),
   });
 }

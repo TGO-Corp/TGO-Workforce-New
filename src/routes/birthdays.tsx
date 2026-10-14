@@ -197,7 +197,7 @@ function BirthdaysPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Total Birthdays"
           value={list.length}
@@ -211,7 +211,7 @@ function BirthdaysPage() {
           icon={CalendarClock}
         />
         <MetricCard title="PH Eastwood" value={eastwood} hint="Philippines Hub" icon={Building2} />
-        <MetricCard title="CO Medellin" value={medellin} hint="Columbia Hub" icon={Globe2} />
+        <MetricCard title="CO Medellin" value={medellin} hint="Colombia Hub" icon={Globe2} />
       </div>
       {list.length === 0 ? (
         <Card>

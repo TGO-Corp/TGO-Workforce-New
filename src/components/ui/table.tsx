@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { useCircuitBand } from "@/lib/use-circuit-background";
 import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
@@ -16,22 +15,14 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, style, ...props }, ref) => {
-  // Dark circuit-board band (see @/lib/circuit-art). The header row's own
-  // hover is forced transparent — the default light hover tint would wash
-  // out the white header text on the navy.
-  const { setRef, style: bandStyle } = useCircuitBand("table", "table");
   return (
     <thead
-      ref={(node) => {
-        setRef(node);
-        if (typeof ref === "function") ref(node);
-        else if (ref) ref.current = node;
-      }}
+      ref={ref}
       className={cn(
-        "[&_tr]:border-b [&_tr]:border-white/10 [&_tr:hover]:bg-transparent [&_th]:[text-shadow:0_1px_2px_rgb(0_0_0/0.4)] [&_.text-muted-foreground]:text-white/70",
+        "bg-muted/60 [&_tr]:border-b [&_tr]:border-border/70 [&_tr:hover]:bg-transparent",
         className,
       )}
-      style={{ ...bandStyle, ...style }}
+      style={style}
       {...props}
     />
   );
@@ -79,7 +70,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-10 px-2 text-left align-middle font-medium text-white/90 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "h-10 px-3 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className,
     )}
     {...props}
@@ -94,7 +85,7 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      "p-2 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+      "px-3 py-2.5 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className,
     )}
     {...props}

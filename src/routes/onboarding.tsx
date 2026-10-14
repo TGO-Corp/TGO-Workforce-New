@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { TableStateRow } from "@/components/table-state-row";
 import { PageHeader } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ import {
   type NewHire,
   type NewHirePatch,
 } from "@/data/new-hire-api";
-import { useDeleteNewHire, useNewHires, useUpdateNewHire } from "@/data/new-hire-store";
+import { useDeleteNewHire, useNewHiresQuery, useUpdateNewHire } from "@/data/new-hire-store";
 import { canEditOnboardingField, canManageOnboarding, canViewOnboarding } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useCurrentAccount } from "@/lib/session";
@@ -116,7 +117,13 @@ function StatusBadge({ status }: { status: ReturnType<typeof computeStatus> }) {
 function OnboardingPage() {
   const { data: account, isLoading: accountLoading } = useCurrentAccount();
   const canView = canViewOnboarding(account?.permissions);
-  const hires = useNewHires(canView);
+  const {
+    data: hiresData,
+    isLoading: hiresLoading,
+    isError: hiresError,
+    refetch,
+  } = useNewHiresQuery(canView);
+  const hires = useMemo(() => hiresData ?? [], [hiresData]);
   const canManage = canManageOnboarding(account?.permissions);
   const updateMutation = useUpdateNewHire();
   const deleteMutation = useDeleteNewHire();
@@ -263,21 +270,34 @@ function OnboardingPage() {
         action={canManage ? <OnboardingHireDialog onCreated={handleAdded} /> : undefined}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard title="Total" value={stats.total} hint="New hires tracked" icon={Users} />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
+          loading={hiresLoading}
+          unavailable={hiresError}
+          title="Total"
+          value={stats.total}
+          hint="New hires tracked"
+          icon={Users}
+        />
+        <MetricCard
+          loading={hiresLoading}
+          unavailable={hiresError}
           title="Not Started"
           value={stats.notStarted}
           hint="No checklist steps yet"
           icon={Circle}
         />
         <MetricCard
+          loading={hiresLoading}
+          unavailable={hiresError}
           title="In Progress"
           value={stats.inProgress}
           hint="Some steps completed"
           icon={TrendingUp}
         />
         <MetricCard
+          loading={hiresLoading}
+          unavailable={hiresError}
           title="Complete"
           value={stats.complete}
           hint="Every step checked"
@@ -352,7 +372,7 @@ function OnboardingPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[160px]">Name</TableHead>
+                <TableHead className="sticky left-0 z-10 min-w-[160px] bg-muted">Name</TableHead>
                 <TableHead className="min-w-[140px]">Role</TableHead>
                 <TableHead className="min-w-[160px]">Start Date</TableHead>
                 <TableHead className="min-w-[140px]">Recruitment Lead</TableHead>
@@ -368,7 +388,22 @@ function OnboardingPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.length === 0 && (
+              {hiresLoading && (
+                <TableStateRow
+                  colSpan={CHECKLIST_COLUMNS.length + (canManage ? 9 : 8)}
+                  kind="loading"
+                  title="Loading onboarding…"
+                />
+              )}
+              {hiresError && (
+                <TableStateRow
+                  colSpan={CHECKLIST_COLUMNS.length + (canManage ? 9 : 8)}
+                  kind="error"
+                  title="Unable to load onboarding"
+                  onRetry={() => void refetch()}
+                />
+              )}
+              {!hiresLoading && !hiresError && rows.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={CHECKLIST_COLUMNS.length + (canManage ? 9 : 8)}
@@ -384,7 +419,9 @@ function OnboardingPage() {
                 const status = computeStatus(hire);
                 return (
                   <TableRow key={hire.id}>
-                    <TableCell className="font-medium">{hire.name}</TableCell>
+                    <TableCell className="sticky left-0 z-10 bg-card font-medium">
+                      {hire.name}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{hire.roleTitle}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatOnboardingStartDate(hire.startDate)}

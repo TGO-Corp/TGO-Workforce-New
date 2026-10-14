@@ -1,57 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { useRouterState } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCurrentAccount } from "@/lib/session";
-import { useCircuitBand } from "@/lib/use-circuit-background";
+import { ArrowUpRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-
-const COUNT_UP_MS = 1200;
-
-/** Animates from the previous numeric value up (or down) to the new one over
- * COUNT_UP_MS, including the very first mount (starts from 0) — that's what
- * makes it visible on every page, not just when a value happens to change
- * while already mounted. Skipped entirely (renders the target immediately)
- * only when the account has turned animations off. */
-function AnimatedNumber({ value, enabled }: { value: number; enabled: boolean }) {
-  // Writes the number straight into the DOM node on each frame instead of
-  // setState-ing it — ~70 React re-renders per card per count-up become zero,
-  // which is what keeps a page full of metric cards smooth.
-  const node = useRef<HTMLSpanElement>(null);
-  const initial = useRef((enabled ? 0 : value).toLocaleString());
-  const previous = useRef(enabled ? 0 : value);
-  const frame = useRef<number | undefined>(undefined);
-
-  useEffect(() => {
-    const from = previous.current;
-    const to = value;
-    previous.current = value;
-    const write = (n: number) => {
-      if (node.current) node.current.textContent = n.toLocaleString();
-    };
-    if (!enabled || from === to) {
-      write(to);
-      return;
-    }
-
-    const start = performance.now();
-    function tick(now: number) {
-      const progress = Math.min(1, (now - start) / COUNT_UP_MS);
-      // Ease-out quart — brisk start, long gentle landing.
-      const eased = 1 - (1 - progress) ** 4;
-      write(Math.round(from + (to - from) * eased));
-      if (progress < 1) {
-        frame.current = requestAnimationFrame(tick);
-      }
-    }
-    frame.current = requestAnimationFrame(tick);
-    return () => {
-      if (frame.current !== undefined) cancelAnimationFrame(frame.current);
-    };
-  }, [value, enabled]);
-
-  return <span ref={node}>{initial.current}</span>;
-}
 
 export function MetricCard({
   title,
@@ -59,71 +10,85 @@ export function MetricCard({
   hint,
   icon: Icon,
   onClick,
+  loading = false,
+  unavailable = false,
+  tone = "neutral",
 }: {
   title: string;
   value: number | string;
   hint: string;
   icon: LucideIcon;
-  /** When provided, the whole card becomes clickable (keyboard-operable too)
-   * with a hover affordance — e.g. the Dashboard's cards open a detail modal
-   * for the employees behind that number (see @/components/metric-detail-modal
-   * and src/routes/index.tsx). Omit for a plain, non-interactive card, same
-   * as every existing usage before this prop existed. */
   onClick?: () => void;
+  loading?: boolean;
+  unavailable?: boolean;
+  tone?: "neutral" | "positive" | "warning" | "danger";
 }) {
-  const { data: account } = useCurrentAccount();
-  const animationsEnabled = account?.animations_enabled ?? true;
-  // Keying on the route forces a fresh AnimatedNumber mount (and so a fresh
-  // 0→value count-up) every time you navigate to a page that renders this
-  // card, independent of whatever the surrounding page tree does or doesn't
-  // remount on its own — this card doesn't rely on a parent remounting
-  // correctly to animate.
-  const pathname = useRouterState({ select: (r) => r.location.pathname });
-  // Seeded off the title so each card draws its own board, stable across renders.
-  const { setRef: setBandRef, style: bandStyle } = useCircuitBand("card", title);
-
+  const iconTone = {
+    neutral: "bg-muted text-muted-foreground",
+    positive: "bg-primary/10 text-primary",
+    warning: "bg-amber-500/10 text-amber-800 dark:text-amber-200",
+    danger: "bg-red-500/10 text-red-700 dark:text-red-300",
+  }[tone];
+  const interactive = !!onClick && !loading && !unavailable;
   return (
     <Card
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onClick={onClick}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? `View ${title.toLowerCase()} details` : undefined}
+      aria-busy={loading}
+      onClick={interactive ? onClick : undefined}
       onKeyDown={
-        onClick
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onClick();
+        interactive
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onClick?.();
               }
             }
           : undefined
       }
       className={cn(
-        "overflow-hidden",
-        onClick && "cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/40",
+        "min-w-0",
+        interactive &&
+          "group cursor-pointer transition-colors duration-150 hover:border-primary/40 hover:bg-primary/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       )}
     >
-      <CardHeader
-        ref={setBandRef}
-        className="flex flex-row items-center justify-between space-y-0 px-5 py-4"
-        style={bandStyle}
-      >
-        <CardTitle className="text-sm font-medium text-white/90">{title}</CardTitle>
-        {/* Icon chip: frosted rounded square with a soft green glow, sitting
-            inside the band's dial rings. Static on purpose — the motion lives
-            in the band's line art, not the icon. */}
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-[#9bd48a] shadow-[0_0_20px_-2px_rgba(114,179,96,0.55)] ring-1 ring-white/25">
-          <Icon className="h-[18px] w-[18px]" />
-        </span>
-      </CardHeader>
-      <CardContent className="pt-5">
-        <div className="text-3xl font-semibold tracking-tight">
-          {typeof value === "number" ? (
-            <AnimatedNumber key={pathname} value={value} enabled={animationsEnabled} />
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <p className="min-h-10 text-sm font-medium leading-snug text-muted-foreground">{title}</p>
+          <span
+            className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", iconTone)}
+          >
+            <Icon className="size-4" aria-hidden="true" />
+          </span>
+        </div>
+        <div
+          className={cn(
+            "mt-2 font-semibold leading-tight tracking-tight tabular-nums",
+            typeof value === "string" && value.length > 12 ? "break-words text-xl" : "text-3xl",
+          )}
+        >
+          {loading ? (
+            <Skeleton className="h-9 w-20" />
+          ) : unavailable ? (
+            <span aria-label="Unavailable">—</span>
+          ) : typeof value === "number" ? (
+            value.toLocaleString()
           ) : (
             value
           )}
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {unavailable ? "Unable to load data" : hint}
+          </p>
+          {interactive && (
+            <ArrowUpRight
+              className="size-3.5 shrink-0 text-muted-foreground/50 group-hover:text-primary"
+              aria-hidden="true"
+            />
+          )}
+        </div>
       </CardContent>
     </Card>
   );

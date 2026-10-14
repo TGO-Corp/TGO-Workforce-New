@@ -191,26 +191,40 @@ function ActivityLogsContent() {
         description="Audit trail of record changes, access events, data exports and system jobs."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
+          loading={isLoading}
+          unavailable={isError}
           title="Total Events"
           value={summary?.total ?? 0}
           hint="All recorded events"
           icon={ScrollText}
         />
         <MetricCard
+          loading={isLoading}
+          unavailable={isError}
+          tone="danger"
           title="Critical"
           value={critical}
           hint="Needs immediate review"
           icon={AlertCircle}
         />
         <MetricCard
+          loading={isLoading}
+          unavailable={isError}
           title="Warning"
           value={warning}
           hint="Worth a second look"
           icon={AlertTriangle}
         />
-        <MetricCard title="Info" value={info} hint="Routine activity" icon={Info} />
+        <MetricCard
+          loading={isLoading}
+          unavailable={isError}
+          title="Info"
+          value={info}
+          hint="Routine activity"
+          icon={Info}
+        />
       </div>
 
       <Card>
