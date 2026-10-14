@@ -60,13 +60,13 @@ export function CompanyMetrics({
     },
     eastwood: {
       title: "PH Eastwood (Active)",
-      description: "Active employees at the Manila delivery hub.",
+      description: "Active employees at the Philippines hub.",
       employees: eastwoodActiveEmployees,
       exportBaseName: "ph-eastwood-active",
     },
     medellin: {
       title: "CO Medellin (Active)",
-      description: "Active employees at the LATAM delivery hub.",
+      description: "Active employees at the Columbia hub.",
       employees: medellinActiveEmployees,
       exportBaseName: "co-medellin-active",
     },
@@ -102,14 +102,14 @@ export function CompanyMetrics({
         <MetricCard
           title="PH Eastwood (Active)"
           value={counts.eastwood}
-          hint="Manila delivery hub"
+          hint="Philippines Hub"
           icon={Building2}
           onClick={() => setOpenMetric("eastwood")}
         />
         <MetricCard
           title="CO Medellin (Active)"
           value={counts.medellin}
-          hint="LATAM delivery hub"
+          hint="Columbia Hub"
           icon={Globe2}
           onClick={() => setOpenMetric("medellin")}
         />

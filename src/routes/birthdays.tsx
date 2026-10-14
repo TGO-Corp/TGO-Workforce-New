@@ -210,13 +210,8 @@ function BirthdaysPage() {
           hint={`Celebrations in ${currentMonthName}`}
           icon={CalendarClock}
         />
-        <MetricCard
-          title="PH Eastwood"
-          value={eastwood}
-          hint="Manila delivery hub"
-          icon={Building2}
-        />
-        <MetricCard title="CO Medellin" value={medellin} hint="LATAM delivery hub" icon={Globe2} />
+        <MetricCard title="PH Eastwood" value={eastwood} hint="Philippines Hub" icon={Building2} />
+        <MetricCard title="CO Medellin" value={medellin} hint="Columbia Hub" icon={Globe2} />
       </div>
       {list.length === 0 ? (
         <Card>
