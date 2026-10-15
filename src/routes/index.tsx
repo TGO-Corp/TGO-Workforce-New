@@ -6,6 +6,7 @@ import { DashboardActions } from "@/components/dashboard/dashboard-actions";
 import { MilestoneCards } from "@/components/dashboard/milestone-cards";
 import { ModuleSnapshots } from "@/components/dashboard/module-snapshots";
 import { RecentExitsCard } from "@/components/dashboard/recent-exits-card";
+import { WhatsNewCard } from "@/components/dashboard/whats-new-card";
 import { HubUtilisationCard } from "@/components/hub-utilisation-card";
 import { MyOverview } from "@/components/my-overview";
 import { WelcomeBanner } from "@/components/welcome-banner";
@@ -66,6 +67,7 @@ function Dashboard() {
   return (
     <div className="space-y-4">
       <WelcomeBanner />
+      <WhatsNewCard />
       <CompanyDashboard viewerMode={getEffectiveRole(account) === "viewer"} />
     </div>
   );
