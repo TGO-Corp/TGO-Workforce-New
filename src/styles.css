@@ -30,7 +30,7 @@
   --chart-4: oklch(0.7959 0.0766 139.6826);
   --chart-5: oklch(0.5137 0.0556 243.6587);
   /* Stable, quiet navigation surface in both application themes. */
-  --sidebar: #142532;
+  --sidebar: #1b3d52;
   --sidebar-foreground: #dce5ed;
   --sidebar-primary: #a7d89a;
   --sidebar-primary-foreground: #142532;
@@ -87,7 +87,7 @@
   --chart-4: oklch(0.5137 0.0556 243.6587);
   --chart-5: oklch(0.6154 0.1064 138.6253);
   /* Navigation keeps the same identity when the workspace theme changes. */
-  --sidebar: #142532;
+  --sidebar: #1b3d52;
   --sidebar-foreground: #dce5ed;
   --sidebar-primary: #a7d89a;
   --sidebar-primary-foreground: #142532;
