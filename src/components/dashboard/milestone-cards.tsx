@@ -7,7 +7,6 @@
 import { useState, type ComponentProps } from "react";
 import { Link } from "@tanstack/react-router";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCircuitBand } from "@/lib/use-circuit-background";
 import { Award as AwardIcon, Cake, Trophy, UserPlus, ArrowUpRight } from "lucide-react";
 
 import { EmployeeNameLink } from "@/components/employee-name-link";
@@ -50,28 +49,23 @@ import {
 
 // These four panels stay together at the top of the dashboard.
 function MilestoneHeader({
-  seed,
   count,
   loading,
   unavailable,
   children,
   ...props
 }: ComponentProps<typeof CardHeader> & {
-  seed: string;
   count: number;
   loading: boolean;
   unavailable: boolean;
 }) {
-  const { setRef, style } = useCircuitBand("card", seed);
   return (
     <CardHeader
-      ref={setRef}
-      style={style}
-      className="min-h-[104px] justify-center border-b border-white/10 p-4 text-white [&_.text-muted-foreground]:text-white/75 [&_svg]:shrink-0 [&_svg]:text-[#a9d698]"
+      className="min-h-[92px] justify-center border-b border-border/70 bg-card p-4 [&_svg]:shrink-0 [&_svg]:text-primary"
       {...props}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1.5">{children}</div>
+        <div className="min-w-0 space-y-1">{children}</div>
         <span
           aria-label={
             loading
@@ -80,7 +74,7 @@ function MilestoneHeader({
                 ? "Record count unavailable"
                 : `${count} records`
           }
-          className="flex min-w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 px-2 py-1 text-sm font-semibold tabular-nums"
+          className="flex min-w-7 shrink-0 items-center justify-center rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground"
         >
           {loading || unavailable ? "—" : count.toLocaleString()}
         </span>
@@ -97,7 +91,7 @@ function MilestoneFooter({
   children: string;
 }) {
   return (
-    <div className="border-t border-border/70 bg-muted/15 px-4 py-2.5">
+    <div className="border-t border-border/70 bg-card px-4 py-3">
       <Link
         to={to}
         className="flex items-center justify-between gap-2 rounded-sm text-xs font-medium text-primary transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -171,7 +165,7 @@ export function MilestoneCards({
         <div>
           <h2 className="text-sm font-semibold">People & milestones</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            New faces, work anniversaries, and moments worth celebrating.
+            Recent hires, upcoming milestones, and employee recognition.
           </p>
         </div>
         {(showAnniversaries || showBirthdays) && (
@@ -199,7 +193,6 @@ export function MilestoneCards({
         {showNewHires && (
           <Card className="flex min-w-0 flex-col overflow-hidden border-border/80">
             <MilestoneHeader
-              seed="new-hires"
               count={newHires.length}
               loading={employeesLoading}
               unavailable={employeesError}
@@ -233,9 +226,9 @@ export function MilestoneCards({
               ) : (
                 <Table
                   containerClassName="overflow-visible"
-                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2"
+                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2 2xl:[&_td]:px-3"
                 >
-                  <TableHeader className="sticky top-0 z-10 bg-[#183445] [&_th]:h-9 [&_th]:px-2 [&_th]:text-xs [&_th]:text-white/80">
+                  <TableHeader className="sticky top-0 z-10 bg-muted [&_th]:h-9 [&_th]:px-2 2xl:[&_th]:px-3 [&_th]:text-xs [&_th]:text-muted-foreground">
                     <TableRow>
                       <TableHead className="w-[40%]">Name</TableHead>
                       <TableHead>Office</TableHead>
@@ -248,7 +241,9 @@ export function MilestoneCards({
                       return (
                         <TableRow
                           key={e.id}
-                          className={daysAgo <= SOON_THRESHOLD_DAYS ? "bg-amber-500/5" : undefined}
+                          className={
+                            daysAgo <= SOON_THRESHOLD_DAYS ? "bg-primary/[0.035]" : undefined
+                          }
                         >
                           <TableCell className="font-medium">
                             <EmployeeNameLink employee={e} />
@@ -280,7 +275,6 @@ export function MilestoneCards({
         {showAnniversaries && (
           <Card className="flex min-w-0 flex-col overflow-hidden border-border/80">
             <MilestoneHeader
-              seed="anniversaries"
               count={anniversaryRows.length}
               loading={employeesLoading}
               unavailable={employeesError}
@@ -316,9 +310,9 @@ export function MilestoneCards({
               ) : (
                 <Table
                   containerClassName="overflow-visible"
-                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2"
+                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2 2xl:[&_td]:px-3"
                 >
-                  <TableHeader className="sticky top-0 z-10 bg-[#183445] [&_th]:h-9 [&_th]:px-2 [&_th]:text-xs [&_th]:text-white/80">
+                  <TableHeader className="sticky top-0 z-10 bg-muted [&_th]:h-9 [&_th]:px-2 2xl:[&_th]:px-3 [&_th]:text-xs [&_th]:text-muted-foreground">
                     <TableRow>
                       <TableHead className="w-[40%]">Name</TableHead>
                       <TableHead>Date</TableHead>
@@ -329,7 +323,9 @@ export function MilestoneCards({
                     {anniversaryRows.map((e) => (
                       <TableRow
                         key={e.id}
-                        className={e.daysAway <= SOON_THRESHOLD_DAYS ? "bg-amber-500/5" : undefined}
+                        className={
+                          e.daysAway <= SOON_THRESHOLD_DAYS ? "bg-primary/[0.035]" : undefined
+                        }
                       >
                         <TableCell>
                           <p className="font-medium">
@@ -348,7 +344,12 @@ export function MilestoneCards({
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Badge variant="secondary">{formatYears(e.years)}</Badge>
+                          <Badge
+                            variant="outline"
+                            className="whitespace-nowrap border-primary/20 bg-primary/5 px-2 font-medium text-primary"
+                          >
+                            {formatYears(e.years)}
+                          </Badge>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -363,7 +364,6 @@ export function MilestoneCards({
         {showBirthdays && (
           <Card className="flex min-w-0 flex-col overflow-hidden border-border/80">
             <MilestoneHeader
-              seed="birthdays"
               count={birthdayRows.length}
               loading={employeesLoading}
               unavailable={employeesError}
@@ -397,9 +397,9 @@ export function MilestoneCards({
               ) : (
                 <Table
                   containerClassName="overflow-visible"
-                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2"
+                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2 2xl:[&_td]:px-3"
                 >
-                  <TableHeader className="sticky top-0 z-10 bg-[#183445] [&_th]:h-9 [&_th]:px-2 [&_th]:text-xs [&_th]:text-white/80">
+                  <TableHeader className="sticky top-0 z-10 bg-muted [&_th]:h-9 [&_th]:px-2 2xl:[&_th]:px-3 [&_th]:text-xs [&_th]:text-muted-foreground">
                     <TableRow>
                       <TableHead className="w-[40%]">Name</TableHead>
                       <TableHead>Office</TableHead>
@@ -410,7 +410,9 @@ export function MilestoneCards({
                     {birthdayRows.map((e) => (
                       <TableRow
                         key={e.id}
-                        className={e.daysAway <= SOON_THRESHOLD_DAYS ? "bg-amber-500/5" : undefined}
+                        className={
+                          e.daysAway <= SOON_THRESHOLD_DAYS ? "bg-primary/[0.035]" : undefined
+                        }
                       >
                         <TableCell className="font-medium">
                           <EmployeeNameLink employee={e} />
@@ -437,7 +439,6 @@ export function MilestoneCards({
         {showAwards && (
           <Card className="flex min-w-0 flex-col overflow-hidden border-border/80">
             <MilestoneHeader
-              seed="awards"
               count={awardRows.length}
               loading={awardsLoading}
               unavailable={awardsError}
@@ -471,9 +472,9 @@ export function MilestoneCards({
               ) : (
                 <Table
                   containerClassName="overflow-visible"
-                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2"
+                  className="table-fixed text-[13px] [&_td]:break-words [&_td]:px-2 2xl:[&_td]:px-3"
                 >
-                  <TableHeader className="sticky top-0 z-10 bg-[#183445] [&_th]:h-9 [&_th]:px-2 [&_th]:text-xs [&_th]:text-white/80">
+                  <TableHeader className="sticky top-0 z-10 bg-muted [&_th]:h-9 [&_th]:px-2 2xl:[&_th]:px-3 [&_th]:text-xs [&_th]:text-muted-foreground">
                     <TableRow>
                       <TableHead className="w-[37%]">Employee</TableHead>
                       <TableHead>Award</TableHead>
@@ -484,7 +485,9 @@ export function MilestoneCards({
                     {awardRows.map((a) => (
                       <TableRow
                         key={a.id}
-                        className={a.daysAgo <= SOON_THRESHOLD_DAYS ? "bg-amber-500/5" : undefined}
+                        className={
+                          a.daysAgo <= SOON_THRESHOLD_DAYS ? "bg-primary/[0.035]" : undefined
+                        }
                       >
                         <TableCell>
                           <p className="font-medium">
@@ -503,9 +506,12 @@ export function MilestoneCards({
                           {a.description ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="cursor-default underline decoration-dotted underline-offset-4">
+                                <button
+                                  type="button"
+                                  className="text-left text-foreground underline decoration-border underline-offset-4 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
                                   {a.title}
-                                </span>
+                                </button>
                               </TooltipTrigger>
                               <TooltipContent className="max-w-64">{a.description}</TooltipContent>
                             </Tooltip>
