@@ -42,22 +42,18 @@ export function WelcomeBanner() {
   return (
     <section
       aria-label="Welcome"
-      className="relative isolate overflow-hidden rounded-xl border border-primary/20 bg-card px-4 py-4 shadow-[0_2px_8px_-4px_rgb(0_0_0/0.12)] sm:px-5"
+      className="relative isolate overflow-hidden rounded-xl border border-sidebar-border bg-sidebar px-4 py-4 text-sidebar-foreground shadow-[0_2px_8px_-4px_rgb(0_0_0/0.12)] sm:px-5"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-r from-primary/12 via-primary/[0.04] to-transparent"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-primary/80 to-primary/30"
+        className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-sidebar-primary/80 to-sidebar-primary/30"
       />
       <svg
         aria-hidden="true"
         focusable="false"
         viewBox="0 0 360 120"
         fill="none"
-        className="pointer-events-none absolute -top-5 right-[24%] -z-10 hidden h-32 w-96 text-primary opacity-[0.12] lg:block"
+        className="pointer-events-none absolute -top-5 right-[24%] -z-10 hidden h-32 w-96 text-sidebar-foreground opacity-[0.12] lg:block"
       >
         <circle cx="240" cy="60" r="46" stroke="currentColor" />
         <circle cx="240" cy="60" r="68" stroke="currentColor" />
@@ -71,12 +67,12 @@ export function WelcomeBanner() {
       </svg>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3 pr-8 sm:pr-0">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm ring-4 ring-primary/10">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-sidebar-primary shadow-sm ring-4 ring-white/5">
             <Hand className="size-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
             <h2 className="text-sm font-semibold leading-snug">Welcome back, {name}</h2>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-xs leading-relaxed text-sidebar-foreground/75">
               {today} · {ROLE_LABELS[account.role]}
             </p>
           </div>
@@ -86,7 +82,7 @@ export function WelcomeBanner() {
             asChild
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground"
+            className="text-sidebar-foreground/80 hover:bg-white/10 hover:text-white"
           >
             <Link to="/settings">
               <Settings className="size-3.5" />
@@ -97,7 +93,7 @@ export function WelcomeBanner() {
             asChild
             variant="outline"
             size="sm"
-            className="border-primary/20 bg-card/80 text-primary shadow-none hover:bg-primary/10 hover:text-primary"
+            className="border-white/20 bg-white/10 text-white shadow-none hover:bg-white/20 hover:text-white"
           >
             <Link to="/settings" hash="dashboard-cards">
               <SlidersHorizontal className="size-3.5" />
@@ -110,7 +106,7 @@ export function WelcomeBanner() {
         type="button"
         onClick={close}
         aria-label="Dismiss welcome message"
-        className="absolute right-3 top-3 flex size-8 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="absolute right-3 top-3 flex size-8 cursor-pointer items-center justify-center rounded-md text-sidebar-foreground/75 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
       >
         <X className="size-4" />
       </button>
