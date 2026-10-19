@@ -1,4 +1,5 @@
-// Nav bell icon + dropdown — the notification module's only UI surface.
+// Nav bell icon + dropdown — the quick peek. The full inbox (search, clear,
+// delete, paging) is the Notifications page, /notifications, in the sidebar.
 // Polls for an unread count independently of whether the dropdown is open
 // (see useUnreadCountQuery), and fetches the actual list on open.
 
@@ -96,7 +97,11 @@ export function NotificationBell() {
                   {!notification.isRead && (
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                   )}
-                  <p className={notification.isRead ? "text-sm text-muted-foreground" : "text-sm font-medium"}>
+                  <p
+                    className={
+                      notification.isRead ? "text-sm text-muted-foreground" : "text-sm font-medium"
+                    }
+                  >
                     {notification.title}
                   </p>
                 </div>
@@ -110,6 +115,13 @@ export function NotificationBell() {
             ))
           )}
         </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer justify-center text-sm font-medium"
+          onClick={() => navigate({ to: "/notifications" })}
+        >
+          View all notifications
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

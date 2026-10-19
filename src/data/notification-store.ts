@@ -1,10 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  clearNotifications,
+  deleteNotification,
+  fetchNotificationPage,
   fetchNotifications,
   fetchUnreadCount,
   markAllNotificationsRead,
   markNotificationRead,
+  markNotificationUnread,
+  type NotificationPageParams,
 } from "@/data/notification-api";
 
 // The nav bell icon and its dropdown read and write through these hooks — a
@@ -59,6 +64,45 @@ export function useMarkAllNotificationsRead() {
   const invalidate = useInvalidateNotifications();
   return useMutation({
     mutationFn: () => markAllNotificationsRead(),
+    onSuccess: invalidate,
+  });
+}
+
+// --- The Notifications module (sidebar page) ---------------------------------
+// Every mutation invalidates NOTIFICATIONS_KEY, which is a prefix of the page
+// query below, the bell's list and the unread count — so all three stay in step.
+
+/** One page of the inbox. keepPreviousData keeps the old rows on screen while the
+ * next page or filter loads instead of flashing an empty list. */
+export function useNotificationPage(params: NotificationPageParams) {
+  return useQuery({
+    queryKey: [...NOTIFICATIONS_KEY, "page", params],
+    queryFn: () => fetchNotificationPage(params),
+    placeholderData: keepPreviousData,
+    refetchInterval: REALTIME_POLL_MS,
+  });
+}
+
+export function useMarkNotificationUnread() {
+  const invalidate = useInvalidateNotifications();
+  return useMutation({
+    mutationFn: (id: number) => markNotificationUnread(id),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteNotification() {
+  const invalidate = useInvalidateNotifications();
+  return useMutation({
+    mutationFn: (id: number) => deleteNotification(id),
+    onSuccess: invalidate,
+  });
+}
+
+export function useClearNotifications() {
+  const invalidate = useInvalidateNotifications();
+  return useMutation({
+    mutationFn: (scope: "read" | "all") => clearNotifications(scope),
     onSuccess: invalidate,
   });
 }

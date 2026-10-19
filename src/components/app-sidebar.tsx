@@ -1,6 +1,7 @@
 import { Link, useRouterState, type LinkProps } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import {
+  Bell,
   LayoutDashboard,
   Users,
   BarChart3,
@@ -35,6 +36,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useUnreadCountQuery } from "@/data/notification-store";
 import { useCurrentAccount } from "@/lib/session";
 import type { AccountProfile, Permission } from "@/lib/session";
 import {
@@ -64,12 +66,20 @@ export type NavItem = {
    * array: its pages read Employee Directory data directly, so without
    * employees.view too they'd load and show nothing. */
   permission?: Permission | Permission[];
+  /** Shows a live count pill on the item. "unread-notifications" is the signed-in
+   * account's unread notification count (the Notifications module). */
+  badge?: "unread-notifications";
 };
 
 export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Overview",
-    items: [{ title: "Dashboard", url: "/", icon: LayoutDashboard }],
+    items: [
+      { title: "Dashboard", url: "/", icon: LayoutDashboard },
+      // Everyone has their own inbox, so there's no permission gate — same as
+      // Settings and Feedback. It only ever shows the caller's own notifications.
+      { title: "Notifications", url: "/notifications", icon: Bell, badge: "unread-notifications" },
+    ],
   },
   {
     label: "People",
@@ -243,6 +253,8 @@ function TgoGlobeIcon() {
 
 export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
+  const { data: unreadCount } = useUnreadCountQuery();
+  const unread = unreadCount ?? 0;
   const collapsed = !isMobile && state === "collapsed";
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const { data: account } = useCurrentAccount();
@@ -328,6 +340,21 @@ export function AppSidebar() {
                         >
                           <item.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                           <span>{item.title}</span>
+                          {item.badge === "unread-notifications" && unread > 0 && (
+                            <>
+                              <span
+                                className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-[11px] font-semibold leading-none text-sidebar-primary-foreground group-data-[collapsible=icon]:hidden"
+                                aria-label={`${unread} unread`}
+                              >
+                                {unread > 99 ? "99+" : unread}
+                              </span>
+                              {/* Collapsed to icons: a small dot instead of the number. */}
+                              <span
+                                className="absolute right-1.5 top-1.5 hidden h-2 w-2 rounded-full bg-sidebar-primary group-data-[collapsible=icon]:block"
+                                aria-hidden="true"
+                              />
+                            </>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

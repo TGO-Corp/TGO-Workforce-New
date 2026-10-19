@@ -21,6 +21,22 @@ export type ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "2026.10.19",
+    date: "2026-10-19",
+    title: "Notifications module",
+    items: [
+      {
+        kind: "new",
+        text: "A Notifications page in the sidebar, with a live unread count: search your inbox, filter to unread, mark items read or unread, and remove them.",
+      },
+      {
+        kind: "new",
+        text: "Clear read notifications or clear everything in one go (with a confirmation first).",
+      },
+      { kind: "improved", text: "The bell menu now has a View all notifications link." },
+    ],
+  },
+  {
     version: "2026.10.14",
     date: "2026-10-14",
     title: "Dashboard and navigation refresh",

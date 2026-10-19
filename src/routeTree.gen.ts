@@ -23,6 +23,7 @@ import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as HmoManagementRouteImport } from './routes/hmo-management'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NewHiresRouteImport } from './routes/new-hires'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -104,6 +105,11 @@ const NewHiresRoute = NewHiresRouteImport.update({
   path: '/new-hires',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/hmo-management': typeof HmoManagementRouteWithChildren
   '/login': typeof LoginRoute
   '/new-hires': typeof NewHiresRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/feedback': typeof FeedbackRoute
   '/login': typeof LoginRoute
   '/new-hires': typeof NewHiresRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/hmo-management': typeof HmoManagementRouteWithChildren
   '/login': typeof LoginRoute
   '/new-hires': typeof NewHiresRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/hmo-management'
     | '/login'
     | '/new-hires'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/settings'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/login'
     | '/new-hires'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/settings'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/hmo-management'
     | '/login'
     | '/new-hires'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/settings'
@@ -324,6 +336,7 @@ export interface RootRouteChildren {
   HmoManagementRoute: typeof HmoManagementRouteWithChildren
   LoginRoute: typeof LoginRoute
   NewHiresRoute: typeof NewHiresRoute
+  NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       path: '/new-hires'
       fullPath: '/new-hires'
       preLoaderRoute: typeof NewHiresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -560,6 +580,7 @@ const rootRouteChildren: RootRouteChildren = {
   HmoManagementRoute: HmoManagementRouteWithChildren,
   LoginRoute: LoginRoute,
   NewHiresRoute: NewHiresRoute,
+  NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
