@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivityLogsRouteImport } from './routes/activity-logs'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AnniversariesRouteImport } from './routes/anniversaries'
+import { Route as ApiAccessRouteImport } from './routes/api-access'
 import { Route as AttendanceReportsRouteImport } from './routes/attendance-reports'
 import { Route as AttendanceViolationsRouteImport } from './routes/attendance-violations'
 import { Route as AwardsRouteImport } from './routes/awards'
@@ -53,6 +54,11 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
 const AnniversariesRoute = AnniversariesRouteImport.update({
   id: '/anniversaries',
   path: '/anniversaries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAccessRoute = ApiAccessRouteImport.update({
+  id: '/api-access',
+  path: '/api-access',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AttendanceReportsRoute = AttendanceReportsRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/activity-logs': typeof ActivityLogsRoute
   '/analytics': typeof AnalyticsRoute
   '/anniversaries': typeof AnniversariesRoute
+  '/api-access': typeof ApiAccessRoute
   '/attendance-reports': typeof AttendanceReportsRoute
   '/attendance-violations': typeof AttendanceViolationsRoute
   '/awards': typeof AwardsRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/activity-logs': typeof ActivityLogsRoute
   '/analytics': typeof AnalyticsRoute
   '/anniversaries': typeof AnniversariesRoute
+  '/api-access': typeof ApiAccessRoute
   '/attendance-reports': typeof AttendanceReportsRoute
   '/attendance-violations': typeof AttendanceViolationsRoute
   '/awards': typeof AwardsRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/activity-logs': typeof ActivityLogsRoute
   '/analytics': typeof AnalyticsRoute
   '/anniversaries': typeof AnniversariesRoute
+  '/api-access': typeof ApiAccessRoute
   '/attendance-reports': typeof AttendanceReportsRoute
   '/attendance-violations': typeof AttendanceViolationsRoute
   '/awards': typeof AwardsRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/activity-logs'
     | '/analytics'
     | '/anniversaries'
+    | '/api-access'
     | '/attendance-reports'
     | '/attendance-violations'
     | '/awards'
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/activity-logs'
     | '/analytics'
     | '/anniversaries'
+    | '/api-access'
     | '/attendance-reports'
     | '/attendance-violations'
     | '/awards'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/activity-logs'
     | '/analytics'
     | '/anniversaries'
+    | '/api-access'
     | '/attendance-reports'
     | '/attendance-violations'
     | '/awards'
@@ -326,6 +338,7 @@ export interface RootRouteChildren {
   ActivityLogsRoute: typeof ActivityLogsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   AnniversariesRoute: typeof AnniversariesRoute
+  ApiAccessRoute: typeof ApiAccessRoute
   AttendanceReportsRoute: typeof AttendanceReportsRoute
   AttendanceViolationsRoute: typeof AttendanceViolationsRoute
   AwardsRoute: typeof AwardsRoute
@@ -371,6 +384,13 @@ declare module '@tanstack/react-router' {
       path: '/anniversaries'
       fullPath: '/anniversaries'
       preLoaderRoute: typeof AnniversariesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api-access': {
+      id: '/api-access'
+      path: '/api-access'
+      fullPath: '/api-access'
+      preLoaderRoute: typeof ApiAccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/attendance-reports': {
@@ -570,6 +590,7 @@ const rootRouteChildren: RootRouteChildren = {
   ActivityLogsRoute: ActivityLogsRoute,
   AnalyticsRoute: AnalyticsRoute,
   AnniversariesRoute: AnniversariesRoute,
+  ApiAccessRoute: ApiAccessRoute,
   AttendanceReportsRoute: AttendanceReportsRoute,
   AttendanceViolationsRoute: AttendanceViolationsRoute,
   AwardsRoute: AwardsRoute,

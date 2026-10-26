@@ -4,6 +4,7 @@
 
 from app.models.account import Account, AccountRole
 from app.models.activity_log import ActivityCategory, ActivityLog, ActivitySeverity
+from app.models.api_key import ApiKey, ApiRequestLog
 from app.models.app_settings import AppSettings
 from app.models.award import Award
 from app.models.employee import Employee, EmployeeStatus
@@ -23,6 +24,8 @@ from app.models.violation import (
 )
 
 __all__ = [
+    "ApiKey",
+    "ApiRequestLog",
     "Account",
     "AccountRole",
     "AccountSession",

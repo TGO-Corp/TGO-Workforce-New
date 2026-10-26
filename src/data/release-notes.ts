@@ -21,6 +21,21 @@ export type ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "2026.10.26",
+    date: "2026-10-26",
+    title: "API Access (Super Admin)",
+    items: [
+      {
+        kind: "new",
+        text: "A new API Access page lets a Super Admin issue keys so other internal apps can read employee and award data, read-only.",
+      },
+      {
+        kind: "new",
+        text: "Live usage stats, a request log, per-key revoke, and a downloadable integration guide (.docx).",
+      },
+    ],
+  },
+  {
     version: "2026.10.19",
     date: "2026-10-19",
     title: "Notifications module",
