@@ -9,6 +9,7 @@ import {
   Award,
   Cake,
   DatabaseBackup,
+  DoorOpen,
   KeyRound,
   HeartPulse,
   MessageSquare,
@@ -72,7 +73,12 @@ export type NavItem = {
   badge?: "unread-notifications";
 };
 
-export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+/** A link out to another TGO app (opens in a new tab). Kept apart from NavItem
+ * so the header search, which navigates in-app, never sees it. No permission
+ * gate: the other app does its own sign-in. */
+export type ExternalNavItem = { title: string; href: string; icon: LucideIcon };
+
+export const NAV_GROUPS: { label: string; items: NavItem[]; external?: ExternalNavItem[] }[] = [
   {
     label: "Overview",
     items: [
@@ -97,6 +103,13 @@ export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         url: "/onboarding",
         icon: ClipboardCheck,
         permission: "onboarding.view",
+      },
+    ],
+    external: [
+      {
+        title: "Onboarding and Offboarding Portal",
+        href: "https://tgo-onboarding-and-offboarding-portal-production-f4a8.up.railway.app/",
+        icon: DoorOpen,
       },
     ],
   },
@@ -315,7 +328,7 @@ export function AppSidebar() {
           // links under it (e.g. for a Recruitment Lead with neither
           // attendance.view nor milestones.view) was worse than just not
           // showing the group at all.
-          if (visibleItems.length === 0) return null;
+          if (visibleItems.length === 0 && !group.external?.length) return null;
 
           return (
             <SidebarGroup key={group.label} className="px-2 py-1.5">
@@ -358,6 +371,33 @@ export function AppSidebar() {
                             </>
                           )}
                         </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                  {group.external?.map((link) => (
+                    <SidebarMenuItem key={link.href}>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip={`${link.title} (opens in a new tab)`}
+                        className="workforce-nav-item relative rounded-lg px-4 text-sidebar-foreground/90 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                      >
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${link.title} (opens in a new tab)`}
+                          onClick={() => {
+                            if (isMobile) setOpenMobile(false);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <link.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                          <span>{link.title}</span>
+                          <ArrowUpRight
+                            className="ml-auto h-3.5 w-3.5 shrink-0 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden"
+                            aria-hidden="true"
+                          />
+                        </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}

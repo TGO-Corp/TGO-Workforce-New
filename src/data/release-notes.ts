@@ -21,6 +21,17 @@ export type ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "2026.10.27",
+    date: "2026-10-27",
+    title: "Onboarding and Offboarding Portal link",
+    items: [
+      {
+        kind: "new",
+        text: "The People section of the sidebar now links to the Onboarding and Offboarding Portal, opening in a new tab.",
+      },
+    ],
+  },
+  {
     version: "2026.10.26",
     date: "2026-10-26",
     title: "API Access (Super Admin)",
