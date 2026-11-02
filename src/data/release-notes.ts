@@ -6,7 +6,7 @@
 // version (a calendar version, YYYY.MM.DD), give it a short title, and list what
 // changed as "new" / "improved" / "fixed" lines. The card reappears for everyone
 // who had dismissed the previous version, since dismissal is remembered per
-// version (see components/dashboard/whats-new-card.tsx).
+// version (see components/dashboard/whats-new-modal.tsx).
 
 export type ReleaseNoteKind = "new" | "improved" | "fixed";
 
