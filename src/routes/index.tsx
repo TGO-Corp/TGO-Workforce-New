@@ -6,7 +6,7 @@ import { DashboardActions } from "@/components/dashboard/dashboard-actions";
 import { MilestoneCards } from "@/components/dashboard/milestone-cards";
 import { ModuleSnapshots } from "@/components/dashboard/module-snapshots";
 import { RecentExitsCard } from "@/components/dashboard/recent-exits-card";
-import { PortalActivityCard } from "@/components/dashboard/portal-activity-card";
+import { PortalActivityPanel } from "@/components/dashboard/portal-activity-panel";
 import { WhatsNewModal } from "@/components/dashboard/whats-new-modal";
 import { HubUtilisationCard } from "@/components/hub-utilisation-card";
 import { MyOverview } from "@/components/my-overview";
@@ -258,7 +258,6 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
             }
           />
           {showPeople && milestoneCards}
-          {canViewPortalActivityModule && <PortalActivityCard />}
           {isFullAccess && canViewEmployeesModule && (
             <CompanyMetrics
               employees={employees}
@@ -301,7 +300,10 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
                 )}
               </div>
             )}
-            <NeedsAttention items={attentionItems} />
+            <NeedsAttention
+              items={attentionItems}
+              extra={canViewPortalActivityModule ? <PortalActivityPanel /> : undefined}
+            />
           </div>
         </>
       )}

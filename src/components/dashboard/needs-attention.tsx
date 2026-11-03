@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, type LinkProps } from "@tanstack/react-router";
 import { ArrowUpRight, CheckCircle2, ClipboardList } from "lucide-react";
@@ -15,7 +15,14 @@ export type AttentionItem = {
   unavailable: boolean;
 };
 
-export function NeedsAttention({ items }: { items: AttentionItem[] }) {
+export function NeedsAttention({
+  items,
+  extra,
+}: {
+  items: AttentionItem[];
+  /** Another section shown under the list, e.g. live Onboarding & Offboarding activity. */
+  extra?: ReactNode;
+}) {
   const [expanded, setExpanded] = useState(false);
   const visible = items.filter((item) => item.loading || item.unavailable || item.count > 0);
   return (
@@ -57,7 +64,7 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
               </Link>
             ))}
           </div>
-        ) : (
+        ) : extra ? null : (
           <div className="flex min-h-44 flex-col items-center justify-center gap-2 text-center">
             <span className="rounded-full bg-primary/10 p-3">
               <CheckCircle2 className="size-6 text-primary" />
@@ -81,6 +88,7 @@ export function NeedsAttention({ items }: { items: AttentionItem[] }) {
             {expanded ? "Show fewer" : `Show all ${visible.length} categories`}
           </Button>
         )}
+        {extra && <div className={visible.length ? "mt-4 border-t pt-4" : ""}>{extra}</div>}
       </CardContent>
     </Card>
   );
