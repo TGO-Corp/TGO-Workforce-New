@@ -95,6 +95,9 @@ class Settings(BaseSettings):
     # Auth is a plain `x-api-key` header, not Authorization: Bearer.
     onboarding_portal_base_url: str = ""
     onboarding_portal_api_key: str = ""
+    # How often the API polls the portal for new transactions (exit requests,
+    # final pay, ...) to show as live activity - see app/services/portal_sync.py.
+    onboarding_portal_poll_seconds: int = 20
 
     # --- Email + password fallback sign-in ----------------------------------
     # A local sign-in that works whichever of Zoho / the Gateway is in front,

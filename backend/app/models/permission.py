@@ -61,6 +61,11 @@ class Permission(enum.StrEnum):
     # and a require_permission gate — nothing ships outside the matrix.
     ACTIVITY_LOGS_VIEW = "activity_logs.view"
     NEW_HIRES_VIEW = "new_hires.view"
+    # Live activity feed from the Onboarding & Offboarding Portal (new hires,
+    # exit requests, final pay, asset returns, exit interviews) on the
+    # Dashboard, plus the notifications it raises. Offboarding data is more
+    # sensitive than the rest, so it is its own permission.
+    PORTAL_ACTIVITY_VIEW = "portal_activity.view"
 
 
 class RolePermission(Base):

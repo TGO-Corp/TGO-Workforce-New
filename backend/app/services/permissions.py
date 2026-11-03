@@ -24,6 +24,7 @@ VIEW_PERMISSIONS: frozenset[Permission] = frozenset(
         Permission.BENEFITS_VIEW,
         Permission.ACTIVITY_LOGS_VIEW,
         Permission.NEW_HIRES_VIEW,
+        Permission.PORTAL_ACTIVITY_VIEW,
     }
 )
 
@@ -113,6 +114,11 @@ PERMISSION_LABELS: dict[Permission, dict[str, str]] = {
         "title": "View Onboarding New Hires",
         "description": "See the Onboarding New Hires page (the external onboarding portal feed).",
     },
+    Permission.PORTAL_ACTIVITY_VIEW: {
+        "title": "View Onboarding & Offboarding Activity",
+        "description": "See live Onboarding & Offboarding Portal activity (exit requests, final pay, "
+        "asset returns, exit interviews) on the Dashboard and receive its notifications.",
+    },
 }
 
 # Default grants — matches this app's behavior from *before* the matrix
@@ -130,6 +136,7 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
         Permission.MILESTONES_VIEW,
         Permission.AWARDS_VIEW,
         Permission.AWARDS_MANAGE,
+        Permission.PORTAL_ACTIVITY_VIEW,
     },
     AccountRole.HR: {
         Permission.EMPLOYEES_VIEW,
@@ -143,6 +150,7 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
         # authorized project stakeholders") — HR runs the module day to day.
         Permission.BENEFITS_VIEW,
         Permission.BENEFITS_MANAGE,
+        Permission.PORTAL_ACTIVITY_VIEW,
     },
     AccountRole.PROJECTS: {
         Permission.EMPLOYEES_VIEW,

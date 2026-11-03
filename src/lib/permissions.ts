@@ -94,6 +94,11 @@ export const PERMISSION_LABELS: Record<Permission, { title: string; description:
     title: "View Onboarding New Hires",
     description: "See the Onboarding New Hires page (the external onboarding portal feed).",
   },
+  "portal_activity.view": {
+    title: "View Onboarding & Offboarding Activity",
+    description:
+      "See live Onboarding & Offboarding Portal activity (exit requests, final pay, asset returns, exit interviews) on the Dashboard and receive its notifications.",
+  },
 };
 
 // Narrower than isFullAccessRole above — a few things (editing the
@@ -186,6 +191,10 @@ export function canViewActivityLogs(permissions: Permission[] | undefined): bool
 
 export function canViewNewHires(permissions: Permission[] | undefined): boolean {
   return hasPermission(permissions, "new_hires.view");
+}
+
+export function canViewPortalActivity(permissions: Permission[] | undefined): boolean {
+  return hasPermission(permissions, "portal_activity.view");
 }
 
 export function canManageBenefits(permissions: Permission[] | undefined): boolean {

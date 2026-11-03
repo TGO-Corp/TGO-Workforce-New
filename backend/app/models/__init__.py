@@ -14,6 +14,7 @@ from app.models.new_hire import NewHire
 from app.models.notification import Notification
 from app.models.pending_invite import PendingInvite
 from app.models.permission import Permission, RolePermission
+from app.models.portal_event import PortalEvent, PortalSyncState
 from app.models.session import AccountSession
 from app.models.violation import (
     EmailStatus,
@@ -49,6 +50,8 @@ __all__ = [
     "Office",
     "PendingInvite",
     "Permission",
+    "PortalEvent",
+    "PortalSyncState",
     "RolePermission",
     "ViolationRecord",
     "ViolationType",

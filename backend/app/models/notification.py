@@ -36,6 +36,11 @@ class Notification(Base):
     # "/attendance-violations" — not an external URL.
     link: Mapped[str | None] = mapped_column(String(500))
 
+    # Which outside system raised this, when it isn't Workforce itself - e.g.
+    # "onboarding_portal" for the Onboarding & Offboarding Portal. Null for
+    # everything Workforce generates. The UI uses it to label the origin.
+    source: Mapped[str | None] = mapped_column(String(40))
+
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
 
     # The permission notify_permission_holders() gated this notification on

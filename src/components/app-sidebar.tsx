@@ -47,6 +47,7 @@ import {
   isSuperAdminRole,
   hasPermission,
 } from "@/lib/permissions";
+import { ONBOARDING_PORTAL_URL } from "@/lib/portal";
 import { cn } from "@/lib/utils";
 
 export type NavItem = {
@@ -108,7 +109,7 @@ export const NAV_GROUPS: { label: string; items: NavItem[]; external?: ExternalN
     external: [
       {
         title: "Onboarding and Offboarding Portal",
-        href: "https://tgo-onboarding-and-offboarding-portal-production-f4a8.up.railway.app/",
+        href: ONBOARDING_PORTAL_URL,
         icon: DoorOpen,
       },
     ],

@@ -6,6 +6,7 @@ import { DashboardActions } from "@/components/dashboard/dashboard-actions";
 import { MilestoneCards } from "@/components/dashboard/milestone-cards";
 import { ModuleSnapshots } from "@/components/dashboard/module-snapshots";
 import { RecentExitsCard } from "@/components/dashboard/recent-exits-card";
+import { PortalActivityCard } from "@/components/dashboard/portal-activity-card";
 import { WhatsNewModal } from "@/components/dashboard/whats-new-modal";
 import { HubUtilisationCard } from "@/components/hub-utilisation-card";
 import { MyOverview } from "@/components/my-overview";
@@ -34,6 +35,7 @@ import {
   canViewAttendance,
   canViewAwards,
   canViewBenefits,
+  canViewPortalActivity,
   canViewEmployees,
   canViewMilestones,
   canViewOnboarding,
@@ -82,6 +84,7 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
   const canViewAttendanceModule = canViewAttendance(account?.permissions);
   const canViewAwardsModule = canViewAwards(account?.permissions);
   const canViewBenefitsModule = canViewBenefits(account?.permissions);
+  const canViewPortalActivityModule = canViewPortalActivity(account?.permissions);
   const canViewMilestonesModule = canViewEmployeesModule && canViewMilestones(account?.permissions);
 
   const employeeQuery = useEmployeesQuery(canViewEmployeesModule);
@@ -255,6 +258,7 @@ function CompanyDashboard({ viewerMode = false }: { viewerMode?: boolean }) {
             }
           />
           {showPeople && milestoneCards}
+          {canViewPortalActivityModule && <PortalActivityCard />}
           {isFullAccess && canViewEmployeesModule && (
             <CompanyMetrics
               employees={employees}

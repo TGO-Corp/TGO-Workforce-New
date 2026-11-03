@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isPortalSource, NotificationSourceBadge } from "@/components/notification-source-badge";
 import type { Notification } from "@/data/notification-api";
 import {
   useClearNotifications,
@@ -280,6 +281,8 @@ function NotificationsPage() {
                 className={cn(
                   "group flex items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/40",
                   !notification.isRead && "bg-primary/[0.04]",
+                  isPortalSource(notification.source) &&
+                    "border-l-4 border-l-sidebar-primary bg-sidebar/[0.05]",
                 )}
               >
                 <span
@@ -294,6 +297,7 @@ function NotificationsPage() {
                   onClick={() => open(notification)}
                   className="min-w-0 flex-1 cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
+                  <NotificationSourceBadge source={notification.source} className="mb-1" />
                   <p
                     className={cn(
                       "text-sm",

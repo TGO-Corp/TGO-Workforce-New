@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { isPortalSource, NotificationSourceBadge } from "@/components/notification-source-badge";
 import type { Notification } from "@/data/notification-api";
 import {
   useMarkAllNotificationsRead,
@@ -23,6 +24,7 @@ import {
   useNotificationsQuery,
   useUnreadCountQuery,
 } from "@/data/notification-store";
+import { cn } from "@/lib/utils";
 
 function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -90,9 +92,14 @@ export function NotificationBell() {
             items.map((notification) => (
               <DropdownMenuItem
                 key={notification.id}
-                className="flex cursor-pointer flex-col items-start gap-0.5 whitespace-normal py-2"
+                className={cn(
+                  "flex cursor-pointer flex-col items-start gap-0.5 whitespace-normal py-2",
+                  isPortalSource(notification.source) &&
+                    "border-l-2 border-l-sidebar-primary bg-sidebar/[0.04]",
+                )}
                 onClick={() => handleOpen(notification)}
               >
+                <NotificationSourceBadge source={notification.source} className="mb-0.5 ml-3" />
                 <div className="flex w-full items-start gap-1.5">
                   {!notification.isRead && (
                     <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />

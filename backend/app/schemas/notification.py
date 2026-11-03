@@ -10,6 +10,7 @@ class NotificationRead(BaseModel):
     title: str
     body: str | None
     link: str | None
+    source: str | None = None
     is_read: bool
     created_at: datetime
 

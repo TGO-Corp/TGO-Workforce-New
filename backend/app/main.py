@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -11,6 +12,7 @@ from app.core.config import get_settings
 from app.core.db import AsyncSessionLocal
 from app.models.api_key import ApiRequestLog
 from app.services.fallback_admin import ensure_fallback_admin
+from app.services.portal_sync import run_portal_sync_loop
 
 settings = get_settings()
 
@@ -25,7 +27,11 @@ async def lifespan(_: FastAPI):
         await ensure_fallback_admin(settings)
     except Exception:
         logger.exception("Couldn't seed the fallback admin account")
+    # Live feed from the Onboarding & Offboarding Portal (a no-op loop until
+    # ONBOARDING_PORTAL_BASE_URL / _API_KEY are set).
+    portal_sync = asyncio.create_task(run_portal_sync_loop())
     yield
+    portal_sync.cancel()
 
 
 app = FastAPI(

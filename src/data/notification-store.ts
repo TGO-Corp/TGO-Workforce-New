@@ -23,7 +23,7 @@ const UNREAD_COUNT_KEY = ["notifications", "unread-count"] as const;
 // Same "multiple things can change server-side between your own actions"
 // rationale as employee-store.ts — someone else's action (e.g. a violation
 // getting prepared) can create a notification for you at any time.
-const REALTIME_POLL_MS = 15_000;
+const REALTIME_POLL_MS = 8_000;
 
 export function useNotificationsQuery() {
   return useQuery({

@@ -10,6 +10,8 @@ export interface Notification {
   title: string;
   body: string | null;
   link: string | null;
+  /** The outside system that raised it, e.g. "onboarding_portal"; null for Workforce's own. */
+  source: string | null;
   isRead: boolean;
   createdAt: string;
 }
@@ -19,6 +21,7 @@ type BackendNotification = {
   title: string;
   body: string | null;
   link: string | null;
+  source?: string | null;
   is_read: boolean;
   created_at: string;
 };
@@ -29,6 +32,7 @@ function fromBackend(row: BackendNotification): Notification {
     title: row.title,
     body: row.body,
     link: row.link,
+    source: row.source ?? null,
     isRead: row.is_read,
     createdAt: row.created_at,
   };

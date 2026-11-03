@@ -44,6 +44,7 @@ async def notify_permission_holders(
     link: str | None = None,
     exclude_account_id: uuid.UUID | None = None,
     require_preference: ColumnElement[bool] | None = None,
+    source: str | None = None,
     commit: bool = True,
 ) -> list[Notification]:
     """Notifies every active account that currently holds `permission` — e.g.
@@ -80,7 +81,14 @@ async def notify_permission_holders(
     account_ids = list(result.scalars().all())
 
     entries = [
-        Notification(account_id=account_id, title=title, body=body, link=link, required_permission=permission)
+        Notification(
+            account_id=account_id,
+            title=title,
+            body=body,
+            link=link,
+            required_permission=permission,
+            source=source,
+        )
         for account_id in account_ids
     ]
     db.add_all(entries)

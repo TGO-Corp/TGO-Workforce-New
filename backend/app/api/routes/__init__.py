@@ -17,6 +17,7 @@ from app.api.routes import (
     new_hires_portal,
     notifications,
     permissions,
+    portal_activity,
     public_api,
     violation_analytics,
     violation_import_export,
@@ -42,6 +43,7 @@ api_router.include_router(new_hires.router)
 api_router.include_router(new_hires_portal.router)
 api_router.include_router(notifications.router)
 api_router.include_router(permissions.router)
+api_router.include_router(portal_activity.router)
 api_router.include_router(violations.router)
 api_router.include_router(violation_reports.router)
 api_router.include_router(violation_analytics.router)

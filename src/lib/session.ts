@@ -44,7 +44,8 @@ export type Permission =
   | "benefits.view"
   | "benefits.manage"
   | "activity_logs.view"
-  | "new_hires.view";
+  | "new_hires.view"
+  | "portal_activity.view";
 
 export type AccountProfile = {
   id: string;

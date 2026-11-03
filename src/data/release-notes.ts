@@ -21,6 +21,22 @@ export type ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "2026.11.03",
+    date: "2026-11-03",
+    title: "Live Onboarding & Offboarding activity",
+    items: [
+      {
+        kind: "new",
+        text: "The Dashboard shows what is happening in the Onboarding & Offboarding Portal as it happens: exit requests, final pay, asset returns, exit interviews and new hires, with counts of what is still open.",
+      },
+      {
+        kind: "new",
+        text: "Notifications from the portal are clearly labelled Onboarding & Offboarding Platform. A new permission, View Onboarding & Offboarding Activity, controls who sees them.",
+      },
+      { kind: "improved", text: "Notifications refresh faster." },
+    ],
+  },
+  {
     version: "2026.10.27",
     date: "2026-10-27",
     title: "Onboarding and Offboarding Portal link",
