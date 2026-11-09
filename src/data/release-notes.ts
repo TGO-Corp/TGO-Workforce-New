@@ -21,6 +21,21 @@ export type ReleaseNote = {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "2026.11.09",
+    date: "2026-11-09",
+    title: "Employee age",
+    items: [
+      {
+        kind: "new",
+        text: "Employee profiles and the Birthdays page now show age (for example 30 years old, turns 31).",
+      },
+      {
+        kind: "new",
+        text: "A Super Admin can switch age display on or off for each role in User Management with the new View Employee Age permission.",
+      },
+    ],
+  },
+  {
     version: "2026.11.03",
     date: "2026-11-03",
     title: "Live Onboarding & Offboarding activity",

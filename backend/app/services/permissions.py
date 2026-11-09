@@ -25,6 +25,7 @@ VIEW_PERMISSIONS: frozenset[Permission] = frozenset(
         Permission.ACTIVITY_LOGS_VIEW,
         Permission.NEW_HIRES_VIEW,
         Permission.PORTAL_ACTIVITY_VIEW,
+        Permission.AGE_VIEW,
     }
 )
 
@@ -119,6 +120,10 @@ PERMISSION_LABELS: dict[Permission, dict[str, str]] = {
         "description": "See live Onboarding & Offboarding Portal activity (exit requests, final pay, "
         "asset returns, exit interviews) on the Dashboard and receive its notifications.",
     },
+    Permission.AGE_VIEW: {
+        "title": "View Employee Age",
+        "description": "See employees' ages on their profile and on the Birthdays page.",
+    },
 }
 
 # Default grants — matches this app's behavior from *before* the matrix
@@ -129,6 +134,7 @@ PERMISSION_LABELS: dict[Permission, dict[str, str]] = {
 # previously-ungated "open to every signed-in role" behavior).
 DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
     AccountRole.PEOPLE_OPS: {
+        Permission.AGE_VIEW,
         Permission.EMPLOYEES_VIEW,
         Permission.ACTIVITY_LOGS_VIEW,
         Permission.NEW_HIRES_VIEW,
@@ -139,6 +145,7 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
         Permission.PORTAL_ACTIVITY_VIEW,
     },
     AccountRole.HR: {
+        Permission.AGE_VIEW,
         Permission.EMPLOYEES_VIEW,
         Permission.ACTIVITY_LOGS_VIEW,
         Permission.NEW_HIRES_VIEW,
@@ -153,6 +160,7 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
         Permission.PORTAL_ACTIVITY_VIEW,
     },
     AccountRole.PROJECTS: {
+        Permission.AGE_VIEW,
         Permission.EMPLOYEES_VIEW,
         Permission.ACTIVITY_LOGS_VIEW,
         Permission.NEW_HIRES_VIEW,
@@ -164,6 +172,7 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
         Permission.BENEFITS_VIEW,
     },
     AccountRole.RECRUITMENT_LEAD: {
+        Permission.AGE_VIEW,
         Permission.EMPLOYEES_VIEW,
         Permission.ACTIVITY_LOGS_VIEW,
         Permission.NEW_HIRES_VIEW,
@@ -172,6 +181,7 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
         Permission.ONBOARDING_MANAGE,
     },
     AccountRole.ONBOARDING_SPECIALIST: {
+        Permission.AGE_VIEW,
         Permission.EMPLOYEES_VIEW,
         Permission.ACTIVITY_LOGS_VIEW,
         Permission.NEW_HIRES_VIEW,
@@ -180,6 +190,7 @@ DEFAULT_GRANTS: dict[AccountRole, set[Permission]] = {
         Permission.ONBOARDING_MANAGE,
     },
     AccountRole.VIEWER: {
+        Permission.AGE_VIEW,
         Permission.EMPLOYEES_VIEW,
         Permission.MILESTONES_VIEW,
     },

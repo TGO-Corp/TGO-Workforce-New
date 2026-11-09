@@ -29,7 +29,7 @@ import {
   type MonthArrangement,
 } from "@/data/employees";
 import { useEmployees } from "@/data/employee-store";
-import { canViewMilestones } from "@/lib/permissions";
+import { canViewAge, canViewMilestones } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import { useCurrentAccount } from "@/lib/session";
 import { useSavedMilestoneFilters } from "@/lib/use-saved-milestone-filters";
@@ -77,6 +77,7 @@ function initials(name: string) {
 function BirthdaysPage() {
   const { data: account, isLoading: accountLoading } = useCurrentAccount();
   const canView = canViewMilestones(account?.permissions);
+  const showAge = canViewAge(account?.permissions);
   const employees = useEmployees();
   // Filters live on the account (see use-saved-milestone-filters.ts): they
   // load with it and save themselves when changed.
@@ -258,7 +259,9 @@ function BirthdaysPage() {
                           <p className="truncate text-xs text-muted-foreground">
                             {e.office}
                             {(() => {
-                              const note = birthdayAgeNote(e.monthIndex, e.day, e.birthYear);
+                              const note = showAge
+                                ? birthdayAgeNote(e.monthIndex, e.day, e.birthYear)
+                                : null;
                               return note ? ` · ${note}` : null;
                             })()}
                           </p>

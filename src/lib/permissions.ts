@@ -99,6 +99,10 @@ export const PERMISSION_LABELS: Record<Permission, { title: string; description:
     description:
       "See live Onboarding & Offboarding Portal activity (exit requests, final pay, asset returns, exit interviews) on the Dashboard and receive its notifications.",
   },
+  "age.view": {
+    title: "View Employee Age",
+    description: "See employees' ages on their profile and on the Birthdays page.",
+  },
 };
 
 // Narrower than isFullAccessRole above — a few things (editing the
@@ -191,6 +195,10 @@ export function canViewActivityLogs(permissions: Permission[] | undefined): bool
 
 export function canViewNewHires(permissions: Permission[] | undefined): boolean {
   return hasPermission(permissions, "new_hires.view");
+}
+
+export function canViewAge(permissions: Permission[] | undefined): boolean {
+  return hasPermission(permissions, "age.view");
 }
 
 export function canViewPortalActivity(permissions: Permission[] | undefined): boolean {

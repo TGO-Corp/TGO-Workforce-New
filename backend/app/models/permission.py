@@ -66,6 +66,9 @@ class Permission(enum.StrEnum):
     # Dashboard, plus the notifications it raises. Offboarding data is more
     # sensitive than the rest, so it is its own permission.
     PORTAL_ACTIVITY_VIEW = "portal_activity.view"
+    # Whether a role sees employees' ages (Employee profile, Birthdays). Granted
+    # to every role by default; a Super Admin can switch it off per role.
+    AGE_VIEW = "age.view"
 
 
 class RolePermission(Base):

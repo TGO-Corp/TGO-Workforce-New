@@ -44,7 +44,7 @@ import {
   tenureDays,
   type EmployeeStatus,
 } from "@/data/employees";
-import { canViewAwards, canViewEmployees, canViewMilestones } from "@/lib/permissions";
+import { canViewAge, canViewAwards, canViewEmployees, canViewMilestones } from "@/lib/permissions";
 import { useCurrentAccount } from "@/lib/session";
 
 export const Route = createFileRoute("/directory/$employeeId")({
@@ -247,13 +247,17 @@ function EmployeeProfilePage() {
                 { label: "Job Offer Date", value: formatDate(employee.jobOfferDate) },
                 { label: "Start Date", value: formatDate(employee.startDate) },
                 { label: "Birthday", value: formatDate(employee.birthday) },
-                {
-                  label: "Age",
-                  value: (() => {
-                    const age = ageFromBirthday(employee.birthday);
-                    return age === null ? "—" : `${age} years old`;
-                  })(),
-                },
+                ...(canViewAge(account?.permissions)
+                  ? [
+                      {
+                        label: "Age",
+                        value: (() => {
+                          const age = ageFromBirthday(employee.birthday);
+                          return age === null ? "—" : `${age} years old`;
+                        })(),
+                      },
+                    ]
+                  : []),
                 { label: "Exit Date", value: formatDate(employee.exitDate) },
               ] satisfies { label: string; value: string }[]
             ).map((row) => (
