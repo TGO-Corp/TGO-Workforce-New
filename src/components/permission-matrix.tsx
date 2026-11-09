@@ -2,23 +2,18 @@
 // Management page. Roles are columns, permissions are rows; toggling a
 // switch only changes local draft state until "Save changes" is pressed,
 // which sends the whole matrix to PUT /permissions/matrix in one call (see
-// @/data/permission-store). Admin and Super Admin never appear as columns —
-// they bypass the matrix entirely (see FULL_ACCESS_ROLES in
-// backend/app/services/permissions.py) — the backend already excludes them
-// from GET /permissions/matrix's `roles` list.
+// @/data/permission-store). Admin and Super Admin bypass the matrix (see
+// FULL_ACCESS_ROLES in backend/app/services/permissions.py) EXCEPT for the few
+// optional permissions (FULL_ACCESS_OPTIONAL_PERMISSIONS, e.g. showing ages):
+// they get columns here too, but only those rows are switches; every other
+// cell reads "Always".
 
 import { useEffect, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -29,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { usePermissionMatrixQuery, useUpdatePermissionMatrix } from "@/data/permission-store";
+import { FULL_ACCESS_OPTIONAL_PERMISSIONS, isFullAccessRole } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/roles";
 import type { AccountRole, Permission } from "@/lib/session";
 
@@ -61,9 +57,7 @@ export function PermissionMatrixEditor() {
             Permission Matrix
           </CardTitle>
           <CardDescription>
-            {isError
-              ? "Couldn't load the permission matrix. Try refreshing the page."
-              : "Loading…"}
+            {isError ? "Couldn't load the permission matrix. Try refreshing the page." : "Loading…"}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -73,7 +67,9 @@ export function PermissionMatrixEditor() {
   const roles = matrix.roles.map((r) => r.role);
   const dirty =
     JSON.stringify(sortedGrants(draft, roles)) !==
-    JSON.stringify(sortedGrants(Object.fromEntries(matrix.roles.map((r) => [r.role, r.permissions])), roles));
+    JSON.stringify(
+      sortedGrants(Object.fromEntries(matrix.roles.map((r) => [r.role, r.permissions])), roles),
+    );
 
   function toggle(role: AccountRole, permission: Permission) {
     setDraft((prev) => {
@@ -91,9 +87,7 @@ export function PermissionMatrixEditor() {
       await updateMatrix.mutateAsync(draft);
       toast.success("Permission matrix updated");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Couldn't save the permission matrix",
-      );
+      toast.error(error instanceof Error ? error.message : "Couldn't save the permission matrix");
     }
   }
 
@@ -105,9 +99,9 @@ export function PermissionMatrixEditor() {
           Permission Matrix
         </CardTitle>
         <CardDescription>
-          Choose exactly what each role can see and do, module by module. Admin and Super
-          Admin always have full access and aren't shown here — only Super Admin can edit
-          this.
+          Choose exactly what each role can see and do, module by module. Admin and Super Admin
+          always have full access to every module; the only thing you can switch off for them is
+          employee age. Only Super Admin can edit this.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -130,15 +124,22 @@ export function PermissionMatrixEditor() {
                     <p className="text-sm font-medium">{permission.title}</p>
                     <p className="text-xs text-muted-foreground">{permission.description}</p>
                   </TableCell>
-                  {roles.map((role) => (
-                    <TableCell key={role} className="text-center">
-                      <Switch
-                        checked={permissionsOf(draft, role).has(permission.key)}
-                        onCheckedChange={() => toggle(role, permission.key)}
-                        aria-label={`${permission.title} — ${ROLE_LABELS[role]}`}
-                      />
-                    </TableCell>
-                  ))}
+                  {roles.map((role) =>
+                    isFullAccessRole(role) &&
+                    !FULL_ACCESS_OPTIONAL_PERMISSIONS.includes(permission.key) ? (
+                      <TableCell key={role} className="text-center text-xs text-muted-foreground">
+                        Always
+                      </TableCell>
+                    ) : (
+                      <TableCell key={role} className="text-center">
+                        <Switch
+                          checked={permissionsOf(draft, role).has(permission.key)}
+                          onCheckedChange={() => toggle(role, permission.key)}
+                          aria-label={`${permission.title} — ${ROLE_LABELS[role]}`}
+                        />
+                      </TableCell>
+                    ),
+                  )}
                 </TableRow>
               ))}
             </TableBody>

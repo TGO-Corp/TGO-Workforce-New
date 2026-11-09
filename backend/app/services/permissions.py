@@ -12,6 +12,12 @@ from app.models.permission import Permission, RolePermission
 # Bypass the matrix entirely — always every permission, matrix rows or not.
 FULL_ACCESS_ROLES = {AccountRole.ADMIN, AccountRole.SUPER_ADMIN}
 
+# The few permissions Admin and Super Admin do NOT get automatically: they are
+# ordinary matrix rows for those two roles too, so a Super Admin can switch them
+# off even for the full-access roles (today: whether ages are shown). Everything
+# else stays an unconditional "always".
+FULL_ACCESS_OPTIONAL: frozenset[Permission] = frozenset({Permission.AGE_VIEW})
+
 # Every "view" permission — what a restricted account (Account.is_restricted)
 # keeps regardless of role; every "manage"/"approve" permission is stripped.
 VIEW_PERMISSIONS: frozenset[Permission] = frozenset(
@@ -210,7 +216,10 @@ async def get_account_permissions(db: AsyncSession, account: Account, *, role: A
     Admin's own FULL_ACCESS_ROLES bypass, so restriction really does mean
     "view only everywhere."""
     if role in FULL_ACCESS_ROLES:
-        granted = set(Permission)
+        # Everything, except the optional ones, which follow the matrix row for
+        # this role like any other role's permission does.
+        result = await db.execute(select(RolePermission.permission).where(RolePermission.role == role))
+        granted = (set(Permission) - FULL_ACCESS_OPTIONAL) | (set(result.scalars().all()) & FULL_ACCESS_OPTIONAL)
     else:
         result = await db.execute(select(RolePermission.permission).where(RolePermission.role == role))
         granted = set(result.scalars().all())
@@ -243,9 +252,13 @@ async def visible_activity_categories(
 
 
 async def get_full_matrix(db: AsyncSession) -> dict[AccountRole, set[Permission]]:
-    result = await db.execute(select(RolePermission).where(RolePermission.role.in_(MATRIX_ROLES)))
-    matrix: dict[AccountRole, set[Permission]] = {role: set() for role in MATRIX_ROLES}
+    # Admin and Super Admin appear too, but only for FULL_ACCESS_OPTIONAL rows.
+    editable = MATRIX_ROLES + sorted(FULL_ACCESS_ROLES, key=lambda r: r.value)
+    result = await db.execute(select(RolePermission).where(RolePermission.role.in_(editable)))
+    matrix: dict[AccountRole, set[Permission]] = {role: set() for role in editable}
     for row in result.scalars().all():
+        if row.role in FULL_ACCESS_ROLES and row.permission not in FULL_ACCESS_OPTIONAL:
+            continue
         matrix[row.role].add(row.permission)
     return matrix
 
@@ -257,11 +270,13 @@ async def replace_matrix(db: AsyncSession, matrix: dict[AccountRole, set[Permiss
     rather than N per-cell races. Silently ignores any role outside
     MATRIX_ROLES (e.g. if a caller accidentally includes admin/super_admin)
     rather than erroring — those roles just have nothing to store."""
-    roles = [role for role in matrix if role in MATRIX_ROLES]
+    roles = [role for role in matrix if role in MATRIX_ROLES or role in FULL_ACCESS_ROLES]
     if not roles:
         return
     await db.execute(delete(RolePermission).where(RolePermission.role.in_(roles)))
     for role in roles:
         for permission in matrix[role]:
+            if role in FULL_ACCESS_ROLES and permission not in FULL_ACCESS_OPTIONAL:
+                continue  # they always have these; nothing to store
             db.add(RolePermission(role=role, permission=permission))
     await db.flush()

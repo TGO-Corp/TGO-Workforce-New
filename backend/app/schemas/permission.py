@@ -28,7 +28,8 @@ class PermissionMatrixRead(BaseModel):
 class PermissionMatrixUpdate(BaseModel):
     """The whole editable matrix, replaced atomically. Keyed by role so the
     Save button can send exactly what's checked in the UI — any role not
-    included is left untouched (not implicitly cleared), and admin/super_admin
-    keys are silently ignored since they always have everything."""
+    included is left untouched (not implicitly cleared). admin/super_admin keys
+    only ever store the few optional permissions (FULL_ACCESS_OPTIONAL); they
+    always have everything else."""
 
     grants: dict[AccountRole, list[Permission]]

@@ -126,6 +126,11 @@ export function getEffectiveRole(
   return account?.sandbox_role ?? account?.role;
 }
 
+/** Permissions Admin and Super Admin do NOT get automatically: a Super Admin can
+ * switch them off for those two roles in the matrix. Mirrors FULL_ACCESS_OPTIONAL
+ * in backend/app/services/permissions.py. */
+export const FULL_ACCESS_OPTIONAL_PERMISSIONS: Permission[] = ["age.view"];
+
 export function hasPermission(
   permissions: Permission[] | undefined,
   permission: Permission,

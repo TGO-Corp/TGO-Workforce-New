@@ -14,7 +14,7 @@ from app.models.account import Account
 from app.models.activity_log import ActivityCategory, ActivitySeverity
 from app.schemas.permission import PermissionInfo, PermissionMatrixRead, PermissionMatrixUpdate, RoleMatrixEntry
 from app.services.activity_log import record_activity
-from app.services.permissions import MATRIX_ROLES, PERMISSION_LABELS, get_full_matrix, replace_matrix
+from app.services.permissions import FULL_ACCESS_ROLES, MATRIX_ROLES, PERMISSION_LABELS, get_full_matrix, replace_matrix
 
 router = APIRouter(prefix="/permissions", tags=["permissions"], dependencies=[Depends(require_super_admin)])
 
@@ -32,7 +32,7 @@ async def get_matrix(db: DbSession) -> PermissionMatrixRead:
         ],
         roles=[
             RoleMatrixEntry(role=role, permissions=sorted(matrix[role], key=lambda p: p.value))
-            for role in MATRIX_ROLES
+            for role in [*MATRIX_ROLES, *sorted(FULL_ACCESS_ROLES, key=lambda r: r.value)]
         ],
     )
 
@@ -61,6 +61,6 @@ async def update_matrix(payload: PermissionMatrixUpdate, db: DbSession, account:
         ],
         roles=[
             RoleMatrixEntry(role=role, permissions=sorted(updated[role], key=lambda p: p.value))
-            for role in MATRIX_ROLES
+            for role in [*MATRIX_ROLES, *sorted(FULL_ACCESS_ROLES, key=lambda r: r.value)]
         ],
     )
