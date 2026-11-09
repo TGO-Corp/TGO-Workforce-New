@@ -81,6 +81,37 @@ export function parseCalendarDate(value: string): Date {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value);
 }
 
+/** Age in whole years on `now` (today by default), or null when the birthday is
+ * missing or unreadable, so callers can leave it out instead of showing "NaN". */
+export function ageFromBirthday(birthday: string | undefined, now = new Date()): number | null {
+  if (!birthday) return null;
+  const born = parseCalendarDate(birthday);
+  if (Number.isNaN(born.getTime())) return null;
+  let age = now.getFullYear() - born.getFullYear();
+  const hadBirthday =
+    now.getMonth() > born.getMonth() ||
+    (now.getMonth() === born.getMonth() && now.getDate() >= born.getDate());
+  if (!hadBirthday) age -= 1;
+  return age >= 0 && age < 130 ? age : null;
+}
+
+/** The age a person reaches on their birthday this year, worded for the
+ * Birthdays page: "turns 31", "turned 31" (already passed) or "turns 31 today".
+ * Null when the birth year is implausible. */
+export function birthdayAgeNote(
+  monthIndex: number,
+  day: number,
+  birthYear: number,
+  now = new Date(),
+): string | null {
+  const turning = now.getFullYear() - birthYear;
+  if (turning < 0 || turning > 130) return null;
+  if (monthIndex === now.getMonth() && day === now.getDate()) return `turns ${turning} today`;
+  const passed =
+    monthIndex < now.getMonth() || (monthIndex === now.getMonth() && day < now.getDate());
+  return `${passed ? "turned" : "turns"} ${turning}`;
+}
+
 /** Raw day count between start and (exit or today) — the source of truth for
  * every "how long has this person been here" display and export column. */
 export function tenureDays(startDate: string, exitDate?: string) {

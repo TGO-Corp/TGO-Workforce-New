@@ -34,6 +34,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAwards } from "@/data/award-store";
 import { useEmployeesQuery } from "@/data/employee-store";
 import {
+  ageFromBirthday,
   daysUntilNextOccurrence,
   formatDate,
   formatYears,
@@ -246,6 +247,13 @@ function EmployeeProfilePage() {
                 { label: "Job Offer Date", value: formatDate(employee.jobOfferDate) },
                 { label: "Start Date", value: formatDate(employee.startDate) },
                 { label: "Birthday", value: formatDate(employee.birthday) },
+                {
+                  label: "Age",
+                  value: (() => {
+                    const age = ageFromBirthday(employee.birthday);
+                    return age === null ? "—" : `${age} years old`;
+                  })(),
+                },
                 { label: "Exit Date", value: formatDate(employee.exitDate) },
               ] satisfies { label: string; value: string }[]
             ).map((row) => (

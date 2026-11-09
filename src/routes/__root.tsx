@@ -111,8 +111,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // hashed asset URLs do) actually refetch this instead of continuing to
       // show whatever icon was cached before this file existed. Bump the
       // "v" value if the favicon image itself ever changes again.
-      { rel: "icon", type: "image/png", href: "/favicon.png?v=2" },
-      { rel: "apple-touch-icon", href: "/favicon.png?v=2" },
+      { rel: "icon", type: "image/png", href: "/favicon.png?v=3" },
+      { rel: "apple-touch-icon", href: "/favicon.png?v=3" },
     ],
   }),
   shellComponent: RootShell,

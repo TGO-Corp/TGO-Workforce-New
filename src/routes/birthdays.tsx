@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import {
   arrangedMonths,
+  birthdayAgeNote,
   MONTH_ARRANGEMENT_LABELS,
   MONTH_ARRANGEMENTS,
   matchesMilestoneTimeFilter,
@@ -254,7 +255,13 @@ function BirthdaysPage() {
                           <p className="truncate text-sm font-medium">
                             <EmployeeNameLink employee={e} />
                           </p>
-                          <p className="truncate text-xs text-muted-foreground">{e.office}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {e.office}
+                            {(() => {
+                              const note = birthdayAgeNote(e.monthIndex, e.day, e.birthYear);
+                              return note ? ` · ${note}` : null;
+                            })()}
+                          </p>
                         </div>
                         <Badge variant="outline">
                           {e.monthName.slice(0, 3)} {e.day}, {e.birthYear}
