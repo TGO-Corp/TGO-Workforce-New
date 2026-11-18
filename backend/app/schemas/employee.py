@@ -17,6 +17,7 @@ class EmployeeBase(BaseModel):
     exit_date: date | None = None
     birthday: date | None = None
     source_type: str | None = None
+    phone: str | None = None
 
 
 class EmployeeCreate(EmployeeBase):
@@ -44,6 +45,7 @@ class EmployeeUpdate(BaseModel):
     exit_date: date | None = None
     birthday: date | None = None
     source_type: str | None = None
+    phone: str | None = None
 
 
 class EmployeeImportRow(BaseModel):
@@ -63,6 +65,7 @@ class EmployeeImportRow(BaseModel):
     exit_date: date | None = None
     birthday: date | None = None
     source_type: str | None = None
+    phone: str | None = None
 
 
 class EmployeeImportResult(BaseModel):

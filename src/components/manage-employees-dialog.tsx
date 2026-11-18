@@ -491,6 +491,16 @@ function EditEmployeeDialog({
           </div>
 
           <div className="grid gap-2">
+            <Label htmlFor="edit-phone">Phone Number</Label>
+            <Input
+              id="edit-phone"
+              type="tel"
+              value={form.phone ?? ""}
+              onChange={(e) => setForm({ ...form, phone: e.target.value || undefined })}
+            />
+          </div>
+
+          <div className="grid gap-2">
             <Label>Office Location</Label>
             <Select value={form.office} onValueChange={(v) => setForm({ ...form, office: v })}>
               <SelectTrigger>

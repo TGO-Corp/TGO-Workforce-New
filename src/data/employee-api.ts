@@ -22,6 +22,7 @@ type BackendEmployee = {
   exit_date: string | null;
   birthday: string | null;
   source_type: string | null;
+  phone: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -40,6 +41,7 @@ function fromBackend(row: BackendEmployee): Employee {
     exitDate: row.exit_date ?? undefined,
     birthday: row.birthday ?? "",
     sourceType: row.source_type ?? undefined,
+    phone: row.phone ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -103,6 +105,7 @@ export type NewEmployeeInput = {
   exitDate?: string;
   birthday?: string;
   sourceType?: string;
+  phone?: string;
 };
 
 function toCreatePayload(input: NewEmployeeInput) {
@@ -118,6 +121,7 @@ function toCreatePayload(input: NewEmployeeInput) {
     exit_date: input.exitDate || undefined,
     birthday: input.birthday || undefined,
     source_type: input.sourceType || undefined,
+    phone: input.phone || undefined,
   };
 }
 
@@ -153,6 +157,7 @@ export async function updateEmployee(originalId: string, employee: Employee): Pr
     exit_date: employee.exitDate || null,
     birthday: employee.birthday || null,
     source_type: employee.sourceType || null,
+    phone: employee.phone || null,
   };
   const row = await request<BackendEmployee>(`/employees/${encodeURIComponent(originalId)}`, {
     method: "PATCH",
@@ -195,6 +200,7 @@ export async function importEmployees(
     exit_date: row.exitDate || undefined,
     birthday: row.birthday || undefined,
     source_type: row.sourceType || undefined,
+    phone: row.phone || undefined,
   }));
   return request<{ added: number; skipped: number }>("/employees/import", {
     method: "POST",

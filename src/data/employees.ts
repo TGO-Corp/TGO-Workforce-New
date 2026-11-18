@@ -17,6 +17,7 @@ export interface Employee {
   exitDate?: string;
   birthday: string; // ISO (year may be birth year); "" when unknown
   sourceType?: string;
+  phone?: string;
   createdAt?: string; // ISO timestamp — when the record was added to HR Operations
   updatedAt?: string; // ISO timestamp — last edit to the record
 }

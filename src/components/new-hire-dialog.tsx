@@ -34,6 +34,7 @@ export function NewHireDialog({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [birthday, setBirthday] = useState("");
+  const [phone, setPhone] = useState("");
   const [startDate, setStartDate] = useState("");
   const [office, setOffice] = useState("");
   const [sourceType, setSourceType] = useState("");
@@ -48,6 +49,7 @@ export function NewHireDialog({
     setFirstName("");
     setLastName("");
     setBirthday("");
+    setPhone("");
     setStartDate("");
     setOffice("");
     setSourceType("");
@@ -67,6 +69,7 @@ export function NewHireDialog({
       const created = await createMutation.mutateAsync({
         name: fullName,
         birthday: birthday || undefined,
+        phone: phone || undefined,
         startDate,
         office: office || undefined,
         sourceType: sourceType || undefined,
@@ -146,6 +149,15 @@ export function NewHireDialog({
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nh-phone">Phone Number</Label>
+                <Input
+                  id="nh-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
             </div>

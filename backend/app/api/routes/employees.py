@@ -137,6 +137,7 @@ async def import_employees(
             exit_date=row.exit_date,
             birthday=row.birthday,
             source_type=row.source_type,
+            phone=row.phone,
         )
         db.add(employee)
         # Flush (not commit) so the next row's next_employee_id() call, if it

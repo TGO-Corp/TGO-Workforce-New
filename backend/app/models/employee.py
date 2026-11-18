@@ -75,6 +75,7 @@ class Employee(Base):
     # with `e.birthday &&`. Better to store NULL than an invalid empty date.
     birthday: Mapped[date | None] = mapped_column(Date)
     source_type: Mapped[str | None] = mapped_column(String(100))
+    phone: Mapped[str | None] = mapped_column(String(30))
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
