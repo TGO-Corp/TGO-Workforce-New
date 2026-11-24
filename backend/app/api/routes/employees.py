@@ -92,7 +92,25 @@ async def create_employee(
 ) -> Employee:
     """Backs the New Hire form — currently a UI-only stub on the frontend that
     just shows a toast; this is what it should call once wired up."""
-    employee = Employee(id=await next_employee_id(db), **payload.model_dump())
+    fields = payload.model_dump(exclude={"id"})
+
+    requested_id = (payload.id or "").strip()
+    if requested_id:
+        if len(requested_id) > 20:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Employee ID must be 20 characters or fewer",
+            )
+        if await db.get(Employee, requested_id) is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Employee ID {requested_id} is already in use",
+            )
+        employee_id = requested_id
+    else:
+        employee_id = await next_employee_id(db)
+
+    employee = Employee(id=employee_id, **fields)
     db.add(employee)
     await db.flush()
 

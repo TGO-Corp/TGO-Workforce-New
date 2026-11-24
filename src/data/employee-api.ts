@@ -124,6 +124,10 @@ export async function fetchEmployees(): Promise<Employee[]> {
 }
 
 export type NewEmployeeInput = {
+  /** Left blank, the backend auto-generates the next "TGO-####"; set, HR is
+   * assigning a specific id up front instead of renaming it after the fact
+   * (uniqueness-checked server-side). */
+  id?: string;
   name: string;
   office?: string;
   department?: string;
@@ -155,6 +159,7 @@ export type NewEmployeeInput = {
 
 function toCreatePayload(input: NewEmployeeInput) {
   return {
+    id: input.id || undefined,
     name: input.name,
     office: input.office || undefined,
     department: input.department || undefined,

@@ -43,6 +43,7 @@ export function NewHireDialog({
   onCreated?: (employee: Employee) => void;
 } = {}) {
   const [open, setOpen] = useState(false);
+  const [employeeId, setEmployeeId] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [preferredName, setPreferredName] = useState("");
@@ -73,6 +74,7 @@ export function NewHireDialog({
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
 
   function reset() {
+    setEmployeeId("");
     setFirstName("");
     setLastName("");
     setPreferredName("");
@@ -109,6 +111,7 @@ export function NewHireDialog({
     }
     try {
       const created = await createMutation.mutateAsync({
+        id: employeeId || undefined,
         name: fullName,
         preferredName: preferredName || undefined,
         photoUrl: photoUrl || undefined,
@@ -183,8 +186,13 @@ export function NewHireDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="nh-id">Employee ID</Label>
-                <Input id="nh-id" value="" placeholder="Assigned automatically (TGO-####)" disabled />
+                <Label htmlFor="nh-id">Employee ID (optional)</Label>
+                <Input
+                  id="nh-id"
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  placeholder="Leave blank to auto-generate (TGO-####)"
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="nh-first-name">First Name</Label>

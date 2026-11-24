@@ -36,8 +36,12 @@ class EmployeeBase(BaseModel):
 
 
 class EmployeeCreate(EmployeeBase):
-    """Used by the New Hire form. id is always server-generated (TGO-####),
-    never supplied by the client."""
+    """Used by the New Hire form. id is optional — left blank, the route
+    auto-generates the next "TGO-####" (see app/services/employee.py); set,
+    it's used as-is (uniqueness-checked by the route) so HR can assign a
+    specific id up front instead of renaming it after the fact."""
+
+    id: str | None = None
 
 
 class EmployeeUpdate(BaseModel):
