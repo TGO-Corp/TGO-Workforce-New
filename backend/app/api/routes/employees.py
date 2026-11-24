@@ -138,6 +138,20 @@ async def import_employees(
             birthday=row.birthday,
             source_type=row.source_type,
             phone=row.phone,
+            address=row.address,
+            personal_email=row.personal_email,
+            preferred_name=row.preferred_name,
+            employment_type=row.employment_type,
+            work_arrangement=row.work_arrangement,
+            supervisor=row.supervisor,
+            tgo_email=row.tgo_email,
+            lms_email=row.lms_email,
+            vonage_extension=row.vonage_extension,
+            emergency_contact_name=row.emergency_contact_name,
+            emergency_contact_relationship=row.emergency_contact_relationship,
+            emergency_contact_number=row.emergency_contact_number,
+            reason_for_separation=row.reason_for_separation,
+            hr_remarks=row.hr_remarks,
         )
         db.add(employee)
         # Flush (not commit) so the next row's next_employee_id() call, if it

@@ -2,11 +2,16 @@ import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpDown,
+  Briefcase,
+  FileText,
+  Landmark,
   Lock,
   Pencil,
+  Phone as PhoneIcon,
   Search,
   ShieldCheck,
   Trash2,
+  User,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -44,8 +49,10 @@ import {
 } from "@/components/ui/table";
 import { useEmployees, useUpdateEmployee, useDeleteEmployee } from "@/data/employee-store";
 import {
+  EMPLOYMENT_TYPES,
   OFFICES,
   STATUSES,
+  WORK_ARRANGEMENTS,
   formatDate,
   type Employee,
   type EmployeeStatus,
@@ -447,6 +454,17 @@ export function ManageEmployeesDialog() {
   );
 }
 
+/** A section heading matching the grouped-fields layout shared with
+ * NewHireDialog (new-hire-dialog.tsx) — Personal/Employment/Company
+ * Accounts/Emergency Contact/Additional Information. */
+function SectionHeading({ icon: Icon, label }: { icon: typeof User; label: string }) {
+  return (
+    <h3 className="flex items-center gap-2 text-sm font-semibold text-primary">
+      <Icon className="h-4 w-4" /> {label}
+    </h3>
+  );
+}
+
 function EditEmployeeDialog({
   employee,
   onCancel,
@@ -461,159 +479,346 @@ function EditEmployeeDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onCancel()}>
-      <DialogContent className="flex max-h-[90vh] w-[95vw] flex-col overflow-hidden p-0 sm:max-w-md">
+      <DialogContent className="flex max-h-[90vh] w-[95vw] flex-col overflow-hidden p-0 sm:max-w-2xl">
         <div className="border-b px-6 py-4">
           <h2 className="text-base font-semibold">Edit Employee Record</h2>
           <p className="text-sm text-muted-foreground">{employee.name}</p>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="edit-id">Employee ID</Label>
-            <Input
-              id="edit-id"
-              value={form.id}
-              onChange={(e) => setForm({ ...form, id: e.target.value })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Used as this record's identifier in Activity Logs and Excel/CSV imports — change it
-              only to fix a mistake. Must be unique.
-            </p>
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
+            <SectionHeading icon={User} label="Personal Information" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="edit-id">Employee ID</Label>
+                <Input
+                  id="edit-id"
+                  value={form.id}
+                  onChange={(e) => setForm({ ...form, id: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Used as this record's identifier in Activity Logs and Excel/CSV imports — change
+                  it only to fix a mistake. Must be unique.
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input
+                  id="edit-name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-preferred-name">Preferred Name / Nickname</Label>
+                <Input
+                  id="edit-preferred-name"
+                  value={form.preferredName ?? ""}
+                  onChange={(e) =>
+                    setForm({ ...form, preferredName: e.target.value || undefined })
+                  }
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-phone">Phone Number</Label>
+                <Input
+                  id="edit-phone"
+                  type="tel"
+                  value={form.phone ?? ""}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value || undefined })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-personal-email">Personal Email</Label>
+                <Input
+                  id="edit-personal-email"
+                  type="email"
+                  value={form.personalEmail ?? ""}
+                  onChange={(e) =>
+                    setForm({ ...form, personalEmail: e.target.value || undefined })
+                  }
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-birthday">Birthday</Label>
+                <Input
+                  id="edit-birthday"
+                  type="date"
+                  value={form.birthday}
+                  onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-address">Residential Address</Label>
+                <Input
+                  id="edit-address"
+                  value={form.address ?? ""}
+                  onChange={(e) => setForm({ ...form, address: e.target.value || undefined })}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="edit-name">Full Name</Label>
-            <Input
-              id="edit-name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
+          <div className="space-y-4">
+            <SectionHeading icon={Briefcase} label="Employment Information" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label>Office Location</Label>
+                <Select value={form.office} onValueChange={(v) => setForm({ ...form, office: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OFFICES.map((o) => (
+                      <SelectItem key={o} value={o}>
+                        {o}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Departments</Label>
+                <CreatableComboboxField
+                  label="Department"
+                  listKey="departments"
+                  options={listOptions?.departments ?? []}
+                  value={form.department}
+                  onChange={(v) => setForm({ ...form, department: v })}
+                  placeholder="Select department"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Position</Label>
+                <CreatableComboboxField
+                  label="Position"
+                  listKey="positions"
+                  options={listOptions?.positions ?? []}
+                  value={form.position}
+                  onChange={(v) => setForm({ ...form, position: v })}
+                  placeholder="Select position"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Levels</Label>
+                <CreatableComboboxField
+                  label="Level"
+                  listKey="levels"
+                  options={listOptions?.levels ?? []}
+                  value={form.level}
+                  onChange={(v) => setForm({ ...form, level: v })}
+                  placeholder="Select level"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Employment Type</Label>
+                <Select
+                  value={form.employmentType ?? ""}
+                  onValueChange={(v) => setForm({ ...form, employmentType: v || undefined })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select employment type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EMPLOYMENT_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Work Arrangement</Label>
+                <Select
+                  value={form.workArrangement ?? ""}
+                  onValueChange={(v) => setForm({ ...form, workArrangement: v || undefined })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select work arrangement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WORK_ARRANGEMENTS.map((w) => (
+                      <SelectItem key={w} value={w}>
+                        {w}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="edit-supervisor">Direct Supervisor / Manager</Label>
+                <Input
+                  id="edit-supervisor"
+                  value={form.supervisor ?? ""}
+                  onChange={(e) => setForm({ ...form, supervisor: e.target.value || undefined })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-job-offer-date">Job Offer Date</Label>
+                <Input
+                  id="edit-job-offer-date"
+                  type="date"
+                  value={form.jobOfferDate ?? ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      jobOfferDate: e.target.value || undefined,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-start">Start Date</Label>
+                <Input
+                  id="edit-start"
+                  type="date"
+                  value={form.startDate}
+                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Status</Label>
+                <Select
+                  value={form.status}
+                  onValueChange={(v) => setForm({ ...form, status: v as EmployeeStatus })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="edit-exit">Exit Date</Label>
+                <Input
+                  id="edit-exit"
+                  type="date"
+                  value={form.exitDate ?? ""}
+                  onChange={(e) => setForm({ ...form, exitDate: e.target.value || undefined })}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="edit-phone">Phone Number</Label>
-            <Input
-              id="edit-phone"
-              type="tel"
-              value={form.phone ?? ""}
-              onChange={(e) => setForm({ ...form, phone: e.target.value || undefined })}
-            />
+          <div className="space-y-4">
+            <SectionHeading icon={Landmark} label="Company Accounts" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-tgo-email">TGO Email Address</Label>
+                <Input
+                  id="edit-tgo-email"
+                  type="email"
+                  value={form.tgoEmail ?? ""}
+                  onChange={(e) => setForm({ ...form, tgoEmail: e.target.value || undefined })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-lms-email">LMS Email Address (if applicable)</Label>
+                <Input
+                  id="edit-lms-email"
+                  type="email"
+                  value={form.lmsEmail ?? ""}
+                  onChange={(e) => setForm({ ...form, lmsEmail: e.target.value || undefined })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-vonage">Vonage Extension</Label>
+                <Input
+                  id="edit-vonage"
+                  value={form.vonageExtension ?? ""}
+                  onChange={(e) =>
+                    setForm({ ...form, vonageExtension: e.target.value || undefined })
+                  }
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label>Office Location</Label>
-            <Select value={form.office} onValueChange={(v) => setForm({ ...form, office: v })}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {OFFICES.map((o) => (
-                  <SelectItem key={o} value={o}>
-                    {o}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <SectionHeading icon={PhoneIcon} label="Emergency Contact" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-ec-name">Emergency Contact Name</Label>
+                <Input
+                  id="edit-ec-name"
+                  value={form.emergencyContactName ?? ""}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyContactName: e.target.value || undefined })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-ec-relationship">Relationship</Label>
+                <Input
+                  id="edit-ec-relationship"
+                  value={form.emergencyContactRelationship ?? ""}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      emergencyContactRelationship: e.target.value || undefined,
+                    })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-ec-number">Emergency Contact Number</Label>
+                <Input
+                  id="edit-ec-number"
+                  type="tel"
+                  value={form.emergencyContactNumber ?? ""}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyContactNumber: e.target.value || undefined })
+                  }
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label>Departments</Label>
-            <CreatableComboboxField
-              label="Department"
-              listKey="departments"
-              options={listOptions?.departments ?? []}
-              value={form.department}
-              onChange={(v) => setForm({ ...form, department: v })}
-              placeholder="Select department"
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Position</Label>
-            <CreatableComboboxField
-              label="Position"
-              listKey="positions"
-              options={listOptions?.positions ?? []}
-              value={form.position}
-              onChange={(v) => setForm({ ...form, position: v })}
-              placeholder="Select position"
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Levels</Label>
-            <CreatableComboboxField
-              label="Level"
-              listKey="levels"
-              options={listOptions?.levels ?? []}
-              value={form.level}
-              onChange={(v) => setForm({ ...form, level: v })}
-              placeholder="Select level"
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="edit-job-offer-date">Job Offer Date</Label>
-            <Input
-              id="edit-job-offer-date"
-              type="date"
-              value={form.jobOfferDate ?? ""}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  jobOfferDate: e.target.value || undefined,
-                })
-              }
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="edit-start">Start Date</Label>
-            <Input
-              id="edit-start"
-              type="date"
-              value={form.startDate}
-              onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="edit-birthday">Birthday</Label>
-            <Input
-              id="edit-birthday"
-              type="date"
-              value={form.birthday}
-              onChange={(e) => setForm({ ...form, birthday: e.target.value })}
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Status</Label>
-            <Select
-              value={form.status}
-              onValueChange={(v) => setForm({ ...form, status: v as EmployeeStatus })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="edit-exit">Exit Date</Label>
-            <Input
-              id="edit-exit"
-              type="date"
-              value={form.exitDate ?? ""}
-              onChange={(e) => setForm({ ...form, exitDate: e.target.value || undefined })}
-            />
+          <div className="space-y-4">
+            <SectionHeading icon={FileText} label="Additional Information" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="edit-reason-for-separation">Reason for Separation</Label>
+                <Input
+                  id="edit-reason-for-separation"
+                  value={form.reasonForSeparation ?? ""}
+                  onChange={(e) =>
+                    setForm({ ...form, reasonForSeparation: e.target.value || undefined })
+                  }
+                />
+              </div>
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="edit-hr-remarks">HR Remarks</Label>
+                <Input
+                  id="edit-hr-remarks"
+                  value={form.hrRemarks ?? ""}
+                  onChange={(e) => setForm({ ...form, hrRemarks: e.target.value || undefined })}
+                />
+              </div>
+            </div>
           </div>
         </div>
 

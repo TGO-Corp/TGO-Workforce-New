@@ -18,6 +18,20 @@ class EmployeeBase(BaseModel):
     birthday: date | None = None
     source_type: str | None = None
     phone: str | None = None
+    address: str | None = None
+    personal_email: str | None = None
+    preferred_name: str | None = None
+    employment_type: str | None = None
+    work_arrangement: str | None = None
+    supervisor: str | None = None
+    tgo_email: str | None = None
+    lms_email: str | None = None
+    vonage_extension: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_relationship: str | None = None
+    emergency_contact_number: str | None = None
+    reason_for_separation: str | None = None
+    hr_remarks: str | None = None
 
 
 class EmployeeCreate(EmployeeBase):
@@ -46,6 +60,20 @@ class EmployeeUpdate(BaseModel):
     birthday: date | None = None
     source_type: str | None = None
     phone: str | None = None
+    address: str | None = None
+    personal_email: str | None = None
+    preferred_name: str | None = None
+    employment_type: str | None = None
+    work_arrangement: str | None = None
+    supervisor: str | None = None
+    tgo_email: str | None = None
+    lms_email: str | None = None
+    vonage_extension: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_relationship: str | None = None
+    emergency_contact_number: str | None = None
+    reason_for_separation: str | None = None
+    hr_remarks: str | None = None
 
 
 class EmployeeImportRow(BaseModel):
@@ -66,6 +94,20 @@ class EmployeeImportRow(BaseModel):
     birthday: date | None = None
     source_type: str | None = None
     phone: str | None = None
+    address: str | None = None
+    personal_email: str | None = None
+    preferred_name: str | None = None
+    employment_type: str | None = None
+    work_arrangement: str | None = None
+    supervisor: str | None = None
+    tgo_email: str | None = None
+    lms_email: str | None = None
+    vonage_extension: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_relationship: str | None = None
+    emergency_contact_number: str | None = None
+    reason_for_separation: str | None = None
+    hr_remarks: str | None = None
 
 
 class EmployeeImportResult(BaseModel):

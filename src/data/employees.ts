@@ -18,11 +18,30 @@ export interface Employee {
   birthday: string; // ISO (year may be birth year); "" when unknown
   sourceType?: string;
   phone?: string;
+  address?: string;
+  personalEmail?: string;
+  preferredName?: string;
+  employmentType?: string;
+  workArrangement?: string;
+  supervisor?: string;
+  tgoEmail?: string;
+  lmsEmail?: string;
+  vonageExtension?: string;
+  emergencyContactName?: string;
+  emergencyContactRelationship?: string;
+  emergencyContactNumber?: string;
+  // Offboarding-only fields, set from the Manage Employees edit dialog.
+  reasonForSeparation?: string;
+  hrRemarks?: string;
   createdAt?: string; // ISO timestamp — when the record was added to HR Operations
   updatedAt?: string; // ISO timestamp — last edit to the record
 }
 
 export const OFFICES = ["PH Eastwood", "CO Medellin"] as const;
+
+export const EMPLOYMENT_TYPES = ["Full-time", "Part-time", "Contract", "Intern"] as const;
+
+export const WORK_ARRANGEMENTS = ["Onsite", "Remote", "Hybrid"] as const;
 
 export const DEPARTMENTS = [
   "Dispatch",

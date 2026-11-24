@@ -23,6 +23,20 @@ type BackendEmployee = {
   birthday: string | null;
   source_type: string | null;
   phone: string | null;
+  address: string | null;
+  personal_email: string | null;
+  preferred_name: string | null;
+  employment_type: string | null;
+  work_arrangement: string | null;
+  supervisor: string | null;
+  tgo_email: string | null;
+  lms_email: string | null;
+  vonage_extension: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_relationship: string | null;
+  emergency_contact_number: string | null;
+  reason_for_separation: string | null;
+  hr_remarks: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -42,6 +56,20 @@ function fromBackend(row: BackendEmployee): Employee {
     birthday: row.birthday ?? "",
     sourceType: row.source_type ?? undefined,
     phone: row.phone ?? undefined,
+    address: row.address ?? undefined,
+    personalEmail: row.personal_email ?? undefined,
+    preferredName: row.preferred_name ?? undefined,
+    employmentType: row.employment_type ?? undefined,
+    workArrangement: row.work_arrangement ?? undefined,
+    supervisor: row.supervisor ?? undefined,
+    tgoEmail: row.tgo_email ?? undefined,
+    lmsEmail: row.lms_email ?? undefined,
+    vonageExtension: row.vonage_extension ?? undefined,
+    emergencyContactName: row.emergency_contact_name ?? undefined,
+    emergencyContactRelationship: row.emergency_contact_relationship ?? undefined,
+    emergencyContactNumber: row.emergency_contact_number ?? undefined,
+    reasonForSeparation: row.reason_for_separation ?? undefined,
+    hrRemarks: row.hr_remarks ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -106,6 +134,18 @@ export type NewEmployeeInput = {
   birthday?: string;
   sourceType?: string;
   phone?: string;
+  address?: string;
+  personalEmail?: string;
+  preferredName?: string;
+  employmentType?: string;
+  workArrangement?: string;
+  supervisor?: string;
+  tgoEmail?: string;
+  lmsEmail?: string;
+  vonageExtension?: string;
+  emergencyContactName?: string;
+  emergencyContactRelationship?: string;
+  emergencyContactNumber?: string;
 };
 
 function toCreatePayload(input: NewEmployeeInput) {
@@ -122,6 +162,18 @@ function toCreatePayload(input: NewEmployeeInput) {
     birthday: input.birthday || undefined,
     source_type: input.sourceType || undefined,
     phone: input.phone || undefined,
+    address: input.address || undefined,
+    personal_email: input.personalEmail || undefined,
+    preferred_name: input.preferredName || undefined,
+    employment_type: input.employmentType || undefined,
+    work_arrangement: input.workArrangement || undefined,
+    supervisor: input.supervisor || undefined,
+    tgo_email: input.tgoEmail || undefined,
+    lms_email: input.lmsEmail || undefined,
+    vonage_extension: input.vonageExtension || undefined,
+    emergency_contact_name: input.emergencyContactName || undefined,
+    emergency_contact_relationship: input.emergencyContactRelationship || undefined,
+    emergency_contact_number: input.emergencyContactNumber || undefined,
   };
 }
 
@@ -158,6 +210,20 @@ export async function updateEmployee(originalId: string, employee: Employee): Pr
     birthday: employee.birthday || null,
     source_type: employee.sourceType || null,
     phone: employee.phone || null,
+    address: employee.address || null,
+    personal_email: employee.personalEmail || null,
+    preferred_name: employee.preferredName || null,
+    employment_type: employee.employmentType || null,
+    work_arrangement: employee.workArrangement || null,
+    supervisor: employee.supervisor || null,
+    tgo_email: employee.tgoEmail || null,
+    lms_email: employee.lmsEmail || null,
+    vonage_extension: employee.vonageExtension || null,
+    emergency_contact_name: employee.emergencyContactName || null,
+    emergency_contact_relationship: employee.emergencyContactRelationship || null,
+    emergency_contact_number: employee.emergencyContactNumber || null,
+    reason_for_separation: employee.reasonForSeparation || null,
+    hr_remarks: employee.hrRemarks || null,
   };
   const row = await request<BackendEmployee>(`/employees/${encodeURIComponent(originalId)}`, {
     method: "PATCH",
@@ -201,6 +267,20 @@ export async function importEmployees(
     birthday: row.birthday || undefined,
     source_type: row.sourceType || undefined,
     phone: row.phone || undefined,
+    address: row.address || undefined,
+    personal_email: row.personalEmail || undefined,
+    preferred_name: row.preferredName || undefined,
+    employment_type: row.employmentType || undefined,
+    work_arrangement: row.workArrangement || undefined,
+    supervisor: row.supervisor || undefined,
+    tgo_email: row.tgoEmail || undefined,
+    lms_email: row.lmsEmail || undefined,
+    vonage_extension: row.vonageExtension || undefined,
+    emergency_contact_name: row.emergencyContactName || undefined,
+    emergency_contact_relationship: row.emergencyContactRelationship || undefined,
+    emergency_contact_number: row.emergencyContactNumber || undefined,
+    reason_for_separation: row.reasonForSeparation || undefined,
+    hr_remarks: row.hrRemarks || undefined,
   }));
   return request<{ added: number; skipped: number }>("/employees/import", {
     method: "POST",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UserPlus } from "lucide-react";
+import { Briefcase, Landmark, Phone as PhoneIcon, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { OFFICES, type Employee } from "@/data/employees";
+import { EMPLOYMENT_TYPES, OFFICES, WORK_ARRANGEMENTS, type Employee } from "@/data/employees";
 import { useCreateEmployee } from "@/data/employee-store";
 import { useListOptionsQuery } from "@/data/list-options-store";
 import { useCurrentAccount } from "@/lib/session";
 
 const SOURCE_TYPES = ["Direct Applicant", "Referral", "Rehire", "Internal Transfer"] as const;
+
+/** A section heading matching the grouped-fields layout shared with
+ * EditEmployeeDialog (manage-employees-dialog.tsx) — Personal/Employment/
+ * Company Accounts/Emergency Contact. */
+function SectionHeading({ icon: Icon, label }: { icon: typeof User; label: string }) {
+  return (
+    <h3 className="flex items-center gap-2 text-sm font-semibold text-primary">
+      <Icon className="h-4 w-4" /> {label}
+    </h3>
+  );
+}
 
 export function NewHireDialog({
   onCreated,
@@ -33,12 +44,24 @@ export function NewHireDialog({
   const [open, setOpen] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [preferredName, setPreferredName] = useState("");
   const [birthday, setBirthday] = useState("");
   const [phone, setPhone] = useState("");
+  const [personalEmail, setPersonalEmail] = useState("");
+  const [address, setAddress] = useState("");
   const [startDate, setStartDate] = useState("");
   const [office, setOffice] = useState("");
   const [sourceType, setSourceType] = useState("");
   const [level, setLevel] = useState("");
+  const [employmentType, setEmploymentType] = useState("");
+  const [workArrangement, setWorkArrangement] = useState("");
+  const [supervisor, setSupervisor] = useState("");
+  const [tgoEmail, setTgoEmail] = useState("");
+  const [lmsEmail, setLmsEmail] = useState("");
+  const [vonageExtension, setVonageExtension] = useState("");
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactRelationship, setEmergencyContactRelationship] = useState("");
+  const [emergencyContactNumber, setEmergencyContactNumber] = useState("");
   const createMutation = useCreateEmployee();
   const { data: account } = useCurrentAccount();
   const { data: listOptions } = useListOptionsQuery();
@@ -48,12 +71,24 @@ export function NewHireDialog({
   function reset() {
     setFirstName("");
     setLastName("");
+    setPreferredName("");
     setBirthday("");
     setPhone("");
+    setPersonalEmail("");
+    setAddress("");
     setStartDate("");
     setOffice("");
     setSourceType("");
     setLevel("");
+    setEmploymentType("");
+    setWorkArrangement("");
+    setSupervisor("");
+    setTgoEmail("");
+    setLmsEmail("");
+    setVonageExtension("");
+    setEmergencyContactName("");
+    setEmergencyContactRelationship("");
+    setEmergencyContactNumber("");
   }
 
   async function handleSubmit() {
@@ -68,12 +103,24 @@ export function NewHireDialog({
     try {
       const created = await createMutation.mutateAsync({
         name: fullName,
+        preferredName: preferredName || undefined,
         birthday: birthday || undefined,
         phone: phone || undefined,
+        personalEmail: personalEmail || undefined,
+        address: address || undefined,
         startDate,
         office: office || undefined,
         sourceType: sourceType || undefined,
         level: level || undefined,
+        employmentType: employmentType || undefined,
+        workArrangement: workArrangement || undefined,
+        supervisor: supervisor || undefined,
+        tgoEmail: tgoEmail || undefined,
+        lmsEmail: lmsEmail || undefined,
+        vonageExtension: vonageExtension || undefined,
+        emergencyContactName: emergencyContactName || undefined,
+        emergencyContactRelationship: emergencyContactRelationship || undefined,
+        emergencyContactNumber: emergencyContactNumber || undefined,
       });
       setOpen(false);
       toast.success(`New hire submitted: ${fullName}`);
@@ -115,7 +162,7 @@ export function NewHireDialog({
 
         <div className="space-y-6 py-2">
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-primary">Basic Information</h3>
+            <SectionHeading icon={User} label="Personal Information" />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="nh-first-name">First Name</Label>
@@ -134,21 +181,20 @@ export function NewHireDialog({
                 />
               </div>
               <div className="grid gap-2">
+                <Label htmlFor="nh-preferred-name">Preferred Name / Nickname</Label>
+                <Input
+                  id="nh-preferred-name"
+                  value={preferredName}
+                  onChange={(e) => setPreferredName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="nh-birthday">Birthday</Label>
                 <Input
                   id="nh-birthday"
                   type="date"
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="nh-start">Start Date</Label>
-                <Input
-                  id="nh-start"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -160,11 +206,28 @@ export function NewHireDialog({
                   onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nh-personal-email">Personal Email</Label>
+                <Input
+                  id="nh-personal-email"
+                  type="email"
+                  value={personalEmail}
+                  onChange={(e) => setPersonalEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="nh-address">Residential Address</Label>
+                <Input
+                  id="nh-address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-primary">Employment Information</h3>
+            <SectionHeading icon={Briefcase} label="Employment Information" />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label>Office</Label>
@@ -205,6 +268,116 @@ export function NewHireDialog({
                   value={level}
                   onChange={setLevel}
                   placeholder="Select level"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nh-start">Start Date</Label>
+                <Input
+                  id="nh-start"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Employment Type (optional)</Label>
+                <Select value={employmentType} onValueChange={setEmploymentType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select employment type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EMPLOYMENT_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Work Arrangement (optional)</Label>
+                <Select value={workArrangement} onValueChange={setWorkArrangement}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select work arrangement" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WORK_ARRANGEMENTS.map((w) => (
+                      <SelectItem key={w} value={w}>
+                        {w}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="nh-supervisor">Direct Supervisor / Manager</Label>
+                <Input
+                  id="nh-supervisor"
+                  value={supervisor}
+                  onChange={(e) => setSupervisor(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <SectionHeading icon={Landmark} label="Company Accounts" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="nh-tgo-email">TGO Email Address</Label>
+                <Input
+                  id="nh-tgo-email"
+                  type="email"
+                  value={tgoEmail}
+                  onChange={(e) => setTgoEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nh-lms-email">LMS Email Address (if applicable)</Label>
+                <Input
+                  id="nh-lms-email"
+                  type="email"
+                  value={lmsEmail}
+                  onChange={(e) => setLmsEmail(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nh-vonage">Vonage Extension</Label>
+                <Input
+                  id="nh-vonage"
+                  value={vonageExtension}
+                  onChange={(e) => setVonageExtension(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <SectionHeading icon={PhoneIcon} label="Emergency Contact" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="nh-ec-name">Emergency Contact Name</Label>
+                <Input
+                  id="nh-ec-name"
+                  value={emergencyContactName}
+                  onChange={(e) => setEmergencyContactName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nh-ec-relationship">Relationship</Label>
+                <Input
+                  id="nh-ec-relationship"
+                  value={emergencyContactRelationship}
+                  onChange={(e) => setEmergencyContactRelationship(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nh-ec-number">Emergency Contact Number</Label>
+                <Input
+                  id="nh-ec-number"
+                  type="tel"
+                  value={emergencyContactNumber}
+                  onChange={(e) => setEmergencyContactNumber(e.target.value)}
                 />
               </div>
             </div>
