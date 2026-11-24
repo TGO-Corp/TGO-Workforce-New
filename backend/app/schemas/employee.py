@@ -18,6 +18,7 @@ class EmployeeBase(BaseModel):
     birthday: date | None = None
     source_type: str | None = None
     phone: str | None = None
+    photo_url: str | None = None
     address: str | None = None
     personal_email: str | None = None
     preferred_name: str | None = None
@@ -60,6 +61,7 @@ class EmployeeUpdate(BaseModel):
     birthday: date | None = None
     source_type: str | None = None
     phone: str | None = None
+    photo_url: str | None = None
     address: str | None = None
     personal_email: str | None = None
     preferred_name: str | None = None
@@ -94,6 +96,7 @@ class EmployeeImportRow(BaseModel):
     birthday: date | None = None
     source_type: str | None = None
     phone: str | None = None
+    photo_url: str | None = None
     address: str | None = None
     personal_email: str | None = None
     preferred_name: str | None = None

@@ -18,6 +18,7 @@ export interface Employee {
   birthday: string; // ISO (year may be birth year); "" when unknown
   sourceType?: string;
   phone?: string;
+  photoUrl?: string;
   address?: string;
   personalEmail?: string;
   preferredName?: string;

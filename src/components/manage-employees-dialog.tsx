@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { CreatableComboboxField } from "@/components/creatable-combobox-field";
 import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -489,6 +490,14 @@ function EditEmployeeDialog({
           <div className="space-y-4">
             <SectionHeading icon={User} label="Personal Information" />
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <PhotoUploadField
+                  id="edit-photo"
+                  value={form.photoUrl ?? ""}
+                  onChange={(v) => setForm({ ...form, photoUrl: v || undefined })}
+                  fallbackName={form.name}
+                />
+              </div>
               <div className="grid gap-2 sm:col-span-2">
                 <Label htmlFor="edit-id">Employee ID</Label>
                 <Input

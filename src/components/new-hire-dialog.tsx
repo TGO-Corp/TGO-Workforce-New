@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Briefcase, Landmark, Phone as PhoneIcon, User, UserPlus } from "lucide-react";
+import { Briefcase, FileText, Landmark, Phone as PhoneIcon, User, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { CreatableComboboxField } from "@/components/creatable-combobox-field";
 import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PhotoUploadField } from "@/components/photo-upload-field";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -45,6 +46,7 @@ export function NewHireDialog({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [preferredName, setPreferredName] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
   const [birthday, setBirthday] = useState("");
   const [phone, setPhone] = useState("");
   const [personalEmail, setPersonalEmail] = useState("");
@@ -62,6 +64,8 @@ export function NewHireDialog({
   const [emergencyContactName, setEmergencyContactName] = useState("");
   const [emergencyContactRelationship, setEmergencyContactRelationship] = useState("");
   const [emergencyContactNumber, setEmergencyContactNumber] = useState("");
+  const [reasonForSeparation, setReasonForSeparation] = useState("");
+  const [hrRemarks, setHrRemarks] = useState("");
   const createMutation = useCreateEmployee();
   const { data: account } = useCurrentAccount();
   const { data: listOptions } = useListOptionsQuery();
@@ -72,6 +76,7 @@ export function NewHireDialog({
     setFirstName("");
     setLastName("");
     setPreferredName("");
+    setPhotoUrl("");
     setBirthday("");
     setPhone("");
     setPersonalEmail("");
@@ -89,6 +94,8 @@ export function NewHireDialog({
     setEmergencyContactName("");
     setEmergencyContactRelationship("");
     setEmergencyContactNumber("");
+    setReasonForSeparation("");
+    setHrRemarks("");
   }
 
   async function handleSubmit() {
@@ -104,6 +111,7 @@ export function NewHireDialog({
       const created = await createMutation.mutateAsync({
         name: fullName,
         preferredName: preferredName || undefined,
+        photoUrl: photoUrl || undefined,
         birthday: birthday || undefined,
         phone: phone || undefined,
         personalEmail: personalEmail || undefined,
@@ -121,6 +129,8 @@ export function NewHireDialog({
         emergencyContactName: emergencyContactName || undefined,
         emergencyContactRelationship: emergencyContactRelationship || undefined,
         emergencyContactNumber: emergencyContactNumber || undefined,
+        reasonForSeparation: reasonForSeparation || undefined,
+        hrRemarks: hrRemarks || undefined,
       });
       setOpen(false);
       toast.success(`New hire submitted: ${fullName}`);
@@ -164,6 +174,18 @@ export function NewHireDialog({
           <div className="space-y-4">
             <SectionHeading icon={User} label="Personal Information" />
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <PhotoUploadField
+                  id="nh-photo"
+                  value={photoUrl}
+                  onChange={setPhotoUrl}
+                  fallbackName={fullName || "New Hire"}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="nh-id">Employee ID</Label>
+                <Input id="nh-id" value="" placeholder="Assigned automatically (TGO-####)" disabled />
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="nh-first-name">First Name</Label>
                 <Input
@@ -378,6 +400,28 @@ export function NewHireDialog({
                   type="tel"
                   value={emergencyContactNumber}
                   onChange={(e) => setEmergencyContactNumber(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <SectionHeading icon={FileText} label="Additional Information" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="nh-reason-for-separation">Reason for Separation</Label>
+                <Input
+                  id="nh-reason-for-separation"
+                  value={reasonForSeparation}
+                  onChange={(e) => setReasonForSeparation(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2 sm:col-span-2">
+                <Label htmlFor="nh-hr-remarks">HR Remarks</Label>
+                <Input
+                  id="nh-hr-remarks"
+                  value={hrRemarks}
+                  onChange={(e) => setHrRemarks(e.target.value)}
                 />
               </div>
             </div>

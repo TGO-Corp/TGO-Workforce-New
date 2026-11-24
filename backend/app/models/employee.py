@@ -7,7 +7,7 @@ change, not a redesign.
 import enum
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Enum, String
+from sqlalchemy import Date, DateTime, Enum, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -76,6 +76,9 @@ class Employee(Base):
     birthday: Mapped[date | None] = mapped_column(Date)
     source_type: Mapped[str | None] = mapped_column(String(100))
     phone: Mapped[str | None] = mapped_column(String(30))
+    # Same data: URI-or-hosted-URL pattern as Account.photo_url (see that
+    # model's comment) — Text, not a bounded varchar, for the same reason.
+    photo_url: Mapped[str | None] = mapped_column(Text)
     address: Mapped[str | None] = mapped_column(String(300))
     personal_email: Mapped[str | None] = mapped_column(String(254))
     preferred_name: Mapped[str | None] = mapped_column(String(100))

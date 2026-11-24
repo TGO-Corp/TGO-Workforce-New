@@ -138,6 +138,7 @@ async def import_employees(
             birthday=row.birthday,
             source_type=row.source_type,
             phone=row.phone,
+            photo_url=row.photo_url,
             address=row.address,
             personal_email=row.personal_email,
             preferred_name=row.preferred_name,

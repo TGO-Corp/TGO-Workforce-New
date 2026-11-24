@@ -23,6 +23,7 @@ type BackendEmployee = {
   birthday: string | null;
   source_type: string | null;
   phone: string | null;
+  photo_url: string | null;
   address: string | null;
   personal_email: string | null;
   preferred_name: string | null;
@@ -56,6 +57,7 @@ function fromBackend(row: BackendEmployee): Employee {
     birthday: row.birthday ?? "",
     sourceType: row.source_type ?? undefined,
     phone: row.phone ?? undefined,
+    photoUrl: row.photo_url ?? undefined,
     address: row.address ?? undefined,
     personalEmail: row.personal_email ?? undefined,
     preferredName: row.preferred_name ?? undefined,
@@ -134,6 +136,7 @@ export type NewEmployeeInput = {
   birthday?: string;
   sourceType?: string;
   phone?: string;
+  photoUrl?: string;
   address?: string;
   personalEmail?: string;
   preferredName?: string;
@@ -146,6 +149,8 @@ export type NewEmployeeInput = {
   emergencyContactName?: string;
   emergencyContactRelationship?: string;
   emergencyContactNumber?: string;
+  reasonForSeparation?: string;
+  hrRemarks?: string;
 };
 
 function toCreatePayload(input: NewEmployeeInput) {
@@ -162,6 +167,7 @@ function toCreatePayload(input: NewEmployeeInput) {
     birthday: input.birthday || undefined,
     source_type: input.sourceType || undefined,
     phone: input.phone || undefined,
+    photo_url: input.photoUrl || undefined,
     address: input.address || undefined,
     personal_email: input.personalEmail || undefined,
     preferred_name: input.preferredName || undefined,
@@ -174,6 +180,8 @@ function toCreatePayload(input: NewEmployeeInput) {
     emergency_contact_name: input.emergencyContactName || undefined,
     emergency_contact_relationship: input.emergencyContactRelationship || undefined,
     emergency_contact_number: input.emergencyContactNumber || undefined,
+    reason_for_separation: input.reasonForSeparation || undefined,
+    hr_remarks: input.hrRemarks || undefined,
   };
 }
 
@@ -210,6 +218,7 @@ export async function updateEmployee(originalId: string, employee: Employee): Pr
     birthday: employee.birthday || null,
     source_type: employee.sourceType || null,
     phone: employee.phone || null,
+    photo_url: employee.photoUrl || null,
     address: employee.address || null,
     personal_email: employee.personalEmail || null,
     preferred_name: employee.preferredName || null,
@@ -267,6 +276,7 @@ export async function importEmployees(
     birthday: row.birthday || undefined,
     source_type: row.sourceType || undefined,
     phone: row.phone || undefined,
+    photo_url: row.photoUrl || undefined,
     address: row.address || undefined,
     personal_email: row.personalEmail || undefined,
     preferred_name: row.preferredName || undefined,
