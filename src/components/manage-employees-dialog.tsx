@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreatableComboboxField } from "@/components/creatable-combobox-field";
 import { Dialog, DialogContent, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { EmployeeAvatar } from "@/components/employee-avatar";
 import { Input } from "@/components/ui/input";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import { Label } from "@/components/ui/label";
@@ -313,7 +314,12 @@ export function ManageEmployeesDialog() {
                   {filtered.map((e) => (
                     <TableRow key={e.id}>
                       <TableCell className="font-mono text-xs">{e.id}</TableCell>
-                      <TableCell className="font-medium whitespace-nowrap">{e.name}</TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <EmployeeAvatar employee={e} />
+                          {e.name}
+                        </div>
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">{e.office}</TableCell>
                       <TableCell className="whitespace-nowrap">{e.department}</TableCell>
                       <TableCell className="whitespace-nowrap">

@@ -46,6 +46,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BulkFixDialog } from "@/components/bulk-fix-dialog";
+import { EmployeeAvatar } from "@/components/employee-avatar";
 import { EmployeeNameLink } from "@/components/employee-name-link";
 import { ImportEmployeesDialog } from "@/components/import-employees-dialog";
 import { ManageEmployeesDialog } from "@/components/manage-employees-dialog";
@@ -519,7 +520,10 @@ export function EmployeeTable() {
                     )}
                     <TableCell className="font-mono text-xs">{e.id}</TableCell>
                     <TableCell className="font-medium whitespace-nowrap">
-                      <EmployeeNameLink employee={e} />
+                      <div className="flex items-center gap-2">
+                        <EmployeeAvatar employee={e} />
+                        <EmployeeNameLink employee={e} />
+                      </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">{e.office}</TableCell>
                     <TableCell className="whitespace-nowrap">{e.department}</TableCell>

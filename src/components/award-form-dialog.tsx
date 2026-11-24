@@ -9,6 +9,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { EmployeeAvatar } from "@/components/employee-avatar";
 import {
   Command,
   CommandEmpty,
@@ -239,6 +240,7 @@ export function AwardFormDialog({
                                 employeeId === e.id ? "opacity-100" : "opacity-0",
                               )}
                             />
+                            <EmployeeAvatar employee={e} />
                             <div className="min-w-0">
                               <p className="truncate">{e.name}</p>
                               <p className="truncate text-xs text-muted-foreground">

@@ -7,7 +7,7 @@
 // full employment/anniversary/awards breakdown that page shows.
 import { type ReactNode } from "react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Separator } from "@/components/ui/separator";
@@ -52,6 +52,7 @@ export function EmployeeHoverCard({
       <HoverCardContent className="w-72">
         <div className="flex items-center gap-3">
           <Avatar className="size-10">
+            {employee.photoUrl && <AvatarImage src={employee.photoUrl} alt={employee.name} />}
             <AvatarFallback className="text-xs">{initials(employee.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">

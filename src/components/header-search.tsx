@@ -18,7 +18,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Command as CommandPrimitive } from "cmdk";
-import { Search, User, Users } from "lucide-react";
+import { Search, User } from "lucide-react";
 
 import { getAccessibleNavItems, type NavItem } from "@/components/app-sidebar";
 import {
@@ -28,6 +28,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { EmployeeAvatar } from "@/components/employee-avatar";
 import { LoadingPulse } from "@/components/loading-pulse";
 import { useEmployees } from "@/data/employee-store";
 import { canViewEmployees } from "@/lib/permissions";
@@ -204,7 +205,7 @@ export function HeaderSearch() {
                         value={employee.name}
                         onSelect={() => goToEmployee(employee.id)}
                       >
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <EmployeeAvatar employee={employee} className="size-5" />
                         {employee.name}
                         <span className="ml-auto truncate text-xs text-muted-foreground">
                           {employee.position || employee.office}
